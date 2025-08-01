@@ -1,6 +1,6 @@
 from django.core.exceptions import PermissionDenied
 from users.models import User
-from .models import Activite, Question
+from .models import Activite, Question, Soumission
 
 def activity_owner_or_admin_required(view_func):
     """
@@ -48,6 +48,34 @@ def question_owner_or_admin_required(view_func):
             question = Question.objects.select_related('activite__course__teacher').get(pk=question_id)
             course_teacher = question.activite.course.teacher
         except Question.DoesNotExist:
+            raise PermissionDenied
+
+        user = request.user
+        if not user.is_authenticated:
+            raise PermissionDenied
+
+        if user.role == User.Role.ADMIN or user == course_teacher:
+            return view_func(request, *args, **kwargs)
+        else:
+            raise PermissionDenied
+
+    return wrapper
+
+def submission_owner_or_admin_required(view_func):
+    """
+    Decorator for views that checks that the user is logged in and is either an admin
+    or the teacher of the submission's activity's course.
+    It assumes that the view kwargs contain 'submission_id'.
+    """
+    def wrapper(request, *args, **kwargs):
+        submission_id = kwargs.get('submission_id')
+        if not submission_id:
+            raise PermissionDenied
+
+        try:
+            submission = Soumission.objects.select_related('activite__course__teacher').get(pk=submission_id)
+            course_teacher = submission.activite.course.teacher
+        except Soumission.DoesNotExist:
             raise PermissionDenied
 
         user = request.user

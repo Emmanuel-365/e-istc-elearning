@@ -1,10 +1,10 @@
 from django.http import JsonResponse
 from django.views.decorators.http import require_POST
 from courses.models import Course
-from .models import Activite, Question, Choix
+from .models import Activite, Question, Choix, Soumission
 from .forms import ActiviteForm, QuestionForm, ChoixForm
 from administration.decorators import course_owner_or_admin_required
-from .decorators import activity_owner_or_admin_required, question_owner_or_admin_required
+from .decorators import activity_owner_or_admin_required, question_owner_or_admin_required, submission_owner_or_admin_required
 import json
 
 @course_owner_or_admin_required
@@ -149,3 +149,40 @@ def delete_question(request, question_id):
     question = Question.objects.get(pk=question_id)
     question.delete()
     return JsonResponse({'status': 'success'})
+
+# API pour la notation des devoirs
+
+@activity_owner_or_admin_required
+def list_submissions(request, activity_id):
+    activite = Activite.objects.get(pk=activity_id)
+    soumissions = Soumission.objects.filter(activite=activite).select_related('etudiant')
+    data = {
+        'soumissions': [
+            {
+                'id': s.id,
+                'etudiant_name': f'{s.etudiant.first_name} {s.etudiant.last_name}',
+                'file_url': s.fichier.url if s.fichier else None,
+                'date_soumission': s.date_soumission.isoformat(),
+                'note': s.note
+            } for s in soumissions
+        ]
+    }
+    return JsonResponse(data)
+
+@submission_owner_or_admin_required
+@require_POST
+def grade_submission(request, submission_id):
+    try:
+        soumission = Soumission.objects.get(pk=submission_id)
+        data = json.loads(request.body)
+        note = data.get('note')
+        if note is not None:
+            soumission.note = float(note)
+            soumission.save()
+            return JsonResponse({'status': 'success'})
+        else:
+            return JsonResponse({'status': 'error', 'message': 'Note manquante.'}, status=400)
+    except Soumission.DoesNotExist:
+        return JsonResponse({'status': 'error', 'message': 'Soumission non trouvée.'}, status=404)
+
+

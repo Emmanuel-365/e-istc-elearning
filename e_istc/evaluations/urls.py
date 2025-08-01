@@ -15,4 +15,8 @@ urlpatterns = [
     path('api/questions/<int:question_id>/', views.question_detail, name='api_question_detail'),
     path('api/questions/<int:question_id>/update/', views.update_question, name='api_update_question'),
     path('api/questions/<int:question_id>/delete/', views.delete_question, name='api_delete_question'),
+
+    # API pour la notation des devoirs
+    path('api/activities/<int:activity_id>/submissions/', views.list_submissions, name='api_list_submissions'),
+    path('api/submissions/<int:submission_id>/grade/', views.grade_submission, name='api_grade_submission'),
 ]

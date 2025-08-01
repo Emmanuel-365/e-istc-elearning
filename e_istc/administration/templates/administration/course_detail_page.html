@@ -87,6 +87,8 @@
                     <div>
                         {% if activite.activity_type == 'QUIZ' %}
                             <button class="btn btn-sm btn-info manage-questions-btn" data-id="{{ activite.id }}">Gérer les questions</button>
+                        {% elif activite.activity_type == 'DEVOIR' %}
+                            <button class="btn btn-sm btn-warning grade-assignment-btn" data-id="{{ activite.id }}">Noter les devoirs</button>
                         {% endif %}
                         <button class="btn btn-sm btn-secondary edit-evaluation-btn" data-id="{{ activite.id }}">Modifier</button>
                         <button class="btn btn-sm btn-danger delete-evaluation-btn" data-id="{{ activite.id }}">Supprimer</button>
@@ -314,6 +316,27 @@
         </div>
     </div>
 
+    <!-- Modal pour Noter les Devoirs -->
+    <div class="modal fade" id="gradeAssignmentModal" tabindex="-1" aria-labelledby="gradeAssignmentModalLabel" aria-hidden="true">
+        <div class="modal-dialog modal-lg">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="gradeAssignmentModalLabel">Noter les Devoirs</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body">
+                    <h6 id="assignmentTitleForGrading"></h6>
+                    <div id="submissionsList">
+                        <!-- Les soumissions seront chargées ici par JS -->
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Fermer</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
 {% endblock %}
 
 {% block extra_js %}
@@ -321,11 +344,12 @@
 document.addEventListener('DOMContentLoaded', function () {
     console.log('Script course_detail_page.html chargé.');
     const courseId = "{{ course.id }}";
-    const moduleModal = new bootstrap.Modal(document.getElementById('moduleModal'));
-    const ressourceModal = new bootstrap.Modal(document.getElementById('ressourceModal'));
-    const deleteConfirmModal = new bootstrap.Modal(document.getElementById('deleteConfirmModal'));
-    const evaluationModal = new bootstrap.Modal(document.getElementById('evaluationModal'));
-    const questionsModal = new bootstrap.Modal(document.getElementById('questionsModal'));
+    const moduleModal = document.getElementById('moduleModal') ? new bootstrap.Modal(document.getElementById('moduleModal')) : null;
+    const ressourceModal = document.getElementById('ressourceModal') ? new bootstrap.Modal(document.getElementById('ressourceModal')) : null;
+    const deleteConfirmModal = document.getElementById('deleteConfirmModal') ? new bootstrap.Modal(document.getElementById('deleteConfirmModal')) : null;
+    const evaluationModal = document.getElementById('evaluationModal') ? new bootstrap.Modal(document.getElementById('evaluationModal')) : null;
+    const questionsModal = document.getElementById('questionsModal') ? new bootstrap.Modal(document.getElementById('questionsModal')) : null;
+    const gradeAssignmentModal = document.getElementById('gradeAssignmentModal') ? new bootstrap.Modal(document.getElementById('gradeAssignmentModal')) : null;
 
     const moduleForm = document.getElementById('moduleForm');
     const ressourceForm = document.getElementById('ressourceForm');
@@ -412,6 +436,7 @@ document.addEventListener('DOMContentLoaded', function () {
             </div>
             <div>
                 ${activite.activity_type === 'Quiz' ? `<button class="btn btn-sm btn-info manage-questions-btn" data-id="${activite.id}">Gérer les questions</button>` : ''}
+                ${activite.activity_type === 'Devoir' ? `<button class="btn btn-sm btn-warning grade-assignment-btn" data-id="${activite.id}">Noter les devoirs</button>` : ''}
                 <button class="btn btn-sm btn-secondary edit-evaluation-btn" data-id="${activite.id}">Modifier</button>
                 <button class="btn btn-sm btn-danger delete-evaluation-btn" data-id="${activite.id}">Supprimer</button>
             </div>
@@ -464,6 +489,12 @@ document.addEventListener('DOMContentLoaded', function () {
             document.getElementById('quizId').value = quizId;
             loadQuestionsForQuiz(quizId);
             questionsModal.show();
+        }
+        if (e.target.classList.contains('grade-assignment-btn')) {
+            const assignmentId = e.target.dataset.id;
+            document.getElementById('assignmentTitleForGrading').textContent = e.target.closest('li').querySelector('h5').textContent;
+            loadSubmissionsForGrading(assignmentId);
+            gradeAssignmentModal.show();
         }
     });
 
@@ -859,6 +890,63 @@ document.addEventListener('DOMContentLoaded', function () {
                     }
                 });
             }
+        }
+    });
+
+    // --- Gestion de la Notation des Devoirs ---
+    const submissionsList = document.getElementById('submissionsList');
+
+    function loadSubmissionsForGrading(assignmentId) {
+        submissionsList.innerHTML = '<li>Chargement des soumissions...</li>';
+        fetch(`/evaluations/api/activities/${assignmentId}/submissions/`)
+            .then(response => response.json())
+            .then(data => {
+                submissionsList.innerHTML = '';
+                if (data.soumissions && data.soumissions.length > 0) {
+                    data.soumissions.forEach(submission => {
+                        const submissionItem = document.createElement('div');
+                        submissionItem.className = 'card mb-2';
+                        submissionItem.innerHTML = `
+                            <div class="card-body">
+                                <h6 class="card-title">${submission.etudiant_name}</h6>
+                                <p class="card-text">Soumis le: ${new Date(submission.date_soumission).toLocaleString()}</p>
+                                ${submission.file_url ? `<a href="${submission.file_url}" target="_blank" class="btn btn-sm btn-info">Voir le fichier</a>` : ''}
+                                <div class="input-group mt-2">
+                                    <span class="input-group-text">Note</span>
+                                    <input type="number" step="0.1" class="form-control grade-input" data-submission-id="${submission.id}" value="${submission.note !== null ? submission.note : ''}">
+                                    <button class="btn btn-primary save-grade-btn" data-submission-id="${submission.id}">Enregistrer</button>
+                                </div>
+                            </div>
+                        `;
+                        submissionsList.appendChild(submissionItem);
+                    });
+                } else {
+                    submissionsList.innerHTML = '<p>Aucune soumission pour ce devoir.</p>';
+                }
+            });
+    }
+
+    submissionsList.addEventListener('click', function(e) {
+        if (e.target.classList.contains('save-grade-btn')) {
+            const submissionId = e.target.dataset.submissionId;
+            const grade = e.target.previousElementSibling.value;
+
+            fetch(`/evaluations/api/submissions/${submissionId}/grade/`, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'X-CSRFToken': csrftoken
+                },
+                body: JSON.stringify({ note: grade })
+            })
+            .then(response => response.json())
+            .then(result => {
+                if (result.status === 'success') {
+                    showToast('Note enregistrée avec succès !', 'success');
+                } else {
+                    showToast(result.message || 'Erreur lors de l\'enregistrement de la note.', 'error');
+                }
+            });
         }
     });
 });
