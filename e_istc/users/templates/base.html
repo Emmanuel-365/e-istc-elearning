@@ -1,0 +1,132 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{% block title %}E-ISTC{% endblock %}</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <style>
+        :root {
+            --bs-primary: #0D47A1;
+            --bs-secondary: #FF9800;
+            --bs-light: #F8F9FA;
+            --bs-dark: #212529;
+        }
+        body {
+            background-color: var(--bs-light);
+            color: var(--bs-dark);
+        }
+        .navbar {
+            background-color: var(--bs-primary);
+        }
+        .btn-primary {
+            background-color: var(--bs-secondary);
+            border-color: var(--bs-secondary);
+        }
+        .btn-primary:hover {
+            background-color: #e68900;
+            border-color: #e68900;
+        }
+        #logout-form .btn-link {
+            color: rgba(255, 255, 255, 0.55);
+            text-decoration: none;
+        }
+        #logout-form .btn-link:hover {
+            color: rgba(255, 255, 255, 0.75);
+        }
+    </style>
+</head>
+<body>
+    <nav class="navbar navbar-expand-lg navbar-dark">
+        <div class="container-fluid">
+            <a class="navbar-brand" href="#">E-ISTC</a>
+            <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav" aria-controls="navbarNav" aria-expanded="false" aria-label="Toggle navigation">
+                <span class="navbar-toggler-icon"></span>
+            </button>
+            <div class="collapse navbar-collapse" id="navbarNav">
+                <ul class="navbar-nav me-auto">
+                    {% if user.is_staff %}
+                        <li class="nav-item">
+                            <a class="nav-link" href="{% url 'administration:user_management' %}">Utilisateurs</a>
+                        </li>
+                        <li class="nav-item">
+                            <a class="nav-link" href="{% url 'administration:course_management' %}">Cours</a>
+                        </li>
+                    {% endif %}
+                </ul>
+                <ul class="navbar-nav ms-auto">
+                    {% if user.is_authenticated %}
+                        <li class="nav-item">
+                            <span class="nav-link">Bonjour, {{ user.first_name }}</span>
+                        </li>
+                        <li class="nav-item">
+                            <form method="post" action="{% url 'users:logout' %}" id="logout-form" class="d-inline">
+                                {% csrf_token %}
+                                <button type="submit" class="nav-link btn btn-link">Déconnexion</button>
+                            </form>
+                        </li>
+                    {% else %}
+                        <li class="nav-item">
+                            <a class="nav-link" href="{% url 'users:login' %}">Connexion</a>
+                        </li>
+                    {% endif %}
+                </ul>
+            </div>
+        </div>
+    </nav>
+
+    <main class="container mt-4">
+        {% block content %}{% endblock %}
+    </main>
+
+    <div class="toast-container position-fixed bottom-0 end-0 p-3">
+        <!-- Toast Template -->
+        <div id="liveToast" class="toast" role="alert" aria-live="assertive" aria-atomic="true">
+            <div class="toast-header">
+                <strong class="me-auto">Notification</strong>
+                <small>Maintenant</small>
+                <button type="button" class="btn-close" data-bs-dismiss="toast" aria-label="Close"></button>
+            </div>
+            <div class="toast-body">
+                <!-- Message will be inserted here -->
+            </div>
+        </div>
+    </div>
+
+    <footer class="text-center mt-5 py-3 bg-white">
+        <p>&copy; 2025 E-ISTC</p>
+    </footer>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <script>
+        function showToast(message, type = 'info') {
+            const toastContainer = document.querySelector('.toast-container');
+            const liveToast = document.getElementById('liveToast');
+            const newToast = liveToast.cloneNode(true);
+
+            newToast.classList.remove('d-none');
+            newToast.querySelector('.toast-body').textContent = message;
+
+            // Set background color based on type
+            if (type === 'success') {
+                newToast.querySelector('.toast-header').classList.add('bg-success', 'text-white');
+            } else if (type === 'error') {
+                newToast.querySelector('.toast-header').classList.add('bg-danger', 'text-white');
+            } else if (type === 'warning') {
+                newToast.querySelector('.toast-header').classList.add('bg-warning', 'text-dark');
+            } else {
+                newToast.querySelector('.toast-header').classList.add('bg-info', 'text-white');
+            }
+
+            toastContainer.appendChild(newToast);
+            const toast = new bootstrap.Toast(newToast);
+            toast.show();
+
+            newToast.addEventListener('hidden.bs.toast', function () {
+                newToast.remove();
+            });
+        }
+    </script>
+    {% block extra_js %}{% endblock %}
+</body>
+</html>

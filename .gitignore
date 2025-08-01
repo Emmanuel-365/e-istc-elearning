@@ -1,0 +1,79 @@
+# Fichier .gitignore personnalisé pour le projet E-ISTC
+# Placé à la racine du dépôt (dossier 'travail')
+
+### 1. Environnements Virtuels ###
+# Ignore les dossiers d'environnement virtuel, qu'ils soient à la racine
+# ou dans un sous-dossier comme 'e_istc/'.
+venv/
+venv*/
+env*
+env/
+.venv/
+ENV/
+.ENV/
+
+### 2. Fichiers de Secrets et de Configuration Locale ###
+# Ne JAMAIS versionner les clés d'API, mots de passe, etc.
+.env
+*.env
+*.env.*
+local_settings.py
+
+### 3. Artefacts Python et Django ###
+# Fichiers de bytecode et cache
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+
+# Base de données de développement locale
+*.sqlite3
+*.sqlite3-journal
+
+# Fichiers générés par Django
+media/
+staticfiles/
+
+### 4. Fichiers de Logs et de Dépendances ###
+*.log
+logs/
+pip-log.txt
+pip-delete-this-directory.txt
+
+### 5. Fichiers de Configuration d'IDE et d'Éditeurs ###
+# Ces fichiers sont spécifiques à l'environnement de chaque développeur.
+.vscode/
+.idea/
+*.sublime-project
+*.sublime-workspace
+
+### 6. Fichiers Générés par le Système d'Exploitation ###
+.DS_Store
+Thumbs.db
+
+### 7. Fichiers de Test et de Couverture de Code ###
+.coverage
+.coverage.*
+.pytest_cache/
+htmlcov/
+nosetests.xml
+coverage.xml
+.tox/
+
+### 8. Artefacts de Build et de Packaging ###
+build/
+dist/
+*.egg-info/
+.eggs/
+MANIFEST
+
+### 9. Fichiers Temporaires et Sauvegardes ###
+*.swp
+*.swo
+*~
+*.bak
+
+### 10. Autres Fichiers Spécifiques ###
+# Fichiers spécifiques au projet qui ne doivent pas être versionnés.
+ressources/
+*.log

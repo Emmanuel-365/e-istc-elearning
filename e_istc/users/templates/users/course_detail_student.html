@@ -1,0 +1,63 @@
+{% extends "base.html" %}
+
+{% block title %}Cours: {{ course.title }}{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+    <nav aria-label="breadcrumb">
+        <ol class="breadcrumb">
+            <li class="breadcrumb-item"><a href="{% url 'users:etudiant_dashboard' %}">Mon Tableau de Bord</a></li>
+            <li class="breadcrumb-item active" aria-current="page">{{ course.title }}</li>
+        </ol>
+    </nav>
+
+    <h2 class="mb-4">{{ course.title }}</h2>
+
+    <div class="card mb-4">
+        <div class="card-header">
+            Informations sur le Cours
+        </div>
+        <div class="card-body">
+            <p><strong>Description :</strong> {{ course.description }}</p>
+            <p><strong>Enseignant :</strong> {{ course.teacher.first_name }} {{ course.teacher.last_name }}</p>
+        </div>
+    </div>
+
+    <h3>Contenu du Cours</h3>
+    {% if course.modules.all %}
+        {% for module in course.modules.all %}
+        <div class="card mb-3">
+            <div class="card-header">
+                <h5>{{ module.title }} (Ordre: {{ module.order }})</h5>
+            </div>
+            <div class="card-body">
+                <p>{{ module.description }}</p>
+                <h6>Ressources:</h6>
+                {% if module.ressources.all %}
+                <ul class="list-group list-group-flush">
+                    {% for ressource in module.ressources.all %}
+                    <li class="list-group-item d-flex justify-content-between align-items-center">
+                        {{ ressource.title }}
+                        <div>
+                            {% if ressource.file %}
+                                <a href="{{ ressource.file.url }}" target="_blank" class="btn btn-sm btn-info">Voir Fichier</a>
+                            {% endif %}
+                            {% if ressource.url %}
+                                <a href="{{ ressource.url }}" target="_blank" class="btn btn-sm btn-info">Voir URL</a>
+                            {% endif %}
+                        </div>
+                    </li>
+                    {% endfor %}
+                </ul>
+                {% else %}
+                <p>Aucune ressource pour ce module.</p>
+                {% endif %}
+            </div>
+        </div>
+        {% endfor %}
+    {% else %}
+        <p>Aucun module pour ce cours pour le moment.</p>
+    {% endif %}
+
+</div>
+{% endblock %}

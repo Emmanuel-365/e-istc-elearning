@@ -1,0 +1,481 @@
+{% extends "base.html" %}
+
+{% block title %}Détails du Cours - {{ course.title }}{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+    <nav aria-label="breadcrumb">
+        <ol class="breadcrumb">
+            <li class="breadcrumb-item"><a href="{% url 'administration:course_management' %}">Gestion des Cours</a></li>
+            <li class="breadcrumb-item active" aria-current="page">{{ course.title }}</li>
+        </ol>
+    </nav>
+
+    <h2 class="mb-4">{{ course.title }}</h2>
+
+    <div class="card mb-4">
+        <div class="card-header">
+            Informations sur le Cours
+        </div>
+        <div class="card-body">
+            <p><strong>Titre :</strong> {{ course.title }}</p>
+            <p><strong>Description :</strong> {{ course.description }}</p>
+            <p><strong>Enseignant :</strong> {{ course.teacher.first_name }} {{ course.teacher.last_name }}</p>
+            <p><strong>Date de Création :</strong> {{ course.created_at|date:"d/m/Y H:i" }}</p>
+            <p><strong>Dernière mise à jour :</strong> {{ course.updated_at|date:"d/m/Y H:i" }}</p>
+        </div>
+    </div>
+
+    <h3>Modules du Cours</h3>
+    <div class="card">
+        <div class="card-header">
+            <button id="addModuleBtn" class="btn btn-primary">Ajouter un module</button>
+        </div>
+        <div class="card-body">
+            <ul class="list-group" id="module-list">
+                {% for module in course.modules.all %}
+                <li class="list-group-item d-flex justify-content-between align-items-center" id="module-item-{{ module.id }}">
+                    <div>
+                        <h5>{{ module.title }} (Ordre: {{ module.order }})</h5>
+                        <p>{{ module.description }}</p>
+                        <h6>Ressources:</h6>
+                        <ul class="list-group list-group-flush" id="ressource-list-{{ module.id }}">
+                            {% for ressource in module.ressources.all %}
+                            <li class="list-group-item d-flex justify-content-between align-items-center" id="ressource-item-{{ ressource.id }}">
+                                {{ ressource.title }}
+                                <div>
+                                    {% if ressource.file %}
+                                        <a href="{{ ressource.file.url }}" target="_blank" class="btn btn-sm btn-info">Voir Fichier</a>
+                                    {% endif %}
+                                    {% if ressource.url %}
+                                        <a href="{{ ressource.url }}" target="_blank" class="btn btn-sm btn-info">Voir URL</a>
+                                    {% endif %}
+                                    <button class="btn btn-sm btn-secondary edit-ressource-btn" data-id="{{ ressource.id }}" data-module-id="{{ module.id }}">Modifier</button>
+                                    <button class="btn btn-sm btn-danger delete-ressource-btn" data-id="{{ ressource.id }}">Supprimer</button>
+                                </div>
+                            </li>
+                            {% endfor %}
+                        </ul>
+                        <button class="btn btn-sm btn-success mt-2 add-ressource-btn" data-module-id="{{ module.id }}">Ajouter Ressource</button>
+                    </div>
+                    <div>
+                        <button class="btn btn-sm btn-secondary edit-module-btn" data-id="{{ module.id }}">Modifier</button>
+                        <button class="btn btn-sm btn-danger delete-module-btn" data-id="{{ module.id }}">Supprimer</button>
+                    </div>
+                </li>
+                {% empty %}
+                <li class="list-group-item">Aucun module pour ce cours pour le moment.</li>
+                {% endfor %}
+            </ul>
+        </div>
+    </div>
+
+    <h3>Étudiants inscrits</h3>
+    <div class="card mb-4">
+        <div class="card-body">
+            <table class="table table-striped">
+                <thead>
+                    <tr>
+                        <th>Nom</th>
+                        <th>Email</th>
+                        <th>Matricule</th>
+                        <th>Actions</th>
+                    </tr>
+                </thead>
+                <tbody id="student-table-body">
+                    {% for student in enrolled_students %}
+                    <tr id="student-row-{{ student.id }}">
+                        <td>{{ student.last_name }} {{ student.first_name }}</td>
+                        <td>{{ student.email }}</td>
+                        <td>{{ student.matricule }}</td>
+                        <td>
+                            <button class="btn btn-sm btn-danger remove-student-btn" data-id="{{ student.id }}">Retirer</button>
+                        </td>
+                    </tr>
+                    {% empty %}
+                    <tr>
+                        <td colspan="4">Aucun étudiant inscrit.</td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+
+    <!-- Modal pour Ajouter/Modifier Module -->
+    <div class="modal fade" id="moduleModal" tabindex="-1" aria-labelledby="moduleModalLabel" aria-hidden="true">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="moduleModalLabel">Ajouter un module</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body">
+                    <form id="moduleForm">
+                        <input type="hidden" id="moduleId" name="moduleId">
+                        <div id="module-form-errors" class="alert alert-danger d-none"></div>
+                        
+                        <div class="mb-3">
+                            <label for="moduleTitle" class="form-label">Titre</label>
+                            <input type="text" class="form-control" id="moduleTitle" name="title" required>
+                        </div>
+                        <div class="mb-3">
+                            <label for="moduleDescription" class="form-label">Description</label>
+                            <textarea class="form-control" id="moduleDescription" name="description" rows="3"></textarea>
+                        </div>
+                        <div class="mb-3">
+                            <label for="moduleOrder" class="form-label">Ordre</label>
+                            <input type="number" class="form-control" id="moduleOrder" name="order" required>
+                        </div>
+                    </form>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Annuler</button>
+                    <button type="button" id="saveModuleBtn" class="btn btn-primary">Sauvegarder</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal pour Ajouter/Modifier Ressource -->
+    <div class="modal fade" id="ressourceModal" tabindex="-1" aria-labelledby="ressourceModalLabel" aria-hidden="true">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="ressourceModalLabel">Ajouter une ressource</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body">
+                    <form id="ressourceForm" enctype="multipart/form-data">
+                        <input type="hidden" id="ressourceId" name="ressourceId">
+                        <input type="hidden" id="ressourceModuleId" name="ressourceModuleId">
+                        <div id="ressource-form-errors" class="alert alert-danger d-none"></div>
+                        
+                        <div class="mb-3">
+                            <label for="ressourceTitle" class="form-label">Titre</label>
+                            <input type="text" class="form-control" id="ressourceTitle" name="title" required>
+                        </div>
+                        <div class="mb-3">
+                            <label for="ressourceFile" class="form-label">Fichier</label>
+                            <input type="file" class="form-control" id="ressourceFile" name="file">
+                        </div>
+                        <div class="mb-3">
+                            <label for="ressourceUrl" class="form-label">URL</label>
+                            <input type="url" class="form-control" id="ressourceUrl" name="url">
+                        </div>
+                    </form>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Annuler</button>
+                    <button type="button" id="saveRessourceBtn" class="btn btn-primary">Sauvegarder</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal de Confirmation de Suppression (Module/Ressource) -->
+    <div class="modal fade" id="deleteConfirmModal" tabindex="-1" aria-hidden="true">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title">Confirmer la suppression</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body">
+                    <p>Êtes-vous sûr de vouloir supprimer cet élément ? Cette action est irréversible.</p>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Annuler</button>
+                    <button type="button" id="confirmDeleteBtn" class="btn btn-danger">Supprimer</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+{% endblock %}
+
+{% block extra_js %}
+<script>
+document.addEventListener('DOMContentLoaded', function () {
+    console.log('Script course_detail_page.html chargé.');
+    const courseId = "{{ course.id }}";
+    const moduleModal = new bootstrap.Modal(document.getElementById('moduleModal'));
+    const ressourceModal = new bootstrap.Modal(document.getElementById('ressourceModal'));
+    const deleteConfirmModal = new bootstrap.Modal(document.getElementById('deleteConfirmModal'));
+
+    const moduleForm = document.getElementById('moduleForm');
+    const ressourceForm = document.getElementById('ressourceForm');
+
+    const addModuleBtn = document.getElementById('addModuleBtn');
+    const saveModuleBtn = document.getElementById('saveModuleBtn');
+    const saveRessourceBtn = document.getElementById('saveRessourceBtn');
+    const confirmDeleteBtn = document.getElementById('confirmDeleteBtn');
+
+    const moduleList = document.getElementById('module-list');
+    const studentTableBody = document.getElementById('student-table-body');
+
+    let currentModuleId = null;
+    let currentRessourceId = null;
+    let deleteElementType = null; // 'module' ou 'ressource'
+
+    function getCookie(name) {
+        let cookieValue = null;
+        if (document.cookie && document.cookie !== '') {
+            const cookies = document.cookie.split(';');
+            for (let i = 0; i < cookies.length; i++) {
+                const cookie = cookies[i].trim();
+                if (cookie.substring(0, name.length + 1) === (name + '=')) {
+                    cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
+                    break;
+                }
+            }
+        }
+        return cookieValue;
+    }
+    const csrftoken = getCookie('csrftoken');
+
+    // --- Fonctions d'aide pour la mise à jour de l'UI ---
+    function upsertModuleInList(module) {
+        let moduleItem = document.getElementById(`module-item-${module.id}`);
+        const moduleHtml = `
+            <div>
+                <h5>${module.title} (Ordre: ${module.order})</h5>
+                <p>${module.description}</p>
+                <h6>Ressources:</h6>
+                <ul class="list-group list-group-flush" id="ressource-list-${module.id}">
+                    <!-- Ressources seront ajoutées dynamiquement ou sont déjà là -->
+                </ul>
+                <button class="btn btn-sm btn-success mt-2 add-ressource-btn" data-module-id="${module.id}">Ajouter Ressource</button>
+            </div>
+            <div>
+                <button class="btn btn-sm btn-secondary edit-module-btn" data-id="${module.id}">Modifier</button>
+                <button class="btn btn-sm btn-danger delete-module-btn" data-id="${module.id}">Supprimer</button>
+            </div>
+        `;
+
+        if (moduleItem) {
+            moduleItem.innerHTML = moduleHtml;
+        } else {
+            moduleItem = document.createElement('li');
+            moduleItem.className = 'list-group-item d-flex justify-content-between align-items-center';
+            moduleItem.id = `module-item-${module.id}`;
+            moduleItem.innerHTML = moduleHtml;
+            moduleList.appendChild(moduleItem);
+        }
+    }
+
+    function upsertRessourceInList(ressource, moduleId) {
+        const ressourceList = document.getElementById(`ressource-list-${moduleId}`);
+        let ressourceItem = document.getElementById(`ressource-item-${ressource.id}`);
+        const ressourceHtml = `
+            ${ressource.title}
+            <div>
+                ${ressource.file_url ? `<a href="${ressource.file_url}" target="_blank" class="btn btn-sm btn-info">Voir Fichier</a>` : ''}
+                ${ressource.url ? `<a href="${ressource.url}" target="_blank" class="btn btn-sm btn-info">Voir URL</a>` : ''}
+                <button class="btn btn-sm btn-secondary edit-ressource-btn" data-id="${ressource.id}" data-module-id="${moduleId}">Modifier</button>
+                <button class="btn btn-sm btn-danger delete-ressource-btn" data-id="${ressource.id}">Supprimer</button>
+            </div>
+        `;
+
+        if (ressourceItem) {
+            ressourceItem.innerHTML = ressourceHtml;
+        } else {
+            ressourceItem = document.createElement('li');
+            ressourceItem.className = 'list-group-item d-flex justify-content-between align-items-center';
+            ressourceItem.id = `ressource-item-${ressource.id}`;
+            ressourceItem.innerHTML = ressourceHtml;
+            ressourceList.appendChild(ressourceItem);
+        }
+    }
+
+    // --- Gestion des Modules ---
+    addModuleBtn.addEventListener('click', function () {
+        currentModuleId = null;
+        moduleForm.reset();
+        document.getElementById('moduleModalLabel').textContent = 'Ajouter un module';
+        document.getElementById('module-form-errors').classList.add('d-none');
+        moduleModal.show();
+    });
+
+    saveModuleBtn.addEventListener('click', function () {
+        const formData = new FormData(moduleForm);
+        const data = Object.fromEntries(formData.entries());
+        const url = currentModuleId 
+            ? `/courses/api/modules/${currentModuleId}/update/` 
+            : `/courses/api/courses/${courseId}/modules/create/`;
+        
+        fetch(url, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'X-CSRFToken': csrftoken
+            },
+            body: JSON.stringify(data)
+        })
+        .then(response => response.json())
+        .then(result => {
+            if (result.status === 'success') {
+                moduleModal.hide();
+                upsertModuleInList(result.module);
+                showToast('Module sauvegardé avec succès !', 'success');
+            } else {
+                const errorDiv = document.getElementById('module-form-errors');
+                errorDiv.innerHTML = Object.values(result.errors).map(e => `<p>${e}</p>`).join('');
+                errorDiv.classList.remove('d-none');
+                showToast('Erreur lors de la sauvegarde du module.', 'error');
+            }
+        });
+    });
+
+    moduleList.addEventListener('click', function (e) {
+        if (e.target.classList.contains('edit-module-btn')) {
+            currentModuleId = e.target.dataset.id;
+            fetch(`/courses/api/modules/${currentModuleId}/`)
+                .then(response => response.json())
+                .then(data => {
+                    if (data.error) {
+                        showToast(data.error, 'error');
+                        return;
+                    }
+                    moduleForm.reset();
+                    document.getElementById('moduleModalLabel').textContent = 'Modifier un module';
+                    document.getElementById('module-form-errors').classList.add('d-none');
+                    
+                    document.getElementById('moduleId').value = data.id;
+                    document.getElementById('moduleTitle').value = data.title;
+                    document.getElementById('moduleDescription').value = data.description;
+                    document.getElementById('moduleOrder').value = data.order;
+                    
+                    moduleModal.show();
+                });
+        }
+        if (e.target.classList.contains('delete-module-btn')) {
+            currentModuleId = e.target.dataset.id;
+            deleteElementType = 'module';
+            deleteConfirmModal.show();
+        }
+    });
+
+    // --- Gestion des Ressources ---
+    moduleList.addEventListener('click', function (e) {
+        if (e.target.classList.contains('add-ressource-btn')) {
+            currentModuleId = e.target.dataset.moduleId;
+            currentRessourceId = null;
+            ressourceForm.reset();
+            document.getElementById('ressourceModalLabel').textContent = 'Ajouter une ressource';
+            document.getElementById('ressource-form-errors').classList.add('d-none');
+            document.getElementById('ressourceModuleId').value = currentModuleId;
+            ressourceModal.show();
+        }
+        if (e.target.classList.contains('edit-ressource-btn')) {
+            currentRessourceId = e.target.dataset.id;
+            currentModuleId = e.target.dataset.moduleId; // Nécessaire pour upsert
+            fetch(`/courses/api/ressources/${currentRessourceId}/`)
+                .then(response => response.json())
+                .then(data => {
+                    if (data.error) {
+                        showToast(data.error, 'error');
+                        return;
+                    }
+                    ressourceForm.reset();
+                    document.getElementById('ressourceModalLabel').textContent = 'Modifier une ressource';
+                    document.getElementById('ressource-form-errors').classList.add('d-none');
+                    
+                    document.getElementById('ressourceId').value = data.id;
+                    document.getElementById('ressourceModuleId').value = currentModuleId;
+                    document.getElementById('ressourceTitle').value = data.title;
+                    // Les champs file et url sont gérés différemment
+                    document.getElementById('ressourceUrl').value = data.url || '';
+                    
+                    ressourceModal.show();
+                });
+        }
+        if (e.target.classList.contains('delete-ressource-btn')) {
+            currentRessourceId = e.target.dataset.id;
+            deleteElementType = 'ressource';
+            deleteConfirmModal.show();
+        }
+    });
+
+    saveRessourceBtn.addEventListener('click', function () {
+        const formData = new FormData(ressourceForm);
+        const url = currentRessourceId 
+            ? `/courses/api/ressources/${currentRessourceId}/update/` 
+            : `/courses/api/modules/${currentModuleId}/ressources/create/`;
+        
+        fetch(url, {
+            method: 'POST',
+            headers: {
+                'X-CSRFToken': csrftoken
+            },
+            body: formData // FormData est utilisé directement pour les fichiers
+        })
+        .then(response => response.json())
+        .then(result => {
+            if (result.status === 'success') {
+                ressourceModal.hide();
+                upsertRessourceInList(result.ressource, currentModuleId);
+                showToast('Ressource sauvegardée avec succès !', 'success');
+            } else {
+                const errorDiv = document.getElementById('ressource-form-errors');
+                errorDiv.innerHTML = Object.values(result.errors).map(e => `<p>${e}</p>`).join('');
+                errorDiv.classList.remove('d-none');
+                showToast('Erreur lors de la sauvegarde de la ressource.', 'error');
+            }
+        });
+    });
+
+    // --- Gestion de la Suppression (Module/Ressource) ---
+    confirmDeleteBtn.addEventListener('click', function() {
+        let url = '';
+        if (deleteElementType === 'module') {
+            url = `/courses/api/modules/${currentModuleId}/delete/`;
+        } else if (deleteElementType === 'ressource') {
+            url = `/courses/api/ressources/${currentRessourceId}/delete/`;
+        }
+
+        fetch(url, {
+            method: 'POST',
+            headers: { 'X-CSRFToken': csrftoken }
+        })
+        .then(response => response.json())
+        .then(result => {
+            if (result.status === 'success') {
+                if (deleteElementType === 'module') {
+                    document.getElementById(`module-item-${currentModuleId}`).remove();
+                } else if (deleteElementType === 'ressource') {
+                    document.getElementById(`ressource-item-${currentRessourceId}`).remove();
+                }
+                deleteConfirmModal.hide();
+                showToast('Élément supprimé avec succès !', 'success');
+            } else {
+                showToast(result.message || 'Une erreur est survenue.', 'error');
+            }
+        });
+    });
+
+    studentTableBody.addEventListener('click', function (e) {
+        if (e.target.classList.contains('remove-student-btn')) {
+            const studentId = e.target.dataset.id;
+            if (confirm('Retirer cet étudiant du cours ?')) {
+                fetch(`/courses/api/courses/{{ course.id }}/students/${studentId}/remove/`, {
+                    method: 'POST',
+                    headers: { 'X-CSRFToken': csrftoken }
+                })
+                .then(response => response.json())
+                .then(result => {
+                    if (result.status === 'success') {
+                        document.getElementById(`student-row-${studentId}`).remove();
+                        showToast('Étudiant retiré avec succès !', 'success');
+                    } else {
+                        showToast(result.message || 'Erreur lors du retrait.', 'error');
+                    }
+                });
+            }
+        }
+    });
+
+    // Optionally, add your showToast function here if not already defined
+});
+</script>
+{% endblock %}

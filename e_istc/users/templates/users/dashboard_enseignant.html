@@ -1,0 +1,233 @@
+{% extends "base.html" %}
+
+{% block title %}Tableau de Bord Enseignant - E-ISTC{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+    <h2>Tableau de Bord Enseignant</h2>
+    <p>Bienvenue, {{ user.first_name }} !</p>
+
+    <div class="card mt-4">
+        <div class="card-header d-flex justify-content-between align-items-center">
+            Vos Cours
+            <button id="addCourseBtn" class="btn btn-primary btn-sm">Ajouter un cours</button>
+        </div>
+        <div class="card-body">
+            <table class="table table-striped table-hover">
+                <thead>
+                    <tr>
+                        <th>Titre</th>
+                        <th>Description</th>
+                        <th>Date de Création</th>
+                        <th>Actions</th>
+                    </tr>
+                </thead>
+                <tbody id="course-table-body">
+                    {% for course in courses %}
+                    <tr id="course-row-{{ course.id }}">
+                        <td>{{ course.title }}</td>
+                        <td>{{ course.description|truncatechars:100 }}</td>
+                        <td>{{ course.created_at|date:"d/m/Y" }}</td>
+                        <td>
+                            <a href="{% url 'administration:course_detail_page' course.id %}" class="btn btn-sm btn-info">Voir Détails</a>
+                            <button class="btn btn-sm btn-secondary edit-btn" data-id="{{ course.id }}">Modifier</button>
+                            <button class="btn btn-sm btn-danger delete-btn" data-id="{{ course.id }}">Supprimer</button>
+                        </td>
+                    </tr>
+                    {% empty %}
+                    <tr>
+                        <td colspan="4">Vous n'avez pas encore créé de cours.</td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+
+<!-- Modal pour Ajouter/Modifier Cours -->
+<div class="modal fade" id="courseModal" tabindex="-1" aria-labelledby="courseModalLabel" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="courseModalLabel">Ajouter un cours</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <form id="courseForm">
+                    <input type="hidden" id="courseId" name="courseId">
+                    <div id="form-errors" class="alert alert-danger d-none"></div>
+                    
+                    <div class="mb-3">
+                        <label for="title" class="form-label">Titre</label>
+                        <input type="text" class="form-control" id="title" name="title" required>
+                    </div>
+                    <div class="mb-3">
+                        <label for="description" class="form-label">Description</label>
+                        <textarea class="form-control" id="description" name="description" rows="4"></textarea>
+                    </div>
+                </form>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Annuler</button>
+                <button type="button" id="saveCourseBtn" class="btn btn-primary">Sauvegarder</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Modal de Confirmation de Suppression -->
+<div class="modal fade" id="deleteConfirmModal" tabindex="-1" aria-hidden="true">
+  <div class="modal-dialog">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h5 class="modal-title">Confirmer la suppression</h5>
+        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+      </div>
+      <div class="modal-body">
+        <p>Êtes-vous sûr de vouloir supprimer ce cours ? Cette action est irréversible.</p>
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Annuler</button>
+        <button type="button" id="confirmDeleteBtn" class="btn btn-danger">Supprimer</button>
+      </div>
+    </div>
+  </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+document.addEventListener('DOMContentLoaded', function () {
+    const courseModal = new bootstrap.Modal(document.getElementById('courseModal'));
+    const deleteModal = new bootstrap.Modal(document.getElementById('deleteConfirmModal'));
+    const courseForm = document.getElementById('courseForm');
+    const addCourseBtn = document.getElementById('addCourseBtn');
+    const saveCourseBtn = document.getElementById('saveCourseBtn');
+    const courseTableBody = document.getElementById('course-table-body');
+    let currentCourseId = null;
+    const loggedInUserId = {{ user.id|default:"null" }};
+
+    function getCookie(name) {
+        let cookieValue = null;
+        if (document.cookie && document.cookie !== '') {
+            const cookies = document.cookie.split(';');
+            for (let i = 0; i < cookies.length; i++) {
+                const cookie = cookies[i].trim();
+                if (cookie.substring(0, name.length + 1) === (name + '=')) {
+                    cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
+                    break;
+                }
+            }
+        }
+        return cookieValue;
+    }
+    const csrftoken = getCookie('csrftoken');
+
+    function upsertCourseInTable(course) {
+        let row = document.getElementById(`course-row-${course.id}`);
+        const newRowHtml = `
+            <td>${course.title}</td>
+            <td>${course.description.substring(0, 100)}</td>
+            <td>${course.created_at}</td>
+            <td>
+                <a href="/administration/cours/${course.id}/" class="btn btn-sm btn-info">Voir Détails</a>
+                <button class="btn btn-sm btn-secondary edit-btn" data-id="${course.id}">Modifier</button>
+                <button class="btn btn-sm btn-danger delete-btn" data-id="${course.id}">Supprimer</button>
+            </td>
+        `;
+        if (row) {
+            row.innerHTML = newRowHtml;
+        } else {
+            row = document.createElement('tr');
+            row.id = `course-row-${course.id}`;
+            row.innerHTML = newRowHtml;
+            courseTableBody.appendChild(row);
+        }
+    }
+
+    addCourseBtn.addEventListener('click', function () {
+        currentCourseId = null;
+        courseForm.reset();
+        document.getElementById('courseModalLabel').textContent = 'Ajouter un cours';
+        document.getElementById('form-errors').classList.add('d-none');
+        courseModal.show();
+    });
+
+    courseTableBody.addEventListener('click', function (e) {
+        if (e.target.classList.contains('edit-btn')) {
+            currentCourseId = e.target.dataset.id;
+            fetch(`/comptes/api/teacher/courses/${currentCourseId}/`)
+                .then(response => response.json())
+                .then(data => {
+                    if (data.error) {
+                        alert(data.error);
+                        return;
+                    }
+                    courseForm.reset();
+                    document.getElementById('courseModalLabel').textContent = 'Modifier un cours';
+                    document.getElementById('form-errors').classList.add('d-none');
+                    
+                    document.getElementById('courseId').value = data.id;
+                    document.getElementById('title').value = data.title;
+                    document.getElementById('description').value = data.description;
+                    
+                    courseModal.show();
+                });
+        }
+        if (e.target.classList.contains('delete-btn')) {
+            currentCourseId = e.target.dataset.id;
+            deleteModal.show();
+        }
+    });
+
+    saveCourseBtn.addEventListener('click', function () {
+        console.log('Bouton Sauvegarder cliqué');
+        const formData = new FormData(courseForm);
+        const data = {
+            title: formData.get('title'),
+            description: formData.get('description'),
+            // L'enseignant est automatiquement l'utilisateur connecté
+            teacher: loggedInUserId
+        };
+        const url = currentCourseId ? `/comptes/api/teacher/courses/${currentCourseId}/update/` : '/comptes/api/teacher/courses/create/';
+        
+        fetch(url, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'X-CSRFToken': csrftoken
+            },
+            body: JSON.stringify(data)
+        })
+        .then(response => response.json())
+        .then(result => {
+            if (result.status === 'success') {
+                courseModal.hide();
+                upsertCourseInTable(result.course);
+            } else {
+                const errorDiv = document.getElementById('form-errors');
+                errorDiv.innerHTML = Object.values(result.errors).map(e => `<p>${e}</p>`).join('');
+                errorDiv.classList.remove('d-none');
+            }
+        });
+    });
+
+    document.getElementById('confirmDeleteBtn').addEventListener('click', function() {
+        fetch(`/comptes/api/teacher/courses/${currentCourseId}/delete/`, {
+            method: 'POST',
+            headers: { 'X-CSRFToken': csrftoken }
+        })
+        .then(response => response.json())
+        .then(result => {
+            if (result.status === 'success') {
+                document.getElementById(`course-row-${currentCourseId}`).remove();
+                deleteModal.hide();
+            } else {
+                alert(result.message || 'Une erreur est survenue.');
+            }
+        });
+    });
+});
+</script>
+{% endblock %}

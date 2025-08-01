@@ -1,0 +1,132 @@
+{% extends "base.html" %}
+{% load static %}
+
+{% block title %}Connexion - E-ISTC{% endblock %}
+
+{% block extra_css %}
+<style>
+    body {
+        background: linear-gradient(to right, #0D47A1, #1976D2);
+        height: 100vh;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+    }
+    .login-container {
+        max-width: 450px;
+        width: 100%;
+    }
+    .card {
+        border: none;
+        border-radius: 1rem;
+        box-shadow: 0 1rem 3rem rgba(0,0,0,.175)!important;
+    }
+    .card-body {
+        padding: 2.5rem;
+    }
+    .logo-container {
+        text-align: center;
+        margin-bottom: 1.5rem;
+    }
+    .logo-container svg {
+        width: 80px;
+        height: 80px;
+        fill: var(--bs-primary);
+    }
+    .form-control {
+        border-radius: 50rem;
+        padding: 1rem;
+    }
+    .btn-primary {
+        border-radius: 50rem;
+        padding: 0.75rem 1.5rem;
+        font-weight: bold;
+        letter-spacing: 0.05rem;
+        transition: all 0.2s;
+    }
+    .form-check-label {
+        font-size: 0.9rem;
+    }
+    .forgot-password {
+        font-size: 0.9rem;
+        text-align: right;
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="login-container">
+    <div class="card">
+        <div class="card-body">
+            <div class="logo-container">
+                <!-- Placeholder pour le logo de l'ISTC -->
+                <svg viewBox="0 0 100 100" xmlns="http://www.w3.org/2000/svg">
+                    <circle cx="50" cy="50" r="45" stroke="currentColor" stroke-width="5" fill="none" />
+                    <text x="50" y="55" font-family="Arial, sans-serif" font-size="20" text-anchor="middle" fill="currentColor">ISTC</text>
+                </svg>
+            </div>
+            <h4 class="card-title text-center mb-4">Bienvenue sur E-ISTC</h4>
+
+            {% if form.non_field_errors %}
+                <div class="alert alert-danger text-center p-2">
+                    {% for error in form.non_field_errors %}
+                        {{ error }}
+                    {% endfor %}
+                </div>
+            {% endif %}
+
+            <form method="post" id="loginForm">
+                {% csrf_token %}
+                <div class="mb-3">
+                    <input type="text" name="username" class="form-control" id="id_username" placeholder="Matricule ou Nom d'utilisateur" required>
+                </div>
+                <div class="mb-3">
+                    <input type="password" name="password" class="form-control" id="id_password" placeholder="Mot de passe" required>
+                </div>
+
+                <div class="d-flex justify-content-between align-items-center mb-3">
+                    <div class="form-check">
+                        <input type="checkbox" class="form-check-input" id="rememberMe">
+                        <label class="form-check-label" for="rememberMe">Se souvenir de moi</label>
+                    </div>
+                    <div class="forgot-password">
+                        <a href="{% url 'users:password_reset' %}">Mot de passe oublié ?</a>
+                    </div>
+                </div>
+
+                <button type="submit" class="btn btn-primary w-100">
+                    <span class="spinner-border spinner-border-sm d-none" role="status" aria-hidden="true"></span>
+                    Connexion
+                </button>
+            </form>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    const loginForm = document.getElementById('loginForm');
+    const submitButton = loginForm.querySelector('button[type="submit"]');
+    const spinner = submitButton.querySelector('.spinner-border');
+
+    loginForm.addEventListener('submit', function(e) {
+        // Validation simple
+        const username = document.getElementById('id_username').value.trim();
+        const password = document.getElementById('id_password').value.trim();
+
+        if (username === '' || password === '') {
+            e.preventDefault();
+            // On pourrait afficher une alerte plus élégante ici
+            alert('Veuillez remplir tous les champs.');
+            return;
+        }
+
+        // Afficher le spinner
+        spinner.classList.remove('d-none');
+        submitButton.disabled = true;
+    });
+});
+</script>
+{% endblock %}

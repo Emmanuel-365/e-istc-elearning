@@ -1,0 +1,170 @@
+from django.shortcuts import render, redirect
+from django.urls import reverse_lazy
+from django.contrib.auth.decorators import login_required
+from django.http import JsonResponse
+from django.views.decorators.http import require_POST
+from .decorators import role_required
+from .models import User
+from django.contrib.auth.views import LoginView, PasswordResetView, PasswordResetConfirmView
+from django.contrib.auth.forms import AuthenticationForm
+from courses.models import Course
+from courses.forms import CourseForm
+import json
+
+class CustomAuthenticationForm(AuthenticationForm):
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        self.fields['username'].widget.attrs.update({'placeholder': "Matricule ou Nom d'utilisateur"})
+        self.fields['password'].widget.attrs.update({'placeholder': 'Mot de passe'})
+
+class CustomLoginView(LoginView):
+    template_name = 'users/login.html'
+    authentication_form = CustomAuthenticationForm
+
+    def form_valid(self, form):
+        remember_me = self.request.POST.get('remember_me')
+        if not remember_me:
+            self.request.session.set_expiry(0) # Session expire à la fermeture du navigateur
+        return super().form_valid(form)
+
+class CustomPasswordResetView(PasswordResetView):
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        context['password_reset_confirm_url'] = 'users:password_reset_confirm'
+        return context
+
+    def get_success_url(self):
+        return reverse_lazy('users:password_reset_done')
+
+class CustomPasswordResetConfirmView(PasswordResetConfirmView):
+    def get_success_url(self):
+        return reverse_lazy('users:password_reset_complete')
+
+@login_required
+def home(request):
+    if request.user.role == User.Role.ETUDIANT:
+        return redirect('users:etudiant_dashboard')
+    elif request.user.role == User.Role.ENSEIGNANT:
+        return redirect('users:enseignant_dashboard')
+    elif request.user.is_staff:
+        return redirect('/admin/')
+    else:
+        # Fallback, au cas où
+        return redirect('users:login')
+
+@login_required
+@role_required(User.Role.ETUDIANT)
+def etudiant_dashboard(request):
+    courses = Course.objects.all().order_by('-created_at')
+    return render(request, 'users/dashboard_etudiant.html', {'courses': courses})
+
+@login_required
+@role_required(User.Role.ENSEIGNANT)
+def enseignant_dashboard(request):
+    courses = Course.objects.filter(teacher=request.user).order_by('-created_at')
+    return render(request, 'users/dashboard_enseignant.html', {'courses': courses})
+
+# API pour les cours (enseignants)
+
+@login_required
+@role_required(User.Role.ENSEIGNANT)
+@require_POST
+def create_course_teacher(request):
+    data = json.loads(request.body)
+    data['teacher'] = request.user.id # Assigne l'enseignant connecté
+    form = CourseForm(data)
+    if form.is_valid():
+        course = form.save()
+        course_data = {
+            'id': course.id,
+            'title': course.title,
+            'description': course.description,
+            'created_at': course.created_at.strftime('%d/%m/%Y')
+        }
+        return JsonResponse({'status': 'success', 'course': course_data})
+    else:
+        return JsonResponse({'status': 'error', 'errors': form.errors}, status=400)
+
+@login_required
+@role_required(User.Role.ENSEIGNANT)
+def course_detail_teacher(request, course_id):
+    try:
+        course = Course.objects.get(pk=course_id, teacher=request.user)
+        data = {
+            'id': course.id,
+            'title': course.title,
+            'description': course.description,
+        }
+        return JsonResponse(data)
+    except Course.DoesNotExist:
+        return JsonResponse({'error': 'Cours non trouvé ou vous n\'êtes pas l\'enseignant de ce cours.'}, status=404)
+
+@login_required
+@role_required(User.Role.ENSEIGNANT)
+@require_POST
+def update_course_teacher(request, course_id):
+    try:
+        course = Course.objects.get(pk=course_id, teacher=request.user)
+        data = json.loads(request.body)
+        form = CourseForm(data, instance=course)
+        if form.is_valid():
+            course = form.save()
+            course_data = {
+                'id': course.id,
+                'title': course.title,
+                'description': course.description,
+                'created_at': course.created_at.strftime('%d/%m/%Y')
+            }
+            return JsonResponse({'status': 'success', 'course': course_data})
+        else:
+            return JsonResponse({'status': 'error', 'errors': form.errors}, status=400)
+    except Course.DoesNotExist:
+        return JsonResponse({'status': 'error', 'message': 'Cours non trouvé ou vous n\'êtes pas l\'enseignant de ce cours.'}, status=404)
+
+@login_required
+@role_required(User.Role.ENSEIGNANT)
+@require_POST
+def delete_course_teacher(request, course_id):
+    try:
+        course = Course.objects.get(pk=course_id, teacher=request.user)
+        course.delete()
+        return JsonResponse({'status': 'success'})
+    except Course.DoesNotExist:
+        return JsonResponse({'status': 'error', 'message': 'Cours non trouvé ou vous n\'êtes pas l\'enseignant de ce cours.'}, status=404)
+
+
+@login_required
+@role_required(User.Role.ETUDIANT)
+def student_course_detail(request, course_id):
+    from django.core.exceptions import PermissionDenied
+    from django.http import Http404
+    try:
+        course = Course.objects.get(pk=course_id)
+        if not request.user.courses.filter(pk=course_id).exists():
+            raise PermissionDenied("Vous n'êtes pas inscrit à ce cours.")
+        return render(request, 'users/course_detail_student.html', {'course': course})
+    except Course.DoesNotExist:
+        raise Http404("Cours non trouvé.")
+    except PermissionDenied as e:
+        return render(request, '403.html', {'message': str(e)}, status=403)
+
+@login_required
+@require_POST
+def enroll_course(request, course_id):
+    try:
+        course = Course.objects.get(pk=course_id)
+        request.user.courses.add(course)
+        return JsonResponse({'status': 'success', 'message': 'Inscrit au cours avec succès.'})
+    except Course.DoesNotExist:
+        return JsonResponse({'status': 'error', 'message': 'Cours non trouvé.'}, status=404)
+
+@login_required
+@require_POST
+def unenroll_course(request, course_id):
+    try:
+        course = Course.objects.get(pk=course_id)
+        request.user.courses.remove(course)
+        return JsonResponse({'status': 'success', 'message': 'Désinscrit du cours avec succès.'})
+    except Course.DoesNotExist:
+        return JsonResponse({'status': 'error', 'message': 'Cours non trouvé.'}, status=404)
+
