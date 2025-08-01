@@ -10,6 +10,7 @@ urlpatterns = [
     path('dashboard/etudiant/', views.etudiant_dashboard, name='etudiant_dashboard'),
     path('dashboard/enseignant/', views.enseignant_dashboard, name='enseignant_dashboard'),
     path('courses/<int:course_id>/', views.student_course_detail, name='student_course_detail'),
+    path('activity/<int:activity_id>/submit/', views.submit_assignment, name='submit_assignment'),
     path('password_reset/', views.CustomPasswordResetView.as_view(template_name='users/registration/password_reset_form.html'), name='password_reset'),
     path('password_reset/done/', auth_views.PasswordResetDoneView.as_view(template_name='users/registration/password_reset_done.html'), name='password_reset_done'),
     path('reset/<uidb64>/<token>/', views.CustomPasswordResetConfirmView.as_view(template_name='users/registration/password_reset_confirm.html'), name='password_reset_confirm'),

@@ -1,5 +1,5 @@
 from django import forms
-from .models import Activite, Question, Choix
+from .models import Activite, Question, Choix, Soumission
 
 class ActiviteForm(forms.ModelForm):
     class Meta:
@@ -15,3 +15,8 @@ class ChoixForm(forms.ModelForm):
     class Meta:
         model = Choix
         fields = ['texte', 'est_correct']
+
+class SoumissionForm(forms.ModelForm):
+    class Meta:
+        model = Soumission
+        fields = ['fichier']

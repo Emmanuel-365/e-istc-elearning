@@ -9,6 +9,8 @@ from django.contrib.auth.views import LoginView, PasswordResetView, PasswordRese
 from django.contrib.auth.forms import AuthenticationForm
 from courses.models import Course
 from courses.forms import CourseForm
+from evaluations.models import Activite, Soumission
+from evaluations.forms import SoumissionForm
 import json
 
 class CustomAuthenticationForm(AuthenticationForm):
@@ -142,7 +144,19 @@ def student_course_detail(request, course_id):
         course = Course.objects.get(pk=course_id)
         if not request.user.courses.filter(pk=course_id).exists():
             raise PermissionDenied("Vous n'êtes pas inscrit à ce cours.")
-        return render(request, 'users/course_detail_student.html', {'course': course})
+        activites = course.activites.all().order_by('due_date')
+        # Récupérer les ID des activités déjà soumises par l'étudiant
+        submitted_activities_ids = Soumission.objects.filter(
+            etudiant=request.user,
+            activite__in=activites
+        ).values_list('activite_id', flat=True)
+
+        context = {
+            'course': course,
+            'activites': activites,
+            'submitted_activities_ids': submitted_activities_ids
+        }
+        return render(request, 'users/course_detail_student.html', context)
     except Course.DoesNotExist:
         raise Http404("Cours non trouvé.")
     except PermissionDenied as e:
@@ -167,4 +181,26 @@ def unenroll_course(request, course_id):
         return JsonResponse({'status': 'success', 'message': 'Désinscrit du cours avec succès.'})
     except Course.DoesNotExist:
         return JsonResponse({'status': 'error', 'message': 'Cours non trouvé.'}, status=404)
+
+@login_required
+@role_required(User.Role.ETUDIANT)
+def submit_assignment(request, activity_id):
+    activite = Activite.objects.get(pk=activity_id)
+    # Vérifier si une soumission existe déjà
+    if Soumission.objects.filter(activite=activite, etudiant=request.user).exists():
+        # On pourrait ajouter un message ici avec le framework de messages de Django
+        return redirect('users:student_course_detail', course_id=activite.course.id)
+
+    if request.method == 'POST':
+        form = SoumissionForm(request.POST, request.FILES)
+        if form.is_valid():
+            soumission = form.save(commit=False)
+            soumission.activite = activite
+            soumission.etudiant = request.user
+            soumission.save()
+            return redirect('users:student_course_detail', course_id=activite.course.id)
+    else:
+        form = SoumissionForm()
+    return render(request, 'users/submit_assignment.html', {'form': form, 'activite': activite})
+
 

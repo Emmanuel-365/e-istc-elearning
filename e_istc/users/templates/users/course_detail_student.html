@@ -59,5 +59,29 @@
         <p>Aucun module pour ce cours pour le moment.</p>
     {% endif %}
 
+    <h3 class="mt-4">Évaluations</h3>
+    <div class="list-group">
+        {% for activite in activites %}
+            <div class="list-group-item list-group-item-action">
+                <div class="d-flex w-100 justify-content-between">
+                    <h5 class="mb-1">{{ activite.title }}</h5>
+                    <small>Date limite : {{ activite.due_date|date:"d/m/Y H:i" }}</small>
+                </div>
+                <p class="mb-1">{{ activite.description }}</p>
+                {% if activite.activity_type == 'DEVOIR' %}
+                    {% if activite.id in submitted_activities_ids %}
+                        <button class="btn btn-secondary btn-sm" disabled>Déjà soumis</button>
+                    {% else %}
+                        <a href="{% url 'users:submit_assignment' activite.id %}" class="btn btn-primary btn-sm">Soumettre le devoir</a>
+                    {% endif %}
+                {% elif activite.activity_type == 'QUIZ' %}
+                    <a href="#" class="btn btn-success btn-sm">Commencer le Quiz</a>
+                {% endif %}
+            </div>
+        {% empty %}
+            <p>Aucune évaluation pour ce cours pour le moment.</p>
+        {% endfor %}
+    </div>
+
 </div>
 {% endblock %}
