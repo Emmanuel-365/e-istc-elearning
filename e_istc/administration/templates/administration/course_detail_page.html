@@ -85,6 +85,9 @@
                         <small>Date limite: {{ activite.due_date|date:"d/m/Y H:i" }}</small>
                     </div>
                     <div>
+                        {% if activite.activity_type == 'QUIZ' %}
+                            <button class="btn btn-sm btn-info manage-questions-btn" data-id="{{ activite.id }}">Gérer les questions</button>
+                        {% endif %}
                         <button class="btn btn-sm btn-secondary edit-evaluation-btn" data-id="{{ activite.id }}">Modifier</button>
                         <button class="btn btn-sm btn-danger delete-evaluation-btn" data-id="{{ activite.id }}">Supprimer</button>
                     </div>
@@ -260,6 +263,57 @@
         </div>
     </div>
 
+    <!-- Modal pour Gérer les Questions d'un Quiz -->
+    <div class="modal fade" id="questionsModal" tabindex="-1" aria-labelledby="questionsModalLabel" aria-hidden="true">
+        <div class="modal-dialog modal-xl">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="questionsModalLabel">Gérer les Questions</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body">
+                    <div class="row">
+                        <div class="col-md-5">
+                            <h5>Ajouter/Modifier une Question</h5>
+                            <form id="questionForm">
+                                <input type="hidden" id="questionId" name="questionId">
+                                <input type="hidden" id="quizId" name="quizId">
+                                <div id="question-form-errors" class="alert alert-danger d-none"></div>
+                                <div class="mb-3">
+                                    <label for="questionIntitule" class="form-label">Intitulé de la question</label>
+                                    <textarea class="form-control" id="questionIntitule" name="intitule" rows="3" required></textarea>
+                                </div>
+                                <div class="mb-3">
+                                    <label for="questionType" class="form-label">Type de question</label>
+                                    <select class="form-select" id="questionType" name="type_question">
+                                        <option value="UNIQUE">Choix Unique</option>
+                                        <option value="MULTIPLE">Choix Multiple</option>
+                                    </select>
+                                </div>
+                                <hr>
+                                <h6>Choix de réponse</h6>
+                                <div id="choices-container">
+                                    <!-- Les choix seront ajoutés ici par JS -->
+                                </div>
+                                <button type="button" id="addChoiceBtn" class="btn btn-sm btn-success mt-2">Ajouter un choix</button>
+                                <div class="mt-3">
+                                    <button type="submit" id="saveQuestionBtn" class="btn btn-primary">Sauvegarder la question</button>
+                                    <button type="button" id="clearQuestionFormBtn" class="btn btn-secondary">Nouvelle Question</button>
+                                </div>
+                            </form>
+                        </div>
+                        <div class="col-md-7">
+                            <h5>Questions du Quiz</h5>
+                            <ul class="list-group" id="question-list-in-modal">
+                                <!-- La liste des questions sera chargée ici -->
+                            </ul>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
 {% endblock %}
 
 {% block extra_js %}
@@ -271,6 +325,7 @@ document.addEventListener('DOMContentLoaded', function () {
     const ressourceModal = new bootstrap.Modal(document.getElementById('ressourceModal'));
     const deleteConfirmModal = new bootstrap.Modal(document.getElementById('deleteConfirmModal'));
     const evaluationModal = new bootstrap.Modal(document.getElementById('evaluationModal'));
+    const questionsModal = new bootstrap.Modal(document.getElementById('questionsModal'));
 
     const moduleForm = document.getElementById('moduleForm');
     const ressourceForm = document.getElementById('ressourceForm');
@@ -356,6 +411,7 @@ document.addEventListener('DOMContentLoaded', function () {
                 <small>Date limite: ${new Date(activite.due_date).toLocaleString()}</small>
             </div>
             <div>
+                ${activite.activity_type === 'Quiz' ? `<button class="btn btn-sm btn-info manage-questions-btn" data-id="${activite.id}">Gérer les questions</button>` : ''}
                 <button class="btn btn-sm btn-secondary edit-evaluation-btn" data-id="${activite.id}">Modifier</button>
                 <button class="btn btn-sm btn-danger delete-evaluation-btn" data-id="${activite.id}">Supprimer</button>
             </div>
@@ -399,6 +455,15 @@ document.addEventListener('DOMContentLoaded', function () {
             currentEvaluationId = e.target.dataset.id;
             deleteElementType = 'evaluation';
             deleteConfirmModal.show();
+        }
+    });
+
+    evaluationList.addEventListener('click', function(e) {
+        if (e.target.classList.contains('manage-questions-btn')) {
+            const quizId = e.target.dataset.id;
+            document.getElementById('quizId').value = quizId;
+            loadQuestionsForQuiz(quizId);
+            questionsModal.show();
         }
     });
 
@@ -648,6 +713,154 @@ document.addEventListener('DOMContentLoaded', function () {
     });
 
     // Optionally, add your showToast function here if not already defined
+
+    // --- Gestion des Questions de Quiz ---
+    const questionForm = document.getElementById('questionForm');
+    const choicesContainer = document.getElementById('choices-container');
+    const questionListInModal = document.getElementById('question-list-in-modal');
+
+    function loadQuestionsForQuiz(quizId) {
+        questionListInModal.innerHTML = '<li>Chargement...</li>';
+        fetch(`/evaluations/api/activities/${quizId}/questions/`)
+            .then(response => response.json())
+            .then(data => {
+                questionListInModal.innerHTML = '';
+                if (data.questions && data.questions.length > 0) {
+                    data.questions.forEach(question => {
+                        const questionItem = document.createElement('li');
+                        questionItem.className = 'list-group-item d-flex justify-content-between align-items-center';
+                        questionItem.innerHTML = `
+                            <span>${question.intitule}</span>
+                            <div>
+                                <button class="btn btn-sm btn-secondary edit-question-btn" data-id="${question.id}">Modifier</button>
+                                <button class="btn btn-sm btn-danger delete-question-btn" data-id="${question.id}">Supprimer</button>
+                            </div>
+                        `;
+                        questionListInModal.appendChild(questionItem);
+                    });
+                } else {
+                    questionListInModal.innerHTML = '<li>Aucune question pour ce quiz.</li>';
+                }
+            });
+    }
+
+    document.getElementById('addChoiceBtn').addEventListener('click', function() {
+        const choiceIndex = choicesContainer.children.length;
+        const choiceHtml = `
+            <div class="input-group mb-2">
+                <input type="text" class="form-control" name="choice_text_${choiceIndex}" placeholder="Texte de la réponse" required>
+                <div class="input-group-text">
+                    <input class="form-check-input mt-0" type="checkbox" name="choice_correct_${choiceIndex}">
+                </div>
+                <button type="button" class="btn btn-outline-danger remove-choice-btn">X</button>
+            </div>
+        `;
+        choicesContainer.insertAdjacentHTML('beforeend', choiceHtml);
+    });
+
+    choicesContainer.addEventListener('click', function(e) {
+        if (e.target.classList.contains('remove-choice-btn')) {
+            e.target.closest('.input-group').remove();
+        }
+    });
+
+    questionForm.addEventListener('submit', function(e) {
+        e.preventDefault();
+        const formData = new FormData(questionForm);
+        const quizId = formData.get('quizId');
+        const questionId = formData.get('questionId');
+        const url = questionId 
+            ? `/evaluations/api/questions/${questionId}/update/`
+            : `/evaluations/api/activities/${quizId}/questions/create/`;
+
+        const data = {
+            intitule: formData.get('intitule'),
+            type_question: formData.get('type_question'),
+            choices: []
+        };
+
+        let i = 0;
+        while(formData.has(`choice_text_${i}`)) {
+            data.choices.push({
+                text: formData.get(`choice_text_${i}`),
+                is_correct: formData.has(`choice_correct_${i}`)
+            });
+            i++;
+        }
+
+        fetch(url, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'X-CSRFToken': csrftoken
+            },
+            body: JSON.stringify(data)
+        })
+        .then(response => response.json())
+        .then(result => {
+            if (result.status === 'success') {
+                showToast('Question sauvegardée !', 'success');
+                questionForm.reset();
+                choicesContainer.innerHTML = '';
+                document.getElementById('questionId').value = '';
+                loadQuestionsForQuiz(quizId);
+            } else {
+                const errorDiv = document.getElementById('question-form-errors');
+                errorDiv.innerHTML = Object.values(result.errors).map(e => `<p>${e}</p>`).join('');
+                errorDiv.classList.remove('d-none');
+            }
+        });
+    });
+
+    document.getElementById('clearQuestionFormBtn').addEventListener('click', function() {
+        questionForm.reset();
+        choicesContainer.innerHTML = '';
+        document.getElementById('questionId').value = '';
+    });
+
+    questionListInModal.addEventListener('click', function(e) {
+        const questionId = e.target.dataset.id;
+        if (e.target.classList.contains('edit-question-btn')) {
+            fetch(`/evaluations/api/questions/${questionId}/`)
+                .then(response => response.json())
+                .then(data => {
+                    questionForm.reset();
+                    choicesContainer.innerHTML = '';
+                    document.getElementById('questionId').value = data.id;
+                    document.getElementById('questionIntitule').value = data.intitule;
+                    document.getElementById('questionType').value = data.type_question;
+                    data.choix.forEach((choice, index) => {
+                        const choiceHtml = `
+                            <div class="input-group mb-2">
+                                <input type="text" class="form-control" name="choice_text_${index}" value="${choice.texte}" required>
+                                <div class="input-group-text">
+                                    <input class="form-check-input mt-0" type="checkbox" name="choice_correct_${index}" ${choice.est_correct ? 'checked' : ''}>
+                                </div>
+                                <button type="button" class="btn btn-outline-danger remove-choice-btn">X</button>
+                            </div>
+                        `;
+                        choicesContainer.insertAdjacentHTML('beforeend', choiceHtml);
+                    });
+                });
+        }
+        if (e.target.classList.contains('delete-question-btn')) {
+            if (confirm('Supprimer cette question ?')) {
+                fetch(`/evaluations/api/questions/${questionId}/delete/`, {
+                    method: 'POST',
+                    headers: { 'X-CSRFToken': csrftoken }
+                })
+                .then(response => response.json())
+                .then(result => {
+                    if (result.status === 'success') {
+                        showToast('Question supprimée', 'success');
+                        loadQuestionsForQuiz(document.getElementById('quizId').value);
+                    } else {
+                        showToast(result.message || 'Erreur', 'error');
+                    }
+                });
+            }
+        }
+    });
 });
 </script>
 {% endblock %}
