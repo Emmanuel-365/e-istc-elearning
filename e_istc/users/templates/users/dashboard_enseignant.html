@@ -70,7 +70,10 @@
             </div>
             <div class="modal-footer">
                 <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Annuler</button>
-                <button type="button" id="saveCourseBtn" class="btn btn-primary">Sauvegarder</button>
+                <button type="button" id="saveCourseBtn" class="btn btn-primary">
+                    <span class="spinner-border spinner-border-sm d-none" role="status" aria-hidden="true"></span>
+                    Sauvegarder
+                </button>
             </div>
         </div>
     </div>
@@ -89,7 +92,10 @@
       </div>
       <div class="modal-footer">
         <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Annuler</button>
-        <button type="button" id="confirmDeleteBtn" class="btn btn-danger">Supprimer</button>
+        <button type="button" id="confirmDeleteBtn" class="btn btn-danger">
+                    <span class="spinner-border spinner-border-sm d-none" role="status" aria-hidden="true"></span>
+                    Supprimer
+                </button>
       </div>
     </div>
   </div>
@@ -182,6 +188,16 @@ document.addEventListener('DOMContentLoaded', function () {
     });
 
     saveCourseBtn.addEventListener('click', function () {
+        // Client-side validation
+        if (!courseForm.checkValidity()) {
+            courseForm.reportValidity();
+            return;
+        }
+
+        const spinner = saveCourseBtn.querySelector('.spinner-border');
+        spinner.classList.remove('d-none');
+        saveCourseBtn.disabled = true;
+
         console.log('Bouton Sauvegarder cliqué');
         const formData = new FormData(courseForm);
         const data = {
@@ -200,32 +216,54 @@ document.addEventListener('DOMContentLoaded', function () {
             },
             body: JSON.stringify(data)
         })
-        .then(response => response.json())
-        .then(result => {
-            if (result.status === 'success') {
-                courseModal.hide();
-                upsertCourseInTable(result.course);
-            } else {
-                const errorDiv = document.getElementById('form-errors');
-                errorDiv.innerHTML = Object.values(result.errors).map(e => `<p>${e}</p>`).join('');
-                errorDiv.classList.remove('d-none');
+        .then(response => {
+            if (!response.ok) {
+                // If response is not ok, it means there were errors, let Django messages handle it
+                return response.json().then(err => Promise.reject(err));
             }
+            return response.json();
+        })
+        .then(result => {
+            courseModal.hide();
+            upsertCourseInTable(result.course);
+        })
+        .catch(error => {
+            console.error('Error:', error);
+            // Django messages will handle the display of errors
+        })
+        .finally(() => {
+            spinner.classList.add('d-none');
+            saveCourseBtn.disabled = false;
         });
     });
 
     document.getElementById('confirmDeleteBtn').addEventListener('click', function() {
+        const spinner = confirmDeleteBtn.querySelector('.spinner-border');
+        spinner.classList.remove('d-none');
+        confirmDeleteBtn.disabled = true;
+
         fetch(`/comptes/api/teacher/courses/${currentCourseId}/delete/`, {
             method: 'POST',
             headers: { 'X-CSRFToken': csrftoken }
         })
-        .then(response => response.json())
-        .then(result => {
-            if (result.status === 'success') {
-                document.getElementById(`course-row-${currentCourseId}`).remove();
-                deleteModal.hide();
-            } else {
-                alert(result.message || 'Une erreur est survenue.');
+        .then(response => {
+            if (!response.ok) {
+                // If response is not ok, it means there were errors, let Django messages handle it
+                return response.json().then(err => Promise.reject(err));
             }
+            return response.json();
+        })
+        .then(result => {
+            document.getElementById(`course-row-${currentCourseId}`).remove();
+            deleteModal.hide();
+        })
+        .catch(error => {
+            console.error('Error:', error);
+            // Django messages will handle the display of errors
+        })
+        .finally(() => {
+            spinner.classList.add('d-none');
+            confirmDeleteBtn.disabled = false;
         });
     });
 });

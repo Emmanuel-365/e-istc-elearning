@@ -216,7 +216,10 @@
                 </div>
                 <div class="modal-footer">
                     <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Annuler</button>
-                    <button type="button" id="saveAnnonceBtn" class="btn btn-primary">Sauvegarder</button>
+                    <button type="button" id="saveAnnonceBtn" class="btn btn-primary">
+                    <span class="spinner-border spinner-border-sm d-none" role="status" aria-hidden="true"></span>
+                    Sauvegarder
+                </button>
                 </div>
             </div>
         </div>
@@ -251,7 +254,10 @@
                 </div>
                 <div class="modal-footer">
                     <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Annuler</button>
-                    <button type="button" id="saveModuleBtn" class="btn btn-primary">Sauvegarder</button>
+                    <button type="button" id="saveModuleBtn" class="btn btn-primary">
+                    <span class="spinner-border spinner-border-sm d-none" role="status" aria-hidden="true"></span>
+                    Sauvegarder
+                </button>
                 </div>
             </div>
         </div>
@@ -287,7 +293,10 @@
                 </div>
                 <div class="modal-footer">
                     <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Annuler</button>
-                    <button type="button" id="saveRessourceBtn" class="btn btn-primary">Sauvegarder</button>
+                    <button type="button" id="saveRessourceBtn" class="btn btn-primary">
+                    <span class="spinner-border spinner-border-sm d-none" role="status" aria-hidden="true"></span>
+                    Sauvegarder
+                </button>
                 </div>
             </div>
         </div>
@@ -306,7 +315,10 @@
                 </div>
                 <div class="modal-footer">
                     <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Annuler</button>
-                    <button type="button" id="confirmDeleteBtn" class="btn btn-danger">Supprimer</button>
+                    <button type="button" id="confirmDeleteBtn" class="btn btn-danger">
+                    <span class="spinner-border spinner-border-sm d-none" role="status" aria-hidden="true"></span>
+                    Supprimer
+                </button>
                 </div>
             </div>
         </div>
@@ -348,7 +360,10 @@
                 </div>
                 <div class="modal-footer">
                     <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Annuler</button>
-                    <button type="button" id="saveEvaluationBtn" class="btn btn-primary">Sauvegarder</button>
+                    <button type="button" id="saveEvaluationBtn" class="btn btn-primary">
+                    <span class="spinner-border spinner-border-sm d-none" role="status" aria-hidden="true"></span>
+                    Sauvegarder
+                </button>
                 </div>
             </div>
         </div>
@@ -388,7 +403,10 @@
                                 </div>
                                 <button type="button" id="addChoiceBtn" class="btn btn-sm btn-success mt-2">Ajouter un choix</button>
                                 <div class="mt-3">
-                                    <button type="submit" id="saveQuestionBtn" class="btn btn-primary">Sauvegarder la question</button>
+                                    <button type="submit" id="saveQuestionBtn" class="btn btn-primary">
+                    <span class="spinner-border spinner-border-sm d-none" role="status" aria-hidden="true"></span>
+                    Sauvegarder la question
+                </button>
                                     <button type="button" id="clearQuestionFormBtn" class="btn btn-secondary">Nouvelle Question</button>
                                 </div>
                             </form>
@@ -494,6 +512,16 @@ document.addEventListener('DOMContentLoaded', function () {
     });
 
     saveEvaluationBtn.addEventListener('click', function () {
+        // Client-side validation
+        if (!evaluationForm.checkValidity()) {
+            evaluationForm.reportValidity();
+            return;
+        }
+
+        const spinner = saveEvaluationBtn.querySelector('.spinner-border');
+        spinner.classList.remove('d-none');
+        saveEvaluationBtn.disabled = true;
+
         const formData = new FormData(evaluationForm);
         const data = Object.fromEntries(formData.entries());
         const url = currentEvaluationId
@@ -510,16 +538,18 @@ document.addEventListener('DOMContentLoaded', function () {
         })
         .then(response => response.json())
         .then(result => {
-            if (result.status === 'success') {
+            if (response.ok) { // Check for HTTP 200-299 status
                 evaluationModal.hide();
                 upsertEvaluationInList(result.activite);
-                showToast('Évaluation sauvegardée avec succès !', 'success');
             } else {
                 const errorDiv = document.getElementById('evaluation-form-errors');
                 errorDiv.innerHTML = Object.values(result.errors).map(e => `<p>${e}</p>`).join('');
                 errorDiv.classList.remove('d-none');
-                showToast('Erreur lors de la sauvegarde de l\'évaluation.', 'error');
             }
+        })
+        .finally(() => {
+            spinner.classList.add('d-none');
+            saveEvaluationBtn.disabled = false;
         });
     });
 
@@ -552,12 +582,17 @@ document.addEventListener('DOMContentLoaded', function () {
 
     evaluationList.addEventListener('click', function (e) {
         if (e.target.classList.contains('edit-evaluation-btn')) {
+            const clickedButton = e.target;
+            const originalButtonText = clickedButton.innerHTML;
+            clickedButton.innerHTML = '<span class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span>';
+            clickedButton.disabled = true;
+
             currentEvaluationId = e.target.dataset.id;
             fetch(`/evaluations/api/activities/${currentEvaluationId}/`)
                 .then(response => response.json())
                 .then(data => {
                     if (data.error) {
-                        showToast(data.error, 'error');
+                        // Django messages will handle the error display
                         return;
                     }
                     evaluationForm.reset();
@@ -571,6 +606,10 @@ document.addEventListener('DOMContentLoaded', function () {
                     document.getElementById('evaluationDueDate').value = data.due_date ? new Date(data.due_date).toISOString().slice(0, 16) : '';
                     
                     evaluationModal.show();
+                })
+                .finally(() => {
+                    clickedButton.innerHTML = originalButtonText;
+                    clickedButton.disabled = false;
                 });
         }
         if (e.target.classList.contains('delete-evaluation-btn')) {
@@ -659,6 +698,16 @@ document.addEventListener('DOMContentLoaded', function () {
     });
 
     saveModuleBtn.addEventListener('click', function () {
+        // Client-side validation
+        if (!moduleForm.checkValidity()) {
+            moduleForm.reportValidity();
+            return;
+        }
+
+        const spinner = saveModuleBtn.querySelector('.spinner-border');
+        spinner.classList.remove('d-none');
+        saveModuleBtn.disabled = true;
+
         const formData = new FormData(moduleForm);
         const data = Object.fromEntries(formData.entries());
         const url = currentModuleId 
@@ -675,27 +724,34 @@ document.addEventListener('DOMContentLoaded', function () {
         })
         .then(response => response.json())
         .then(result => {
-            if (result.status === 'success') {
+            if (response.ok) {
                 moduleModal.hide();
                 upsertModuleInList(result.module);
-                showToast('Module sauvegardé avec succès !', 'success');
             } else {
                 const errorDiv = document.getElementById('module-form-errors');
                 errorDiv.innerHTML = Object.values(result.errors).map(e => `<p>${e}</p>`).join('');
                 errorDiv.classList.remove('d-none');
-                showToast('Erreur lors de la sauvegarde du module.', 'error');
             }
+        })
+        .finally(() => {
+            spinner.classList.add('d-none');
+            saveModuleBtn.disabled = false;
         });
     });
 
     moduleList.addEventListener('click', function (e) {
         if (e.target.classList.contains('edit-module-btn')) {
+            const clickedButton = e.target;
+            const originalButtonText = clickedButton.innerHTML;
+            clickedButton.innerHTML = '<span class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span>';
+            clickedButton.disabled = true;
+
             currentModuleId = e.target.dataset.id;
             fetch(`/courses/api/modules/${currentModuleId}/`)
                 .then(response => response.json())
                 .then(data => {
                     if (data.error) {
-                        showToast(data.error, 'error');
+                        // Django messages will handle the error display
                         return;
                     }
                     moduleForm.reset();
@@ -708,6 +764,10 @@ document.addEventListener('DOMContentLoaded', function () {
                     document.getElementById('moduleOrder').value = data.order;
                     
                     moduleModal.show();
+                })
+                .finally(() => {
+                    clickedButton.innerHTML = originalButtonText;
+                    clickedButton.disabled = false;
                 });
         }
         if (e.target.classList.contains('delete-module-btn')) {
@@ -729,13 +789,18 @@ document.addEventListener('DOMContentLoaded', function () {
             ressourceModal.show();
         }
         if (e.target.classList.contains('edit-ressource-btn')) {
+            const clickedButton = e.target;
+            const originalButtonText = clickedButton.innerHTML;
+            clickedButton.innerHTML = '<span class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span>';
+            clickedButton.disabled = true;
+
             currentRessourceId = e.target.dataset.id;
             currentModuleId = e.target.dataset.moduleId; // Nécessaire pour upsert
             fetch(`/courses/api/ressources/${currentRessourceId}/`)
                 .then(response => response.json())
                 .then(data => {
                     if (data.error) {
-                        showToast(data.error, 'error');
+                        // Django messages will handle the error display
                         return;
                     }
                     ressourceForm.reset();
@@ -749,6 +814,10 @@ document.addEventListener('DOMContentLoaded', function () {
                     document.getElementById('ressourceUrl').value = data.url || '';
                     
                     ressourceModal.show();
+                })
+                .finally(() => {
+                    clickedButton.innerHTML = originalButtonText;
+                    clickedButton.disabled = false;
                 });
         }
         if (e.target.classList.contains('delete-ressource-btn')) {
@@ -759,6 +828,16 @@ document.addEventListener('DOMContentLoaded', function () {
     });
 
     saveRessourceBtn.addEventListener('click', function () {
+        // Client-side validation
+        if (!ressourceForm.checkValidity()) {
+            ressourceForm.reportValidity();
+            return;
+        }
+
+        const spinner = saveRessourceBtn.querySelector('.spinner-border');
+        spinner.classList.remove('d-none');
+        saveRessourceBtn.disabled = true;
+
         const formData = new FormData(ressourceForm);
         const url = currentRessourceId 
             ? `/courses/api/ressources/${currentRessourceId}/update/` 
@@ -773,21 +852,27 @@ document.addEventListener('DOMContentLoaded', function () {
         })
         .then(response => response.json())
         .then(result => {
-            if (result.status === 'success') {
+            if (response.ok) {
                 ressourceModal.hide();
                 upsertRessourceInList(result.ressource, currentModuleId);
-                showToast('Ressource sauvegardée avec succès !', 'success');
             } else {
                 const errorDiv = document.getElementById('ressource-form-errors');
                 errorDiv.innerHTML = Object.values(result.errors).map(e => `<p>${e}</p>`).join('');
                 errorDiv.classList.remove('d-none');
-                showToast('Erreur lors de la sauvegarde de la ressource.', 'error');
             }
+        })
+        .finally(() => {
+            spinner.classList.add('d-none');
+            saveRessourceBtn.disabled = false;
         });
     });
 
     // --- Gestion de la Suppression (Module/Ressource) ---
     confirmDeleteBtn.addEventListener('click', function() {
+        const spinner = confirmDeleteBtn.querySelector('.spinner-border');
+        spinner.classList.remove('d-none');
+        confirmDeleteBtn.disabled = true;
+
         let url = '';
         if (deleteElementType === 'module') {
             url = `/courses/api/modules/${currentModuleId}/delete/`;
@@ -805,7 +890,7 @@ document.addEventListener('DOMContentLoaded', function () {
         })
         .then(response => response.json())
         .then(result => {
-            if (result.status === 'success') {
+            if (response.ok) {
                 if (deleteElementType === 'module') {
                     document.getElementById(`module-item-${currentModuleId}`).remove();
                 } else if (deleteElementType === 'ressource') {
@@ -816,16 +901,20 @@ document.addEventListener('DOMContentLoaded', function () {
                     document.getElementById(`annonce-item-${currentAnnonceId}`).remove();
                 }
                 deleteConfirmModal.hide();
-                showToast('Élément supprimé avec succès !', 'success');
             } else {
-                showToast(result.message || 'Une erreur est survenue.', 'error');
+                // Django messages will handle the error display
             }
+        })
+        .finally(() => {
+            spinner.classList.add('d-none');
+            confirmDeleteBtn.disabled = false;
         });
     });
 
     studentTableBody.addEventListener('click', function (e) {
         if (e.target.classList.contains('remove-student-btn')) {
             const studentId = e.target.dataset.id;
+            // Using native confirm for now, will be replaced by a custom modal later if needed
             if (confirm('Retirer cet étudiant du cours ?')) {
                 fetch(`/courses/api/courses/{{ course.id }}/students/${studentId}/remove/`, {
                     method: 'POST',
@@ -833,11 +922,10 @@ document.addEventListener('DOMContentLoaded', function () {
                 })
                 .then(response => response.json())
                 .then(result => {
-                    if (result.status === 'success') {
+                    if (response.ok) {
                         document.getElementById(`student-row-${studentId}`).remove();
-                        showToast('Étudiant retiré avec succès !', 'success');
                     } else {
-                        showToast(result.message || 'Erreur lors du retrait.', 'error');
+                        // Django messages will handle the error display
                     }
                 });
             }
@@ -930,8 +1018,7 @@ document.addEventListener('DOMContentLoaded', function () {
         })
         .then(response => response.json())
         .then(result => {
-            if (result.status === 'success') {
-                showToast('Question sauvegardée !', 'success');
+            if (response.ok) {
                 questionForm.reset();
                 choicesContainer.innerHTML = '';
                 document.getElementById('questionId').value = '';
@@ -956,6 +1043,10 @@ document.addEventListener('DOMContentLoaded', function () {
             fetch(`/evaluations/api/questions/${questionId}/`)
                 .then(response => response.json())
                 .then(data => {
+                    if (data.error) {
+                        // Django messages will handle the error display
+                        return;
+                    }
                     questionForm.reset();
                     choicesContainer.innerHTML = '';
                     document.getElementById('questionId').value = data.id;
@@ -983,11 +1074,11 @@ document.addEventListener('DOMContentLoaded', function () {
                 })
                 .then(response => response.json())
                 .then(result => {
-                    if (result.status === 'success') {
-                        showToast('Question supprimée', 'success');
+                    if (response.ok) {
+                        // Django messages will handle the success display
                         loadQuestionsForQuiz(document.getElementById('quizId').value);
                     } else {
-                        showToast(result.message || 'Erreur', 'error');
+                        // Django messages will handle the error display
                     }
                 });
             }
@@ -1015,7 +1106,10 @@ document.addEventListener('DOMContentLoaded', function () {
                                 <div class="input-group mt-2">
                                     <span class="input-group-text">Note</span>
                                     <input type="number" step="0.1" class="form-control grade-input" data-submission-id="${submission.id}" value="${submission.note !== null ? submission.note : ''}">
-                                    <button class="btn btn-primary save-grade-btn" data-submission-id="${submission.id}">Enregistrer</button>
+                                    <button class="btn btn-primary save-grade-btn" data-submission-id="${submission.id}">
+                                        <span class="spinner-border spinner-border-sm d-none" role="status" aria-hidden="true"></span>
+                                        Enregistrer
+                                    </button>
                                 </div>
                             </div>
                         `;
@@ -1042,11 +1136,15 @@ document.addEventListener('DOMContentLoaded', function () {
             })
             .then(response => response.json())
             .then(result => {
-                if (result.status === 'success') {
-                    showToast('Note enregistrée avec succès !', 'success');
+                if (response.ok) {
+                    // Django messages will handle the success display
                 } else {
-                    showToast(result.message || 'Erreur lors de l\'enregistrement de la note.', 'error');
+                    // Django messages will handle the error display
                 }
+            })
+            .finally(() => {
+                spinner.classList.add('d-none');
+                clickedButton.disabled = false;
             });
         }
     });
@@ -1061,6 +1159,16 @@ document.addEventListener('DOMContentLoaded', function () {
     });
 
     saveAnnonceBtn.addEventListener('click', function () {
+        // Client-side validation
+        if (!annonceForm.checkValidity()) {
+            annonceForm.reportValidity();
+            return;
+        }
+
+        const spinner = saveAnnonceBtn.querySelector('.spinner-border');
+        spinner.classList.remove('d-none');
+        saveAnnonceBtn.disabled = true;
+
         const formData = new FormData(annonceForm);
         const data = Object.fromEntries(formData.entries());
         const url = currentAnnonceId
@@ -1077,16 +1185,18 @@ document.addEventListener('DOMContentLoaded', function () {
         })
         .then(response => response.json())
         .then(result => {
-            if (result.status === 'success') {
+            if (response.ok) {
                 annonceModal.hide();
                 upsertAnnonceInList(result.annonce);
-                showToast('Annonce sauvegardée avec succès !', 'success');
             } else {
                 const errorDiv = document.getElementById('annonce-form-errors');
                 errorDiv.innerHTML = Object.values(result.errors).map(e => `<p>${e}</p>`).join('');
                 errorDiv.classList.remove('d-none');
-                showToast('Erreur lors de la sauvegarde de l\'annonce.', 'error');
             }
+        })
+        .finally(() => {
+            spinner.classList.add('d-none');
+            saveAnnonceBtn.disabled = false;
         });
     });
 
@@ -1117,12 +1227,17 @@ document.addEventListener('DOMContentLoaded', function () {
 
     annonceList.addEventListener('click', function (e) {
         if (e.target.classList.contains('edit-annonce-btn')) {
+            const clickedButton = e.target;
+            const originalButtonText = clickedButton.innerHTML;
+            clickedButton.innerHTML = '<span class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span>';
+            clickedButton.disabled = true;
+
             currentAnnonceId = e.target.dataset.id;
             fetch(`/courses/api/annonces/${currentAnnonceId}/`)
                 .then(response => response.json())
                 .then(data => {
                     if (data.error) {
-                        showToast(data.error, 'error');
+                        // Django messages will handle the error display
                         return;
                     }
                     annonceForm.reset();
@@ -1134,6 +1249,10 @@ document.addEventListener('DOMContentLoaded', function () {
                     document.getElementById('annonceContenu').value = data.contenu;
                     
                     annonceModal.show();
+                })
+                .finally(() => {
+                    clickedButton.innerHTML = originalButtonText;
+                    clickedButton.disabled = false;
                 });
         }
         if (e.target.classList.contains('delete-annonce-btn')) {
@@ -1170,21 +1289,29 @@ document.addEventListener('DOMContentLoaded', function () {
 
     document.getElementById('enrollable-student-list').addEventListener('click', function(e) {
         if (e.target.classList.contains('enroll-now-btn')) {
+            const clickedButton = e.target;
+            const originalButtonText = clickedButton.innerHTML;
+            clickedButton.innerHTML = '<span class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span>';
+            clickedButton.disabled = true;
+
             const studentId = e.target.dataset.id;
             fetch(`/courses/api/courses/${courseId}/students/${studentId}/enroll/`, {
                 method: 'POST',
                 headers: { 'X-CSRFToken': csrftoken }
             })
             .then(response => response.json())
-            .then(result => {
-                if (result.status === 'success') {
-                    enrollStudentModal.hide();
-                    addStudentToTable(result.student);
-                    showToast('Étudiant inscrit avec succès !', 'success');
-                } else {
-                    showToast(result.message || 'Erreur lors de l\'inscription.', 'error');
-                }
-            });
+        .then(result => {
+            if (response.ok) {
+                enrollStudentModal.hide();
+                addStudentToTable(result.student);
+            } else {
+                // Django messages will handle the error display
+            }
+        })
+        .finally(() => {
+            clickedButton.innerHTML = originalButtonText;
+            clickedButton.disabled = false;
+        });
         }
     });
 

@@ -12,6 +12,7 @@ from courses.forms import CourseForm
 from evaluations.models import Activite, Soumission, Question, Choix, Tentative
 from evaluations.forms import SoumissionForm
 import json
+from django.contrib import messages
 
 class CustomAuthenticationForm(AuthenticationForm):
     def __init__(self, *args, **kwargs):
@@ -83,9 +84,11 @@ def create_course_teacher(request):
             'description': course.description,
             'created_at': course.created_at.strftime('%d/%m/%Y')
         }
-        return JsonResponse({'status': 'success', 'course': course_data})
+        messages.success(request, 'Cours créé avec succès !')
+        return JsonResponse({'course': course_data})
     else:
-        return JsonResponse({'status': 'error', 'errors': form.errors}, status=400)
+        messages.error(request, 'Erreur lors de la création du cours.')
+        return JsonResponse({'errors': form.errors}, status=400)
 
 @login_required
 @role_required(User.Role.ENSEIGNANT)
@@ -99,7 +102,8 @@ def course_detail_teacher(request, course_id):
         }
         return JsonResponse(data)
     except Course.DoesNotExist:
-        return JsonResponse({'error': 'Cours non trouvé ou vous n\'êtes pas l\'enseignant de ce cours.'}, status=404)
+        messages.error(request, 'Cours non trouvé ou vous n\'êtes pas l\'enseignant de ce cours.')
+        return JsonResponse({'message': 'Cours non trouvé ou vous n\'êtes pas l\'enseignant de ce cours.'}, status=404)
 
 @login_required
 @role_required(User.Role.ENSEIGNANT)
@@ -117,11 +121,14 @@ def update_course_teacher(request, course_id):
                 'description': course.description,
                 'created_at': course.created_at.strftime('%d/%m/%Y')
             }
-            return JsonResponse({'status': 'success', 'course': course_data})
+            messages.success(request, 'Cours mis à jour avec succès !')
+            return JsonResponse({'course': course_data})
         else:
-            return JsonResponse({'status': 'error', 'errors': form.errors}, status=400)
+            messages.error(request, 'Erreur lors de la mise à jour du cours.')
+            return JsonResponse({'errors': form.errors}, status=400)
     except Course.DoesNotExist:
-        return JsonResponse({'status': 'error', 'message': 'Cours non trouvé ou vous n\'êtes pas l\'enseignant de ce cours.'}, status=404)
+        messages.error(request, 'Cours non trouvé ou vous n\'êtes pas l\'enseignant de ce cours.')
+        return JsonResponse({'message': 'Cours non trouvé ou vous n\'êtes pas l\'enseignant de ce cours.'}, status=404)
 
 @login_required
 @role_required(User.Role.ENSEIGNANT)
@@ -130,9 +137,11 @@ def delete_course_teacher(request, course_id):
     try:
         course = Course.objects.get(pk=course_id, teacher=request.user)
         course.delete()
-        return JsonResponse({'status': 'success'})
+        messages.success(request, 'Cours supprimé avec succès !')
+        return JsonResponse({})
     except Course.DoesNotExist:
-        return JsonResponse({'status': 'error', 'message': 'Cours non trouvé ou vous n\'êtes pas l\'enseignant de ce cours.'}, status=404)
+        messages.error(request, 'Cours non trouvé ou vous n\'êtes pas l\'enseignant de ce cours.')
+        return JsonResponse({'message': 'Cours non trouvé ou vous n\'êtes pas l\'enseignant de ce cours.'}, status=404)
 
 
 @login_required
@@ -170,9 +179,11 @@ def enroll_course(request, course_id):
     try:
         course = Course.objects.get(pk=course_id)
         request.user.courses.add(course)
-        return JsonResponse({'status': 'success', 'message': 'Inscrit au cours avec succès.'})
+        messages.success(request, 'Inscrit au cours avec succès.')
+        return JsonResponse({})
     except Course.DoesNotExist:
-        return JsonResponse({'status': 'error', 'message': 'Cours non trouvé.'}, status=404)
+        messages.error(request, 'Cours non trouvé.')
+        return JsonResponse({'message': 'Cours non trouvé.'}, status=404)
 
 @login_required
 @require_POST
@@ -180,9 +191,11 @@ def unenroll_course(request, course_id):
     try:
         course = Course.objects.get(pk=course_id)
         request.user.courses.remove(course)
-        return JsonResponse({'status': 'success', 'message': 'Désinscrit du cours avec succès.'})
+        messages.success(request, 'Désinscrit du cours avec succès.')
+        return JsonResponse({})
     except Course.DoesNotExist:
-        return JsonResponse({'status': 'error', 'message': 'Cours non trouvé.'}, status=404)
+        messages.error(request, 'Cours non trouvé.')
+        return JsonResponse({'message': 'Cours non trouvé.'}, status=404)
 
 @login_required
 @role_required(User.Role.ETUDIANT)

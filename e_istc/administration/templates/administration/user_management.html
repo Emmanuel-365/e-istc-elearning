@@ -89,7 +89,10 @@
             </div>
             <div class="modal-footer">
                 <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Annuler</button>
-                <button type="button" id="saveUserBtn" class="btn btn-primary">Sauvegarder</button>
+                <button type="button" id="saveUserBtn" class="btn btn-primary">
+                    <span class="spinner-border spinner-border-sm d-none" role="status" aria-hidden="true"></span>
+                    Sauvegarder
+                </button>
             </div>
         </div>
     </div>
@@ -108,7 +111,10 @@
       </div>
       <div class="modal-footer">
         <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Annuler</button>
-        <button type="button" id="confirmDeleteBtn" class="btn btn-danger">Supprimer</button>
+        <button type="button" id="confirmDeleteBtn" class="btn btn-danger">
+                    <span class="spinner-border spinner-border-sm d-none" role="status" aria-hidden="true"></span>
+                    Supprimer
+                </button>
       </div>
     </div>
   </div>
@@ -199,7 +205,7 @@ document.addEventListener('DOMContentLoaded', function () {
                 .then(response => response.json())
                 .then(data => {
                     if (data.error) {
-                        showToast(data.error, 'error');
+                        // Django messages will handle the error display
                         return;
                     }
                     userForm.reset();
@@ -226,6 +232,16 @@ document.addEventListener('DOMContentLoaded', function () {
     });
 
     saveUserBtn.addEventListener('click', function () {
+        // Client-side validation
+        if (!userForm.checkValidity()) {
+            userForm.reportValidity();
+            return;
+        }
+
+        const spinner = saveUserBtn.querySelector('.spinner-border');
+        spinner.classList.remove('d-none');
+        saveUserBtn.disabled = true;
+
         const formData = new FormData(userForm);
         const data = Object.fromEntries(formData.entries());
         const url = currentUserId ? `/administration/api/users/${currentUserId}/update/` : '/administration/api/users/create/';
@@ -240,33 +256,42 @@ document.addEventListener('DOMContentLoaded', function () {
         })
         .then(response => response.json())
         .then(result => {
-            if (result.status === 'success') {
+            if (response.ok) {
                 userModal.hide();
                 upsertUserInTable(result.user);
-                showToast('Utilisateur sauvegardé avec succès !', 'success');
             } else {
-                const errorDiv = document.getElementById('form-errors');
-                errorDiv.innerHTML = Object.values(result.errors).map(e => `<p>${e}</p>`).join('');
-                errorDiv.classList.remove('d-none');
-                showToast('Erreur lors de la sauvegarde de l\'utilisateur.', 'error');
+                // Django messages will handle the error display
+                // For form-specific errors, we can re-enable the form-errors div if needed
+                // For now, rely on Django messages for general errors
             }
+        })
+        .finally(() => {
+            spinner.classList.add('d-none');
+            saveUserBtn.disabled = false;
         });
     });
 
     document.getElementById('confirmDeleteBtn').addEventListener('click', function() {
+        const spinner = confirmDeleteBtn.querySelector('.spinner-border');
+        spinner.classList.remove('d-none');
+        confirmDeleteBtn.disabled = true;
+
         fetch(`/administration/api/users/${currentUserId}/delete/`, {
             method: 'POST',
             headers: { 'X-CSRFToken': csrftoken }
         })
         .then(response => response.json())
         .then(result => {
-            if (result.status === 'success') {
+            if (response.ok) {
                 document.getElementById(`user-row-${currentUserId}`).remove();
                 deleteModal.hide();
-                showToast('Utilisateur supprimé avec succès !', 'success');
             } else {
-                showToast(result.message || 'Une erreur est survenue.', 'error');
+                // Django messages will handle the error display
             }
+        })
+        .finally(() => {
+            spinner.classList.add('d-none');
+            confirmDeleteBtn.disabled = false;
         });
     });
 });

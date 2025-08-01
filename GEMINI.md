@@ -34,7 +34,7 @@
         - Soumission de devoirs : page dédiée avec formulaire de téléversement et gestion de la soumission unique.
         - Passage de quiz : interface pour répondre aux questions, calcul du score et enregistrement de la tentative.
         - Consultation des notes : page récapitulative des notes obtenues aux devoirs et quiz.
-- **Fonctionnalité 4 : Annonces et Communication - EN COURS**
+- **Fonctionnalité 4 : Annonces et Communication - TERMINÉE**
     - **Annonces :**
         - **Partie Enseignant/Admin :** Création du modèle `Annonce`, intégration du CRUD dynamique dans l'interface d'administration des cours.
         - **Partie Étudiant :** Affichage des annonces sur la page de détail du cours.
@@ -46,6 +46,7 @@
         - Ajout de boutons "Contacter" pour démarrer des conversations depuis les pages de détail des cours.
         - Ajout d'un compteur de messages non lus dans la barre de navigation.
         - Amélioration de l'interface de conversation avec des bulles de chat.
+        - Possibilité de rechercher des utilisateurs pour démarrer une conversation.
 - **Fonctionnalité 5 : Gestion des Inscriptions - TERMINÉE**
     - **Partie Étudiant :**
         - Inscription et désinscription autonomes depuis le tableau de bord.
@@ -73,14 +74,15 @@
     - Création d'un template tag pour compter les messages non lus.
     - Mise à jour de la vue `conversation_detail` pour marquer les messages comme lus.
     - Amélioration de l'interface de `conversation_detail.html` avec des bulles de chat et un défilement automatique.
+    - Ajout d'une vue d'API `search_users` dans `messaging/views.py` pour rechercher des utilisateurs.
+    - Ajout de l'URL correspondante dans `messaging/urls.py`.
+    - Intégration d'un champ de recherche et affichage des résultats dans `inbox.html`.
+- **Améliorations de l'Expérience Utilisateur (UX) :**
+    - **Feedback Visuel :** Remplacement des `alert()` JavaScript par des messages de succès/erreur plus élégants (toasts Bootstrap ou messages Django) dans les vues et les templates JavaScript.
+    - **Indicateurs de Chargement :** Ajout de spinners et de la logique de désactivation/réactivation des boutons pour les opérations AJAX dans `administration/course_management.html`, `administration/user_management.html`, `users/dashboard_enseignant.html`, et `users/dashboard_etudiant.html`.
+    - **Validation Côté Client :** Implémentation d'une validation JavaScript plus robuste pour les formulaires des modales afin de fournir un feedback instantané avant l'envoi au serveur.
 
 ## Prochaines Étapes
-1.  **Améliorations de la Messagerie :**
-    *   Permettre de rechercher des utilisateurs pour démarrer une conversation.
-2.  **Améliorations de l'Expérience Utilisateur (UX) :**
-    *   **Feedback Visuel :** Remplacer les `alert()` JavaScript par des messages de succès/erreur plus élégants (par exemple, des toasts Bootstrap ou des messages Django).
-    *   **Indicateurs de Chargement :** Ajouter des indicateurs visuels (spinners) pour toutes les opérations AJAX afin d'informer l'utilisateur que l'action est en cours.
-    *   **Validation Côté Client :** Implémenter une validation JavaScript plus robuste pour les formulaires des modales afin de fournir un feedback instantané avant l'envoi au serveur.
-3.  **Tests et Préparation au Déploiement :**
+1.  **Tests et Préparation au Déploiement :**
     *   **Tests Automatisés :** Écrire des tests unitaires et d'intégration pour les fonctionnalités critiques (modèles, formulaires, vues, API).
     *   **Configuration de Déploiement :** Préparer le projet pour un environnement de production (gestion des fichiers statiques et médias, configuration de la base de données, sécurité).

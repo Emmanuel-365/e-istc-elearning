@@ -116,12 +116,8 @@ document.addEventListener('DOMContentLoaded', function() {
         const username = document.getElementById('id_username').value.trim();
         const password = document.getElementById('id_password').value.trim();
 
-        if (username === '' || password === '') {
-            e.preventDefault();
-            // On pourrait afficher une alerte plus élégante ici
-            alert('Veuillez remplir tous les champs.');
-            return;
-        }
+        // Client-side validation removed, relying on Django's form validation and messages framework.
+        // If fields are empty, Django will add errors to the form, which will be displayed by base.html's message handling.
 
         // Afficher le spinner
         spinner.classList.remove('d-none');

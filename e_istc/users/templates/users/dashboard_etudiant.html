@@ -32,9 +32,15 @@
                                 <a href="{% url 'users:student_course_detail' course.id %}" class="btn btn-sm btn-info">Voir Détails</a>
                             {% endif %}
                             {% if course in user.courses.all %}
-                                <button class="btn btn-sm btn-danger unenroll-btn" data-id="{{ course.id }}">Se désinscrire</button>
+                                <button class="btn btn-sm btn-danger unenroll-btn" data-id="{{ course.id }}">
+                                    <span class="spinner-border spinner-border-sm d-none" role="status" aria-hidden="true"></span>
+                                    Se désinscrire
+                                </button>
                             {% else %}
-                                <button class="btn btn-sm btn-success enroll-btn" data-id="{{ course.id }}">S'inscrire</button>
+                                <button class="btn btn-sm btn-success enroll-btn" data-id="{{ course.id }}">
+                                    <span class="spinner-border spinner-border-sm d-none" role="status" aria-hidden="true"></span>
+                                    S'inscrire
+                                </button>
                             {% endif %}
                         </td>
                     </tr>
@@ -72,15 +78,21 @@ document.addEventListener('DOMContentLoaded', function () {
     const csrftoken = getCookie('csrftoken');
 
     coursesTableBody.addEventListener('click', function (e) {
-        console.log('Clic détecté sur le tableau des cours', e.target);
-        const courseId = e.target.dataset.id;
+        const clickedButton = e.target.closest('button');
+        if (!clickedButton) return; // Not a button click
+
+        const courseId = clickedButton.dataset.id;
         let url = '';
         let isEnroll = false;
 
-        if (e.target.classList.contains('enroll-btn')) {
+        const spinner = clickedButton.querySelector('.spinner-border');
+        spinner.classList.remove('d-none');
+        clickedButton.disabled = true;
+
+        if (clickedButton.classList.contains('enroll-btn')) {
             url = `/comptes/api/courses/${courseId}/enroll/`;
             isEnroll = true;
-        } else if (e.target.classList.contains('unenroll-btn')) {
+        } else if (clickedButton.classList.contains('unenroll-btn')) {
             url = `/comptes/api/courses/${courseId}/unenroll/`;
             isEnroll = false;
         }
@@ -92,22 +104,31 @@ document.addEventListener('DOMContentLoaded', function () {
                     'X-CSRFToken': csrftoken
                 }
             })
-            .then(response => response.json())
-            .then(result => {
-                if (result.status === 'success') {
-                    const row = document.getElementById(`course-row-${courseId}`);
-                    const actionsCell = row.querySelector('td:last-child');
-                    actionsCell.innerHTML = `
-                        <a href="/comptes/courses/${courseId}/" class="btn btn-sm btn-info">Voir Détails</a>
-                        ${isEnroll 
-                            ? '<button class="btn btn-sm btn-danger unenroll-btn" data-id="${courseId}">Se désinscrire</button>'
-                            : '<button class="btn btn-sm btn-success enroll-btn" data-id="${courseId}">S\'inscrire</button>'
-                        }
-                    `;
-                    alert(result.message);
-                } else {
-                    alert(result.message || 'Une erreur est survenue.');
+            .then(response => {
+                if (!response.ok) {
+                    // If response is not ok, it means there were errors, let Django messages handle it
+                    return response.json().then(err => Promise.reject(err));
                 }
+                return response.json();
+            })
+            .then(result => {
+                const row = document.getElementById(`course-row-${courseId}`);
+                const actionsCell = row.querySelector('td:last-child');
+                actionsCell.innerHTML = `
+                    <a href="/comptes/courses/${courseId}/" class="btn btn-sm btn-info">Voir Détails</a>
+                    ${isEnroll 
+                        ? '<button class="btn btn-sm btn-danger unenroll-btn" data-id="${courseId}"><span class="spinner-border spinner-border-sm d-none" role="status" aria-hidden="true"></span> Se désinscrire</button>'
+                        : '<button class="btn btn-sm btn-success enroll-btn" data-id="${courseId}"><span class="spinner-border spinner-border-sm d-none" role="status" aria-hidden="true"></span> S\'inscrire</button>'
+                    }
+                `;
+            })
+            .catch(error => {
+                console.error('Error:', error);
+                // Django messages will handle the display of errors
+            })
+            .finally(() => {
+                spinner.classList.add('d-none');
+                clickedButton.disabled = false;
             });
         }
     });

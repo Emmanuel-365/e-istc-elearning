@@ -8,6 +8,7 @@ from courses.forms import CourseForm, ModuleForm, RessourceForm
 from evaluations.models import Activite
 from .decorators import admin_required, course_owner_or_admin_required
 import json
+from django.contrib import messages
 
 @admin_required
 def user_management_page(request):
@@ -52,8 +53,10 @@ def create_user(request):
             'matricule': user.matricule,
             'specialite': user.specialite,
         }
+        messages.success(request, 'Utilisateur créé avec succès !')
         return JsonResponse({'status': 'success', 'user': user_data})
     else:
+        messages.error(request, 'Erreur lors de la création de l\'utilisateur.')
         return JsonResponse({'status': 'error', 'errors': form.errors}, status=400)
 
 @admin_required
@@ -72,6 +75,7 @@ def user_detail(request, user_id):
         }
         return JsonResponse(data)
     except User.DoesNotExist:
+        messages.error(request, 'Utilisateur non trouvé.')
         return JsonResponse({'error': 'Utilisateur non trouvé'}, status=404)
 
 @admin_required
@@ -94,10 +98,13 @@ def update_user(request, user_id):
                 'matricule': user.matricule,
                 'specialite': user.specialite,
             }
+            messages.success(request, 'Utilisateur mis à jour avec succès !')
             return JsonResponse({'status': 'success', 'user': user_data})
         else:
+            messages.error(request, 'Erreur lors de la mise à jour de l\'utilisateur.')
             return JsonResponse({'status': 'error', 'errors': form.errors}, status=400)
     except User.DoesNotExist:
+        messages.error(request, 'Utilisateur non trouvé.')
         return JsonResponse({'status': 'error', 'message': 'Utilisateur non trouvé'}, status=404)
 
 
@@ -122,8 +129,10 @@ def create_course(request):
             },
             'created_at': course.created_at.strftime('%d/%m/%Y')
         }
+        messages.success(request, 'Cours créé avec succès !')
         return JsonResponse({'status': 'success', 'course': course_data})
     else:
+        messages.error(request, 'Erreur lors de la création du cours.')
         return JsonResponse({'status': 'error', 'errors': form.errors}, status=400)
 
 @admin_required
@@ -138,6 +147,7 @@ def course_detail(request, course_id):
         }
         return JsonResponse(data)
     except Course.DoesNotExist:
+        messages.error(request, 'Cours non trouvé.')
         return JsonResponse({'error': 'Cours non trouvé'}, status=404)
 
 @admin_required
@@ -158,10 +168,13 @@ def update_course(request, course_id):
                 },
                 'created_at': course.created_at.strftime('%d/%m/%Y')
             }
+            messages.success(request, 'Cours mis à jour avec succès !')
             return JsonResponse({'status': 'success', 'course': course_data})
         else:
+            messages.error(request, 'Erreur lors de la mise à jour du cours.')
             return JsonResponse({'status': 'error', 'errors': form.errors}, status=400)
     except Course.DoesNotExist:
+        messages.error(request, 'Cours non trouvé.')
         return JsonResponse({'status': 'error', 'message': 'Cours non trouvé'}, status=404)
 
 @admin_required
@@ -170,8 +183,10 @@ def delete_course(request, course_id):
     try:
         course = Course.objects.get(pk=course_id)
         course.delete()
+        messages.success(request, 'Cours supprimé avec succès !')
         return JsonResponse({'status': 'success'})
     except Course.DoesNotExist:
+        messages.error(request, 'Cours non trouvé.')
         return JsonResponse({'status': 'error', 'message': 'Cours non trouvé'}, status=404)
 
 @admin_required
@@ -180,7 +195,8 @@ def delete_user(request, user_id):
     try:
         user = User.objects.get(pk=user_id)
         user.delete()
+        messages.success(request, 'Utilisateur supprimé avec succès !')
         return JsonResponse({'status': 'success'})
     except User.DoesNotExist:
+        messages.error(request, 'Utilisateur non trouvé.')
         return JsonResponse({'status': 'error', 'message': 'Utilisateur non trouvé'}, status=404)
-

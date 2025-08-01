@@ -72,7 +72,10 @@
             </div>
             <div class="modal-footer">
                 <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Annuler</button>
-                <button type="button" id="saveCourseBtn" class="btn btn-primary">Sauvegarder</button>
+                <button type="button" id="saveCourseBtn" class="btn btn-primary">
+                    <span class="spinner-border spinner-border-sm d-none" role="status" aria-hidden="true"></span>
+                    Sauvegarder
+                </button>
             </div>
         </div>
     </div>
@@ -91,7 +94,10 @@
       </div>
       <div class="modal-footer">
         <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Annuler</button>
-        <button type="button" id="confirmDeleteBtn" class="btn btn-danger">Supprimer</button>
+        <button type="button" id="confirmDeleteBtn" class="btn btn-danger">
+                    <span class="spinner-border spinner-border-sm d-none" role="status" aria-hidden="true"></span>
+                    Supprimer
+                </button>
       </div>
     </div>
   </div>
@@ -184,6 +190,16 @@ document.addEventListener('DOMContentLoaded', function () {
     });
 
     saveCourseBtn.addEventListener('click', function () {
+        // Client-side validation
+        if (!courseForm.checkValidity()) {
+            courseForm.reportValidity();
+            return;
+        }
+
+        const spinner = saveCourseBtn.querySelector('.spinner-border');
+        spinner.classList.remove('d-none');
+        saveCourseBtn.disabled = true;
+
         const formData = new FormData(courseForm);
         const data = {
             title: formData.get('title'),
@@ -205,17 +221,23 @@ document.addEventListener('DOMContentLoaded', function () {
             if (result.status === 'success') {
                 courseModal.hide();
                 upsertCourseInTable(result.course);
-                showToast('Cours sauvegardé avec succès !', 'success');
             } else {
-                const errorDiv = document.getElementById('form-errors');
-                errorDiv.innerHTML = Object.values(result.errors).map(e => `<p>${e}</p>`).join('');
-                errorDiv.classList.remove('d-none');
-                showToast('Erreur lors de la sauvegarde du cours.', 'error');
+                // Django messages will handle the error display
+                // For form-specific errors, we can re-enable the form-errors div if needed
+                // For now, rely on Django messages for general errors
             }
+        })
+        .finally(() => {
+            spinner.classList.add('d-none');
+            saveCourseBtn.disabled = false;
         });
     });
 
     document.getElementById('confirmDeleteBtn').addEventListener('click', function() {
+        const spinner = confirmDeleteBtn.querySelector('.spinner-border');
+        spinner.classList.remove('d-none');
+        confirmDeleteBtn.disabled = true;
+
         fetch(`/administration/api/courses/${currentCourseId}/delete/`, {
             method: 'POST',
             headers: { 'X-CSRFToken': csrftoken }
@@ -225,42 +247,19 @@ document.addEventListener('DOMContentLoaded', function () {
             if (result.status === 'success') {
                 document.getElementById(`course-row-${currentCourseId}`).remove();
                 deleteModal.hide();
-                showToast('Cours supprimé avec succès !', 'success');
             } else {
-                showToast(result.message || 'Une erreur est survenue.', 'error');
+                // Django messages will handle the error display
             }
+        })
+        .finally(() => {
+            spinner.classList.add('d-none');
+            confirmDeleteBtn.disabled = false;
         });
     });
 });
 function showToast(message, type) {
-    // Simple Bootstrap 5 Toast implementation
-    let toastContainer = document.getElementById('toast-container');
-    if (!toastContainer) {
-        toastContainer = document.createElement('div');
-        toastContainer.id = 'toast-container';
-        toastContainer.style.position = 'fixed';
-        toastContainer.style.top = '20px';
-        toastContainer.style.right = '20px';
-        toastContainer.style.zIndex = '9999';
-        document.body.appendChild(toastContainer);
-    }
-    const toast = document.createElement('div');
-    toast.className = `toast align-items-center text-bg-${type === 'success' ? 'success' : 'danger'} border-0 show`;
-    toast.setAttribute('role', 'alert');
-    toast.setAttribute('aria-live', 'assertive');
-    toast.setAttribute('aria-atomic', 'true');
-    toast.innerHTML = `
-        <div class="d-flex">
-            <div class="toast-body">
-                ${message}
-            </div>
-            <button type="button" class="btn-close btn-close-white me-2 m-auto" data-bs-dismiss="toast" aria-label="Close"></button>
-        </div>
-    `;
-    toastContainer.appendChild(toast);
-    setTimeout(() => {
-        toast.remove();
-    }, 3000);
+    // This function is now handled by base.html Django messages
+    console.log(`Toast message: ${message} (${type})`);
 }
 
 </script>

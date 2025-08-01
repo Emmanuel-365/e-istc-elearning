@@ -6,6 +6,7 @@ from courses.models import Course, Module, Ressource, Annonce
 from courses.forms import ModuleForm, RessourceForm, AnnonceForm
 from administration.decorators import admin_required, course_owner_or_admin_required, module_owner_or_admin_required, ressource_owner_or_admin_required, annonce_owner_or_admin_required
 import json
+from django.contrib import messages
 
 # API pour les modules
 
@@ -21,15 +22,16 @@ def create_module(request, course_id):
         module = form.save(commit=False)
         module.course = course
         module.save()
-        module_data = {
+        messages.success(request, 'Module créé avec succès !')
+        return JsonResponse({'module': {
             'id': module.id,
             'title': module.title,
             'description': module.description,
             'order': module.order,
-        }
-        return JsonResponse({'status': 'success', 'module': module_data})
+        }})
     else:
-        return JsonResponse({'status': 'error', 'errors': form.errors}, status=400)
+        messages.error(request, 'Erreur lors de la création du module.')
+        return JsonResponse({'errors': form.errors}, status=400)
 
 @module_owner_or_admin_required
 def module_detail(request, module_id):
@@ -43,6 +45,7 @@ def module_detail(request, module_id):
         }
         return JsonResponse(data)
     except Module.DoesNotExist:
+        messages.error(request, 'Module non trouvé.')
         return JsonResponse({'error': 'Module non trouvé'}, status=404)
 
 @module_owner_or_admin_required
@@ -54,17 +57,19 @@ def update_module(request, module_id):
         form = ModuleForm(data, instance=module)
         if form.is_valid():
             module = form.save()
-            module_data = {
+            messages.success(request, 'Module mis à jour avec succès !')
+            return JsonResponse({'module': {
                 'id': module.id,
                 'title': module.title,
                 'description': module.description,
                 'order': module.order,
-            }
-            return JsonResponse({'status': 'success', 'module': module_data})
+            }})
         else:
-            return JsonResponse({'status': 'error', 'errors': form.errors}, status=400)
+            messages.error(request, 'Erreur lors de la mise à jour du module.')
+            return JsonResponse({'errors': form.errors}, status=400)
     except Module.DoesNotExist:
-        return JsonResponse({'status': 'error', 'message': 'Module non trouvé'}, status=404)
+        messages.error(request, 'Module non trouvé.')
+        return JsonResponse({'message': 'Module non trouvé'}, status=404)
 
 @module_owner_or_admin_required
 @require_POST
@@ -72,9 +77,11 @@ def delete_module(request, module_id):
     try:
         module = Module.objects.get(pk=module_id)
         module.delete()
-        return JsonResponse({'status': 'success'})
+        messages.success(request, 'Module supprimé avec succès !')
+        return JsonResponse({})
     except Module.DoesNotExist:
-        return JsonResponse({'status': 'error', 'message': 'Module non trouvé'}, status=404)
+        messages.error(request, 'Module non trouvé.')
+        return JsonResponse({'message': 'Module non trouvé'}, status=404)
 
 # API pour les ressources
 
@@ -87,15 +94,16 @@ def create_ressource(request, module_id):
         ressource = form.save(commit=False)
         ressource.module = module
         ressource.save()
-        ressource_data = {
+        messages.success(request, 'Ressource créée avec succès !')
+        return JsonResponse({'ressource': {
             'id': ressource.id,
             'title': ressource.title,
             'file_url': ressource.file.url if ressource.file else None,
             'url': ressource.url,
-        }
-        return JsonResponse({'status': 'success', 'ressource': ressource_data})
+        }})
     else:
-        return JsonResponse({'status': 'error', 'errors': form.errors}, status=400)
+        messages.error(request, 'Erreur lors de la création de la ressource.')
+        return JsonResponse({'errors': form.errors}, status=400)
 
 @ressource_owner_or_admin_required
 def ressource_detail(request, ressource_id):
@@ -109,6 +117,7 @@ def ressource_detail(request, ressource_id):
         }
         return JsonResponse(data)
     except Ressource.DoesNotExist:
+        messages.error(request, 'Ressource non trouvée.')
         return JsonResponse({'error': 'Ressource non trouvée'}, status=404)
 
 @ressource_owner_or_admin_required
@@ -119,17 +128,19 @@ def update_ressource(request, ressource_id):
         form = RessourceForm(request.POST, request.FILES, instance=ressource)
         if form.is_valid():
             ressource = form.save()
-            ressource_data = {
+            messages.success(request, 'Ressource mise à jour avec succès !')
+            return JsonResponse({'ressource': {
                 'id': ressource.id,
                 'title': ressource.title,
                 'file_url': ressource.file.url if ressource.file else None,
                 'url': ressource.url,
-            }
-            return JsonResponse({'status': 'success', 'ressource': ressource_data})
+            }})
         else:
-            return JsonResponse({'status': 'error', 'errors': form.errors}, status=400)
+            messages.error(request, 'Erreur lors de la mise à jour de la ressource.')
+            return JsonResponse({'errors': form.errors}, status=400)
     except Ressource.DoesNotExist:
-        return JsonResponse({'status': 'error', 'message': 'Ressource non trouvée'}, status=404)
+        messages.error(request, 'Ressource non trouvée.')
+        return JsonResponse({'message': 'Ressource non trouvée'}, status=404)
 
 @ressource_owner_or_admin_required
 @require_POST
@@ -137,9 +148,11 @@ def delete_ressource(request, ressource_id):
     try:
         ressource = Ressource.objects.get(pk=ressource_id)
         ressource.delete()
-        return JsonResponse({'status': 'success'})
+        messages.success(request, 'Ressource supprimée avec succès !')
+        return JsonResponse({})
     except Ressource.DoesNotExist:
-        return JsonResponse({'status': 'error', 'message': 'Ressource non trouvée'}, status=404)
+        messages.error(request, 'Ressource non trouvée.')
+        return JsonResponse({'message': 'Ressource non trouvée'}, status=404)
 
 @course_owner_or_admin_required
 @require_POST
@@ -148,9 +161,11 @@ def remove_student_from_course(request, course_id, student_id):
         course = Course.objects.get(pk=course_id)
         student = User.objects.get(pk=student_id)
         course.students.remove(student)
-        return JsonResponse({'status': 'success'})
+        messages.success(request, 'Étudiant retiré du cours avec succès !')
+        return JsonResponse({})
     except (Course.DoesNotExist, User.DoesNotExist):
-        return JsonResponse({'status': 'error', 'message': 'Cours ou étudiant non trouvé.'}, status=404)
+        messages.error(request, 'Cours ou étudiant non trouvé.')
+        return JsonResponse({'message': 'Cours ou étudiant non trouvé.'}, status=404)
 
 # API pour les annonces
 
@@ -164,15 +179,16 @@ def create_annonce(request, course_id):
         annonce = form.save(commit=False)
         annonce.cours = course
         annonce.save()
-        annonce_data = {
+        messages.success(request, 'Annonce créée avec succès !')
+        return JsonResponse({'annonce': {
             'id': annonce.id,
             'titre': annonce.titre,
             'contenu': annonce.contenu,
             'cree_le': annonce.cree_le.strftime('%d/%m/%Y %H:%M'),
-        }
-        return JsonResponse({'status': 'success', 'annonce': annonce_data})
+        }})
     else:
-        return JsonResponse({'status': 'error', 'errors': form.errors}, status=400)
+        messages.error(request, 'Erreur lors de la création de l\'annonce.')
+        return JsonResponse({'errors': form.errors}, status=400)
 
 @annonce_owner_or_admin_required
 def annonce_detail(request, annonce_id):
@@ -185,6 +201,7 @@ def annonce_detail(request, annonce_id):
         }
         return JsonResponse(data)
     except Annonce.DoesNotExist:
+        messages.error(request, 'Annonce non trouvée.')
         return JsonResponse({'error': 'Annonce non trouvée'}, status=404)
 
 @annonce_owner_or_admin_required
@@ -196,17 +213,19 @@ def update_annonce(request, annonce_id):
         form = AnnonceForm(data, instance=annonce)
         if form.is_valid():
             annonce = form.save()
-            annonce_data = {
+            messages.success(request, 'Annonce mise à jour avec succès !')
+            return JsonResponse({'annonce': {
                 'id': annonce.id,
                 'titre': annonce.titre,
                 'contenu': annonce.contenu,
                 'cree_le': annonce.cree_le.strftime('%d/%m/%Y %H:%M'),
-            }
-            return JsonResponse({'status': 'success', 'annonce': annonce_data})
+            }})
         else:
-            return JsonResponse({'status': 'error', 'errors': form.errors}, status=400)
+            messages.error(request, 'Erreur lors de la mise à jour de l\'annonce.')
+            return JsonResponse({'errors': form.errors}, status=400)
     except Annonce.DoesNotExist:
-        return JsonResponse({'status': 'error', 'message': 'Annonce non trouvée'}, status=404)
+        messages.error(request, 'Annonce non trouvée.')
+        return JsonResponse({'message': 'Annonce non trouvée'}, status=404)
 
 @annonce_owner_or_admin_required
 @require_POST
@@ -214,9 +233,11 @@ def delete_annonce(request, annonce_id):
     try:
         annonce = Annonce.objects.get(pk=annonce_id)
         annonce.delete()
-        return JsonResponse({'status': 'success'})
+        messages.success(request, 'Annonce supprimée avec succès !')
+        return JsonResponse({})
     except Annonce.DoesNotExist:
-        return JsonResponse({'status': 'error', 'message': 'Annonce non trouvée'}, status=404)
+        messages.error(request, 'Annonce non trouvée.')
+        return JsonResponse({'message': 'Annonce non trouvée'}, status=404)
 
 @course_owner_or_admin_required
 def list_enrollable_students(request, course_id):
@@ -239,13 +260,14 @@ def enroll_student(request, course_id, student_id):
         course = Course.objects.get(pk=course_id)
         student = User.objects.get(pk=student_id, role=User.Role.ETUDIANT)
         course.students.add(student)
-        student_data = {
+        messages.success(request, 'Étudiant inscrit avec succès !')
+        return JsonResponse({'student': {
             'id': student.id,
             'first_name': student.first_name,
             'last_name': student.last_name,
             'email': student.email,
             'matricule': student.matricule
-        }
-        return JsonResponse({'status': 'success', 'student': student_data})
+        }})
     except (Course.DoesNotExist, User.DoesNotExist):
-        return JsonResponse({'status': 'error', 'message': 'Cours ou étudiant non trouvé.'}, status=404)
+        messages.error(request, 'Cours ou étudiant non trouvé.')
+        return JsonResponse({'message': 'Cours ou étudiant non trouvé.'}, status=404)

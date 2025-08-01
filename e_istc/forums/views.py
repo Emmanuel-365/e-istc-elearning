@@ -7,6 +7,7 @@ from courses.models import Course
 from .models import SujetDiscussion, MessageForum
 from .forms import SujetForm, MessageForm
 from users.models import User
+from django.contrib import messages
 
 def check_user_permission_for_course(user, course):
     """
@@ -44,15 +45,18 @@ def details_sujet(request, sujet_id):
             message.sujet = sujet
             message.auteur = request.user
             message.save()
+            messages.success(request, 'Message envoyé avec succès !')
             return redirect('forums:details_sujet', sujet_id=sujet.id)
+        else:
+            messages.error(request, 'Erreur lors de l\'envoi du message.')
     else:
         message_form = MessageForm()
 
-    messages = sujet.messages.all()
+    messages_list = sujet.messages.all()
     context = {
         'sujet': sujet,
         'course': course,
-        'messages': messages,
+        'messages': messages_list,
         'message_form': message_form,
     }
     return render(request, 'forums/details_sujet.html', context)
@@ -76,8 +80,10 @@ def creer_sujet(request, course_id):
             message.sujet = sujet
             message.auteur = request.user
             message.save()
-
+            messages.success(request, 'Sujet de discussion créé avec succès !')
             return redirect('forums:details_sujet', sujet_id=sujet.id)
+        else:
+            messages.error(request, 'Erreur lors de la création du sujet.')
     else:
         sujet_form = SujetForm()
         message_form = MessageForm()
@@ -102,6 +108,9 @@ def ajouter_message(request, sujet_id):
         message.sujet = sujet
         message.auteur = request.user
         message.save()
+        messages.success(request, 'Message ajouté avec succès !')
+    else:
+        messages.error(request, 'Erreur lors de l\'ajout du message.')
     return redirect('forums:details_sujet', sujet_id=sujet.id)
 
 
@@ -113,12 +122,15 @@ def supprimer_message(request, message_id):
     # Seul l'auteur, l'enseignant du cours ou un admin peut supprimer
     if request.user == message.auteur or request.user == sujet.cours.teacher or request.user.role == User.Role.ADMIN:
         message.delete()
+        messages.success(request, 'Message supprimé avec succès !')
         # Si c'était le premier message, on supprime le sujet aussi
         if not sujet.messages.exists():
             sujet.delete()
+            messages.success(request, 'Sujet de discussion supprimé car il ne contenait plus de messages.')
             return redirect('forums:forum_cours', course_id=sujet.cours.id)
         return redirect('forums:details_sujet', sujet_id=sujet.id)
     else:
+        messages.error(request, 'Vous n\'avez pas la permission de supprimer ce message.')
         raise PermissionDenied
 
 @login_required
@@ -129,6 +141,8 @@ def supprimer_sujet(request, sujet_id):
     # Seul l'auteur du sujet, l'enseignant du cours ou un admin peut supprimer
     if request.user == sujet.auteur or request.user == sujet.cours.teacher or request.user.role == User.Role.ADMIN:
         sujet.delete()
+        messages.success(request, 'Sujet de discussion supprimé avec succès !')
         return redirect('forums:forum_cours', course_id=course_id)
     else:
+        messages.error(request, 'Vous n\'avez pas la permission de supprimer ce sujet.')
         raise PermissionDenied
