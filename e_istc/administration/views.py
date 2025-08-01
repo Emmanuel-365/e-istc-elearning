@@ -25,10 +25,12 @@ def course_detail_page(request, course_id):
     course = Course.objects.get(pk=course_id)
     enrolled_students = course.students.all()
     activites = course.activites.all().order_by('-created_at')
+    annonces = course.annonces.all()
     context = {
         'course': course,
         'enrolled_students': enrolled_students,
         'activites': activites,
+        'annonces': annonces,
     }
     return render(request, 'administration/course_detail_page.html', context)
 

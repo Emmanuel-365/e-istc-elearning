@@ -92,7 +92,7 @@
         - Création d'une modale pour lister les soumissions d'un devoir et permettre la saisie des notes.
         - Ajout des vues et URLs d'API (`evaluations/urls.py`, `evaluations/views.py`) pour lister les soumissions et mettre à jour les notes.
 
-## Prochaines Étapes
+## Prochaines Étapes (lointaines)
 1.  **Améliorations de l'Expérience Utilisateur (UX) :**
     *   **Feedback Visuel :** Remplacer les `alert()` JavaScript par des messages de succès/erreur plus élégants (par exemple, des toasts Bootstrap ou des messages Django).
     *   **Indicateurs de Chargement :** Ajouter des indicateurs visuels (spinners) pour toutes les opérations AJAX afin d'informer l'utilisateur que l'action est en cours.

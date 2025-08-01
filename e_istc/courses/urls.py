@@ -18,4 +18,10 @@ urlpatterns = [
 
     # API pour les étudiants
     path('api/courses/<int:course_id>/students/<int:student_id>/remove/', views.remove_student_from_course, name='api_remove_student_from_course'),
+
+    # API pour les annonces
+    path('api/courses/<int:course_id>/annonces/create/', views.create_annonce, name='api_create_annonce'),
+    path('api/annonces/<int:annonce_id>/', views.annonce_detail, name='api_annonce_detail'),
+    path('api/annonces/<int:annonce_id>/update/', views.update_annonce, name='api_update_annonce'),
+    path('api/annonces/<int:annonce_id>/delete/', views.delete_annonce, name='api_delete_annonce'),
 ]

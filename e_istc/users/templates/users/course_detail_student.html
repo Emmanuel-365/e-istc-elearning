@@ -59,6 +59,26 @@
         <p>Aucun module pour ce cours pour le moment.</p>
     {% endif %}
 
+    <h3 class="mt-4">Annonces</h3>
+    <div class="accordion" id="annoncesAccordion">
+        {% for annonce in annonces %}
+        <div class="accordion-item">
+            <h2 class="accordion-header" id="heading{{ annonce.id }}">
+                <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#collapse{{ annonce.id }}" aria-expanded="false" aria-controls="collapse{{ annonce.id }}">
+                    <strong>{{ annonce.titre }}</strong>&nbsp;-&nbsp;<small>{{ annonce.cree_le|date:"d/m/Y H:i" }}</small>
+                </button>
+            </h2>
+            <div id="collapse{{ annonce.id }}" class="accordion-collapse collapse" aria-labelledby="heading{{ annonce.id }}" data-bs-parent="#annoncesAccordion">
+                <div class="accordion-body">
+                    {{ annonce.contenu|linebreaksbr }}
+                </div>
+            </div>
+        </div>
+        {% empty %}
+        <p>Aucune annonce pour ce cours.</p>
+        {% endfor %}
+    </div>
+
     <h3 class="mt-4">Évaluations</h3>
     <div class="list-group">
         {% for activite in activites %}

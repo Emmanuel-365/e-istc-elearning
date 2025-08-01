@@ -145,6 +145,7 @@ def student_course_detail(request, course_id):
         if not request.user.courses.filter(pk=course_id).exists():
             raise PermissionDenied("Vous n'êtes pas inscrit à ce cours.")
         activites = course.activites.all().order_by('due_date')
+        annonces = course.annonces.all()
         # Récupérer les ID des activités déjà soumises par l'étudiant
         submitted_activities_ids = Soumission.objects.filter(
             etudiant=request.user,
@@ -154,7 +155,8 @@ def student_course_detail(request, course_id):
         context = {
             'course': course,
             'activites': activites,
-            'submitted_activities_ids': submitted_activities_ids
+            'submitted_activities_ids': submitted_activities_ids,
+            'annonces': annonces,
         }
         return render(request, 'users/course_detail_student.html', context)
     except Course.DoesNotExist:

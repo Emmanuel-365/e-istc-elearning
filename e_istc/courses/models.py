@@ -11,6 +11,18 @@ class Course(models.Model):
     def __str__(self):
         return self.title
 
+class Annonce(models.Model):
+    cours = models.ForeignKey(Course, on_delete=models.CASCADE, related_name='annonces')
+    titre = models.CharField(max_length=255)
+    contenu = models.TextField()
+    cree_le = models.DateTimeField(auto_now_add=True)
+
+    def __str__(self):
+        return self.titre
+
+    class Meta:
+        ordering = ['-cree_le']
+
 class Module(models.Model):
     course = models.ForeignKey(Course, related_name='modules', on_delete=models.CASCADE)
     title = models.CharField(max_length=200)

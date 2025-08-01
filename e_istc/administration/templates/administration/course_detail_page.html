@@ -141,6 +141,63 @@
         </div>
     </div>
 
+    <h3>Annonces</h3>
+    <div class="card mb-4">
+        <div class="card-header">
+            <button id="addAnnonceBtn" class="btn btn-primary">Ajouter une annonce</button>
+        </div>
+        <div class="card-body">
+            <ul class="list-group" id="annonce-list">
+                {% for annonce in annonces %}
+                <li class="list-group-item d-flex justify-content-between align-items-center" id="annonce-item-{{ annonce.id }}">
+                    <div>
+                        <h5>{{ annonce.titre }}</h5>
+                        <p>{{ annonce.contenu|linebreaksbr }}</p>
+                        <small>Publié le: {{ annonce.cree_le|date:"d/m/Y H:i" }}</small>
+                    </div>
+                    <div>
+                        <button class="btn btn-sm btn-secondary edit-annonce-btn" data-id="{{ annonce.id }}">Modifier</button>
+                        <button class="btn btn-sm btn-danger delete-annonce-btn" data-id="{{ annonce.id }}">Supprimer</button>
+                    </div>
+                </li>
+                {% empty %}
+                <li class="list-group-item">Aucune annonce pour ce cours pour le moment.</li>
+                {% endfor %}
+            </ul>
+        </div>
+    </div>
+
+    <!-- Modal pour Ajouter/Modifier Annonce -->
+    <div class="modal fade" id="annonceModal" tabindex="-1" aria-labelledby="annonceModalLabel" aria-hidden="true">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="annonceModalLabel">Ajouter une annonce</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body">
+                    <form id="annonceForm">
+                        <input type="hidden" id="annonceId" name="annonceId">
+                        <div id="annonce-form-errors" class="alert alert-danger d-none"></div>
+                        
+                        <div class="mb-3">
+                            <label for="annonceTitre" class="form-label">Titre</label>
+                            <input type="text" class="form-control" id="annonceTitre" name="titre" required>
+                        </div>
+                        <div class="mb-3">
+                            <label for="annonceContenu" class="form-label">Contenu</label>
+                            <textarea class="form-control" id="annonceContenu" name="contenu" rows="4" required></textarea>
+                        </div>
+                    </form>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Annuler</button>
+                    <button type="button" id="saveAnnonceBtn" class="btn btn-primary">Sauvegarder</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
     <!-- Modal pour Ajouter/Modifier Module -->
     <div class="modal fade" id="moduleModal" tabindex="-1" aria-labelledby="moduleModalLabel" aria-hidden="true">
         <div class="modal-dialog">
@@ -358,10 +415,12 @@ document.addEventListener('DOMContentLoaded', function () {
     const evaluationModal = document.getElementById('evaluationModal') ? new bootstrap.Modal(document.getElementById('evaluationModal')) : null;
     const questionsModal = document.getElementById('questionsModal') ? new bootstrap.Modal(document.getElementById('questionsModal')) : null;
     const gradeAssignmentModal = document.getElementById('gradeAssignmentModal') ? new bootstrap.Modal(document.getElementById('gradeAssignmentModal')) : null;
+    const annonceModal = document.getElementById('annonceModal') ? new bootstrap.Modal(document.getElementById('annonceModal')) : null;
 
     const moduleForm = document.getElementById('moduleForm');
     const ressourceForm = document.getElementById('ressourceForm');
     const evaluationForm = document.getElementById('evaluationForm');
+    const annonceForm = document.getElementById('annonceForm');
 
     const addModuleBtn = document.getElementById('addModuleBtn');
     const saveModuleBtn = document.getElementById('saveModuleBtn');
@@ -369,15 +428,19 @@ document.addEventListener('DOMContentLoaded', function () {
     const confirmDeleteBtn = document.getElementById('confirmDeleteBtn');
     const addEvaluationBtn = document.getElementById('addEvaluationBtn');
     const saveEvaluationBtn = document.getElementById('saveEvaluationBtn');
+    const addAnnonceBtn = document.getElementById('addAnnonceBtn');
+    const saveAnnonceBtn = document.getElementById('saveAnnonceBtn');
 
     const moduleList = document.getElementById('module-list');
     const studentTableBody = document.getElementById('student-table-body');
     const evaluationList = document.getElementById('evaluation-list');
+    const annonceList = document.getElementById('annonce-list');
 
     let currentModuleId = null;
     let currentRessourceId = null;
     let currentEvaluationId = null;
-    let deleteElementType = null; // 'module', 'ressource' ou 'evaluation'
+    let currentAnnonceId = null;
+    let deleteElementType = null; // 'module', 'ressource', 'evaluation' ou 'annonce'
 
     function getCookie(name) {
         let cookieValue = null;
@@ -706,6 +769,8 @@ document.addEventListener('DOMContentLoaded', function () {
             url = `/courses/api/ressources/${currentRessourceId}/delete/`;
         } else if (deleteElementType === 'evaluation') {
             url = `/evaluations/api/activities/${currentEvaluationId}/delete/`;
+        } else if (deleteElementType === 'annonce') {
+            url = `/courses/api/annonces/${currentAnnonceId}/delete/`;
         }
 
         fetch(url, {
@@ -721,6 +786,8 @@ document.addEventListener('DOMContentLoaded', function () {
                     document.getElementById(`ressource-item-${currentRessourceId}`).remove();
                 } else if (deleteElementType === 'evaluation') {
                     document.getElementById(`evaluation-item-${currentEvaluationId}`).remove();
+                } else if (deleteElementType === 'annonce') {
+                    document.getElementById(`annonce-item-${currentAnnonceId}`).remove();
                 }
                 deleteConfirmModal.hide();
                 showToast('Élément supprimé avec succès !', 'success');
@@ -955,6 +1022,98 @@ document.addEventListener('DOMContentLoaded', function () {
                     showToast(result.message || 'Erreur lors de l\'enregistrement de la note.', 'error');
                 }
             });
+        }
+    });
+
+    // --- Gestion des Annonces ---
+    addAnnonceBtn.addEventListener('click', function () {
+        currentAnnonceId = null;
+        annonceForm.reset();
+        document.getElementById('annonceModalLabel').textContent = 'Ajouter une annonce';
+        document.getElementById('annonce-form-errors').classList.add('d-none');
+        annonceModal.show();
+    });
+
+    saveAnnonceBtn.addEventListener('click', function () {
+        const formData = new FormData(annonceForm);
+        const data = Object.fromEntries(formData.entries());
+        const url = currentAnnonceId
+            ? `/courses/api/annonces/${currentAnnonceId}/update/`
+            : `/courses/api/courses/${courseId}/annonces/create/`;
+
+        fetch(url, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'X-CSRFToken': csrftoken
+            },
+            body: JSON.stringify(data)
+        })
+        .then(response => response.json())
+        .then(result => {
+            if (result.status === 'success') {
+                annonceModal.hide();
+                upsertAnnonceInList(result.annonce);
+                showToast('Annonce sauvegardée avec succès !', 'success');
+            } else {
+                const errorDiv = document.getElementById('annonce-form-errors');
+                errorDiv.innerHTML = Object.values(result.errors).map(e => `<p>${e}</p>`).join('');
+                errorDiv.classList.remove('d-none');
+                showToast('Erreur lors de la sauvegarde de l\'annonce.', 'error');
+            }
+        });
+    });
+
+    function upsertAnnonceInList(annonce) {
+        let annonceItem = document.getElementById(`annonce-item-${annonce.id}`);
+        const annonceHtml = `
+            <div>
+                <h5>${annonce.titre}</h5>
+                <p>${annonce.contenu.replace(/\n/g, '<br>')}</p>
+                <small>Publié le: ${new Date(annonce.cree_le).toLocaleString()}</small>
+            </div>
+            <div>
+                <button class="btn btn-sm btn-secondary edit-annonce-btn" data-id="${annonce.id}">Modifier</button>
+                <button class="btn btn-sm btn-danger delete-annonce-btn" data-id="${annonce.id}">Supprimer</button>
+            </div>
+        `;
+
+        if (annonceItem) {
+            annonceItem.innerHTML = annonceHtml;
+        } else {
+            annonceItem = document.createElement('li');
+            annonceItem.className = 'list-group-item d-flex justify-content-between align-items-center';
+            annonceItem.id = `annonce-item-${annonce.id}`;
+            annonceItem.innerHTML = annonceHtml;
+            annonceList.appendChild(annonceItem);
+        }
+    }
+
+    annonceList.addEventListener('click', function (e) {
+        if (e.target.classList.contains('edit-annonce-btn')) {
+            currentAnnonceId = e.target.dataset.id;
+            fetch(`/courses/api/annonces/${currentAnnonceId}/`)
+                .then(response => response.json())
+                .then(data => {
+                    if (data.error) {
+                        showToast(data.error, 'error');
+                        return;
+                    }
+                    annonceForm.reset();
+                    document.getElementById('annonceModalLabel').textContent = 'Modifier une annonce';
+                    document.getElementById('annonce-form-errors').classList.add('d-none');
+                    
+                    document.getElementById('annonceId').value = data.id;
+                    document.getElementById('annonceTitre').value = data.titre;
+                    document.getElementById('annonceContenu').value = data.contenu;
+                    
+                    annonceModal.show();
+                });
+        }
+        if (e.target.classList.contains('delete-annonce-btn')) {
+            currentAnnonceId = e.target.dataset.id;
+            deleteElementType = 'annonce';
+            deleteConfirmModal.show();
         }
     });
 });

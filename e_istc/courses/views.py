@@ -2,9 +2,9 @@ from django.shortcuts import render
 from django.http import JsonResponse
 from django.views.decorators.http import require_POST
 from users.models import User
-from courses.models import Course, Module, Ressource
-from courses.forms import ModuleForm, RessourceForm
-from administration.decorators import admin_required, course_owner_or_admin_required, module_owner_or_admin_required, ressource_owner_or_admin_required
+from courses.models import Course, Module, Ressource, Annonce
+from courses.forms import ModuleForm, RessourceForm, AnnonceForm
+from administration.decorators import admin_required, course_owner_or_admin_required, module_owner_or_admin_required, ressource_owner_or_admin_required, annonce_owner_or_admin_required
 import json
 
 # API pour les modules
@@ -151,3 +151,69 @@ def remove_student_from_course(request, course_id, student_id):
         return JsonResponse({'status': 'success'})
     except (Course.DoesNotExist, User.DoesNotExist):
         return JsonResponse({'status': 'error', 'message': 'Cours ou étudiant non trouvé.'}, status=404)
+
+# API pour les annonces
+
+@course_owner_or_admin_required
+@require_POST
+def create_annonce(request, course_id):
+    course = Course.objects.get(pk=course_id)
+    data = json.loads(request.body)
+    form = AnnonceForm(data)
+    if form.is_valid():
+        annonce = form.save(commit=False)
+        annonce.cours = course
+        annonce.save()
+        annonce_data = {
+            'id': annonce.id,
+            'titre': annonce.titre,
+            'contenu': annonce.contenu,
+            'cree_le': annonce.cree_le.strftime('%d/%m/%Y %H:%M'),
+        }
+        return JsonResponse({'status': 'success', 'annonce': annonce_data})
+    else:
+        return JsonResponse({'status': 'error', 'errors': form.errors}, status=400)
+
+@annonce_owner_or_admin_required
+def annonce_detail(request, annonce_id):
+    try:
+        annonce = Annonce.objects.get(pk=annonce_id)
+        data = {
+            'id': annonce.id,
+            'titre': annonce.titre,
+            'contenu': annonce.contenu,
+        }
+        return JsonResponse(data)
+    except Annonce.DoesNotExist:
+        return JsonResponse({'error': 'Annonce non trouvée'}, status=404)
+
+@annonce_owner_or_admin_required
+@require_POST
+def update_annonce(request, annonce_id):
+    try:
+        annonce = Annonce.objects.get(pk=annonce_id)
+        data = json.loads(request.body)
+        form = AnnonceForm(data, instance=annonce)
+        if form.is_valid():
+            annonce = form.save()
+            annonce_data = {
+                'id': annonce.id,
+                'titre': annonce.titre,
+                'contenu': annonce.contenu,
+                'cree_le': annonce.cree_le.strftime('%d/%m/%Y %H:%M'),
+            }
+            return JsonResponse({'status': 'success', 'annonce': annonce_data})
+        else:
+            return JsonResponse({'status': 'error', 'errors': form.errors}, status=400)
+    except Annonce.DoesNotExist:
+        return JsonResponse({'status': 'error', 'message': 'Annonce non trouvée'}, status=404)
+
+@annonce_owner_or_admin_required
+@require_POST
+def delete_annonce(request, annonce_id):
+    try:
+        annonce = Annonce.objects.get(pk=annonce_id)
+        annonce.delete()
+        return JsonResponse({'status': 'success'})
+    except Annonce.DoesNotExist:
+        return JsonResponse({'status': 'error', 'message': 'Annonce non trouvée'}, status=404)
