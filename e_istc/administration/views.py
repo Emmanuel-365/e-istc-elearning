@@ -5,6 +5,7 @@ from users.models import User
 from users.forms import CustomUserCreationForm, CustomUserChangeForm
 from courses.models import Course, Module, Ressource
 from courses.forms import CourseForm, ModuleForm, RessourceForm
+from evaluations.models import Activite
 from .decorators import admin_required, course_owner_or_admin_required
 import json
 
@@ -23,7 +24,13 @@ def course_management_page(request):
 def course_detail_page(request, course_id):
     course = Course.objects.get(pk=course_id)
     enrolled_students = course.students.all()
-    return render(request, 'administration/course_detail_page.html', {'course': course, 'enrolled_students': enrolled_students})
+    activites = course.activites.all().order_by('-created_at')
+    context = {
+        'course': course,
+        'enrolled_students': enrolled_students,
+        'activites': activites,
+    }
+    return render(request, 'administration/course_detail_page.html', context)
 
 @admin_required
 @require_POST

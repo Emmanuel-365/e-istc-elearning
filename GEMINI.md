@@ -1,5 +1,7 @@
 # Journal de Progression du Projet E-ISTC
 
+## Très important: Utiliser git comme un pro
+
 ## Statut Actuel
 - **Fonctionnalité 1 : Gestion des Utilisateurs et Authentification - TERMINÉE**
     - Interface d'administration des utilisateurs entièrement dynamique (CRUD sans rechargement de page).

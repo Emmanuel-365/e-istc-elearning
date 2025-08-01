@@ -26,5 +26,6 @@ urlpatterns = [
     path('comptes/', include('users.urls')),
     path('administration/', include('administration.urls')),
     path('courses/', include('courses.urls')),
+    path('evaluations/', include('evaluations.urls')),
     path('', user_views.home, name='home'),
 ] + static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)

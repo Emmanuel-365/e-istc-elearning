@@ -70,6 +70,32 @@
         </div>
     </div>
 
+    <h3>Évaluations</h3>
+    <div class="card mb-4">
+        <div class="card-header">
+            <button id="addEvaluationBtn" class="btn btn-primary">Ajouter une évaluation</button>
+        </div>
+        <div class="card-body">
+            <ul class="list-group" id="evaluation-list">
+                {% for activite in activites %}
+                <li class="list-group-item d-flex justify-content-between align-items-center" id="evaluation-item-{{ activite.id }}">
+                    <div>
+                        <h5>{{ activite.title }} <span class="badge bg-info">{{ activite.get_activity_type_display }}</span></h5>
+                        <p>{{ activite.description }}</p>
+                        <small>Date limite: {{ activite.due_date|date:"d/m/Y H:i" }}</small>
+                    </div>
+                    <div>
+                        <button class="btn btn-sm btn-secondary edit-evaluation-btn" data-id="{{ activite.id }}">Modifier</button>
+                        <button class="btn btn-sm btn-danger delete-evaluation-btn" data-id="{{ activite.id }}">Supprimer</button>
+                    </div>
+                </li>
+                {% empty %}
+                <li class="list-group-item">Aucune évaluation pour ce cours pour le moment.</li>
+                {% endfor %}
+            </ul>
+        </div>
+    </div>
+
     <h3>Étudiants inscrits</h3>
     <div class="card mb-4">
         <div class="card-body">
@@ -192,6 +218,48 @@
         </div>
     </div>
 
+    <!-- Modal pour Ajouter/Modifier Évaluation -->
+    <div class="modal fade" id="evaluationModal" tabindex="-1" aria-labelledby="evaluationModalLabel" aria-hidden="true">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="evaluationModalLabel">Ajouter une évaluation</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body">
+                    <form id="evaluationForm">
+                        <input type="hidden" id="evaluationId" name="evaluationId">
+                        <div id="evaluation-form-errors" class="alert alert-danger d-none"></div>
+                        
+                        <div class="mb-3">
+                            <label for="evaluationTitle" class="form-label">Titre</label>
+                            <input type="text" class="form-control" id="evaluationTitle" name="title" required>
+                        </div>
+                        <div class="mb-3">
+                            <label for="evaluationDescription" class="form-label">Description</label>
+                            <textarea class="form-control" id="evaluationDescription" name="description" rows="3"></textarea>
+                        </div>
+                        <div class="mb-3">
+                            <label for="evaluationType" class="form-label">Type</label>
+                            <select class="form-select" id="evaluationType" name="activity_type" required>
+                                <option value="DEVOIR">Devoir</option>
+                                <option value="QUIZ">Quiz</option>
+                            </select>
+                        </div>
+                        <div class="mb-3">
+                            <label for="evaluationDueDate" class="form-label">Date Limite</label>
+                            <input type="datetime-local" class="form-control" id="evaluationDueDate" name="due_date">
+                        </div>
+                    </form>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Annuler</button>
+                    <button type="button" id="saveEvaluationBtn" class="btn btn-primary">Sauvegarder</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
 {% endblock %}
 
 {% block extra_js %}
@@ -202,21 +270,27 @@ document.addEventListener('DOMContentLoaded', function () {
     const moduleModal = new bootstrap.Modal(document.getElementById('moduleModal'));
     const ressourceModal = new bootstrap.Modal(document.getElementById('ressourceModal'));
     const deleteConfirmModal = new bootstrap.Modal(document.getElementById('deleteConfirmModal'));
+    const evaluationModal = new bootstrap.Modal(document.getElementById('evaluationModal'));
 
     const moduleForm = document.getElementById('moduleForm');
     const ressourceForm = document.getElementById('ressourceForm');
+    const evaluationForm = document.getElementById('evaluationForm');
 
     const addModuleBtn = document.getElementById('addModuleBtn');
     const saveModuleBtn = document.getElementById('saveModuleBtn');
     const saveRessourceBtn = document.getElementById('saveRessourceBtn');
     const confirmDeleteBtn = document.getElementById('confirmDeleteBtn');
+    const addEvaluationBtn = document.getElementById('addEvaluationBtn');
+    const saveEvaluationBtn = document.getElementById('saveEvaluationBtn');
 
     const moduleList = document.getElementById('module-list');
     const studentTableBody = document.getElementById('student-table-body');
+    const evaluationList = document.getElementById('evaluation-list');
 
     let currentModuleId = null;
     let currentRessourceId = null;
-    let deleteElementType = null; // 'module' ou 'ressource'
+    let currentEvaluationId = null;
+    let deleteElementType = null; // 'module', 'ressource' ou 'evaluation'
 
     function getCookie(name) {
         let cookieValue = null;
@@ -233,6 +307,100 @@ document.addEventListener('DOMContentLoaded', function () {
         return cookieValue;
     }
     const csrftoken = getCookie('csrftoken');
+
+    // --- Gestion des Évaluations ---
+    addEvaluationBtn.addEventListener('click', function () {
+        currentEvaluationId = null;
+        evaluationForm.reset();
+        document.getElementById('evaluationModalLabel').textContent = 'Ajouter une évaluation';
+        document.getElementById('evaluation-form-errors').classList.add('d-none');
+        evaluationModal.show();
+    });
+
+    saveEvaluationBtn.addEventListener('click', function () {
+        const formData = new FormData(evaluationForm);
+        const data = Object.fromEntries(formData.entries());
+        const url = currentEvaluationId
+            ? `/evaluations/api/activities/${currentEvaluationId}/update/`
+            : `/evaluations/api/courses/${courseId}/activities/create/`;
+
+        fetch(url, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'X-CSRFToken': csrftoken
+            },
+            body: JSON.stringify(data)
+        })
+        .then(response => response.json())
+        .then(result => {
+            if (result.status === 'success') {
+                evaluationModal.hide();
+                upsertEvaluationInList(result.activite);
+                showToast('Évaluation sauvegardée avec succès !', 'success');
+            } else {
+                const errorDiv = document.getElementById('evaluation-form-errors');
+                errorDiv.innerHTML = Object.values(result.errors).map(e => `<p>${e}</p>`).join('');
+                errorDiv.classList.remove('d-none');
+                showToast('Erreur lors de la sauvegarde de l\'évaluation.', 'error');
+            }
+        });
+    });
+
+    function upsertEvaluationInList(activite) {
+        let evaluationItem = document.getElementById(`evaluation-item-${activite.id}`);
+        const evaluationHtml = `
+            <div>
+                <h5>${activite.title} <span class="badge bg-info">${activite.activity_type}</span></h5>
+                <p>${activite.description}</p>
+                <small>Date limite: ${new Date(activite.due_date).toLocaleString()}</small>
+            </div>
+            <div>
+                <button class="btn btn-sm btn-secondary edit-evaluation-btn" data-id="${activite.id}">Modifier</button>
+                <button class="btn btn-sm btn-danger delete-evaluation-btn" data-id="${activite.id}">Supprimer</button>
+            </div>
+        `;
+
+        if (evaluationItem) {
+            evaluationItem.innerHTML = evaluationHtml;
+        } else {
+            evaluationItem = document.createElement('li');
+            evaluationItem.className = 'list-group-item d-flex justify-content-between align-items-center';
+            evaluationItem.id = `evaluation-item-${activite.id}`;
+            evaluationItem.innerHTML = evaluationHtml;
+            evaluationList.appendChild(evaluationItem);
+        }
+    }
+
+    evaluationList.addEventListener('click', function (e) {
+        if (e.target.classList.contains('edit-evaluation-btn')) {
+            currentEvaluationId = e.target.dataset.id;
+            fetch(`/evaluations/api/activities/${currentEvaluationId}/`)
+                .then(response => response.json())
+                .then(data => {
+                    if (data.error) {
+                        showToast(data.error, 'error');
+                        return;
+                    }
+                    evaluationForm.reset();
+                    document.getElementById('evaluationModalLabel').textContent = 'Modifier une évaluation';
+                    document.getElementById('evaluation-form-errors').classList.add('d-none');
+                    
+                    document.getElementById('evaluationId').value = data.id;
+                    document.getElementById('evaluationTitle').value = data.title;
+                    document.getElementById('evaluationDescription').value = data.description;
+                    document.getElementById('evaluationType').value = data.activity_type;
+                    document.getElementById('evaluationDueDate').value = data.due_date ? new Date(data.due_date).toISOString().slice(0, 16) : '';
+                    
+                    evaluationModal.show();
+                });
+        }
+        if (e.target.classList.contains('delete-evaluation-btn')) {
+            currentEvaluationId = e.target.dataset.id;
+            deleteElementType = 'evaluation';
+            deleteConfirmModal.show();
+        }
+    });
 
     // --- Fonctions d'aide pour la mise à jour de l'UI ---
     function upsertModuleInList(module) {
@@ -432,6 +600,8 @@ document.addEventListener('DOMContentLoaded', function () {
             url = `/courses/api/modules/${currentModuleId}/delete/`;
         } else if (deleteElementType === 'ressource') {
             url = `/courses/api/ressources/${currentRessourceId}/delete/`;
+        } else if (deleteElementType === 'evaluation') {
+            url = `/evaluations/api/activities/${currentEvaluationId}/delete/`;
         }
 
         fetch(url, {
@@ -445,6 +615,8 @@ document.addEventListener('DOMContentLoaded', function () {
                     document.getElementById(`module-item-${currentModuleId}`).remove();
                 } else if (deleteElementType === 'ressource') {
                     document.getElementById(`ressource-item-${currentRessourceId}`).remove();
+                } else if (deleteElementType === 'evaluation') {
+                    document.getElementById(`evaluation-item-${currentEvaluationId}`).remove();
                 }
                 deleteConfirmModal.hide();
                 showToast('Élément supprimé avec succès !', 'success');
