@@ -47,6 +47,7 @@ INSTALLED_APPS = [
     'administration.apps.AdministrationConfig',
     'courses.apps.CoursesConfig',
     'evaluations.apps.EvaluationsConfig',
+    'forums.apps.ForumsConfig',
 ]
 
 AUTH_USER_MODEL = 'users.User'

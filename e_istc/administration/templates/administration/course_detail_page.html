@@ -133,6 +133,14 @@
         </div>
     </div>
 
+    <h3>Forum du Cours</h3>
+    <div class="card mb-4">
+        <div class="card-body">
+            <p>Espace de discussion pour ce cours.</p>
+            <a href="{% url 'forums:forum_cours' course.id %}" class="btn btn-primary">Accéder au Forum</a>
+        </div>
+    </div>
+
     <!-- Modal pour Ajouter/Modifier Module -->
     <div class="modal fade" id="moduleModal" tabindex="-1" aria-labelledby="moduleModalLabel" aria-hidden="true">
         <div class="modal-dialog">

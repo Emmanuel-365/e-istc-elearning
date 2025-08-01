@@ -83,5 +83,13 @@
         {% endfor %}
     </div>
 
+    <h3 class="mt-4">Forum</h3>
+    <div class="card">
+        <div class="card-body">
+            <p>Participez aux discussions et posez vos questions.</p>
+            <a href="{% url 'forums:forum_cours' course.id %}" class="btn btn-primary">Accéder au Forum</a>
+        </div>
+    </div>
+
 </div>
 {% endblock %}
