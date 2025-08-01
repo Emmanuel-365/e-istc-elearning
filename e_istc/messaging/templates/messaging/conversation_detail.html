@@ -2,9 +2,51 @@
 
 {% block title %}Conversation{% endblock %}
 
+{% block extra_css %}
+<style>
+    .chat-box {
+        height: 500px;
+        overflow-y: scroll;
+        padding: 1rem;
+        background-color: #f8f9fa;
+    }
+    .message-container {
+        display: flex;
+        margin-bottom: 1rem;
+    }
+    .message-container.sent {
+        justify-content: flex-end;
+    }
+    .message-container.received {
+        justify-content: flex-start;
+    }
+    .message-bubble {
+        max-width: 70%;
+        padding: 0.75rem 1rem;
+        border-radius: 1rem;
+        position: relative;
+    }
+    .message-bubble.sent {
+        background-color: var(--bs-primary);
+        color: white;
+        border-top-right-radius: 0.25rem;
+    }
+    .message-bubble.received {
+        background-color: #e9ecef;
+        color: black;
+        border-top-left-radius: 0.25rem;
+    }
+    .message-info {
+        font-size: 0.75rem;
+        color: #6c757d;
+        margin-top: 0.25rem;
+    }
+</style>
+{% endblock %}
+
 {% block content %}
 <div class="container">
-    <h2>Conversation avec 
+    <h2 class="mb-3">Conversation avec 
         {% for participant in conversation.participants.all %}
             {% if participant != request.user %}
                 {{ participant.first_name }} {{ participant.last_name }}
@@ -12,21 +54,36 @@
         {% endfor %}
     </h2>
 
-    <div class="chat-box" style="height: 400px; overflow-y: scroll; border: 1px solid #ccc; padding: 10px; margin-bottom: 10px;">
-        {% for message in conversation.messages.all %}
-            <div class="message {% if message.sender == request.user %}text-end{% endif %}">
-                <p><strong>{{ message.sender.first_name }}:</strong> {{ message.content }}</p>
-                <small class="text-muted">{{ message.timestamp|date:"d/m/Y H:i" }}</small>
-            </div>
-        {% endfor %}
-    </div>
-
-    <form method="post">
-        {% csrf_token %}
-        <div class="input-group">
-            <input type="text" name="content" class="form-control" placeholder="Votre message...">
-            <button type="submit" class="btn btn-primary">Envoyer</button>
+    <div class="card">
+        <div class="card-body chat-box" id="chat-box">
+            {% for message in conversation.messages.all %}
+                <div class="message-container {% if message.sender == request.user %}sent{% else %}received{% endif %}">
+                    <div class="message-bubble {% if message.sender == request.user %}sent{% else %}received{% endif %}">
+                        <p class="mb-0">{{ message.content }}</p>
+                        <div class="message-info text-end mt-1">
+                            {{ message.timestamp|date:"H:i" }}
+                        </div>
+                    </div>
+                </div>
+            {% endfor %}
         </div>
-    </form>
+        <div class="card-footer">
+            <form method="post">
+                {% csrf_token %}
+                <div class="input-group">
+                    <input type="text" name="content" class="form-control" placeholder="Votre message..." autofocus>
+                    <button type="submit" class="btn btn-primary">Envoyer</button>
+                </div>
+            </form>
+        </div>
+    </div>
 </div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+    // Auto-scroll to the bottom of the chat box
+    const chatBox = document.getElementById('chat-box');
+    chatBox.scrollTop = chatBox.scrollHeight;
+</script>
 {% endblock %}

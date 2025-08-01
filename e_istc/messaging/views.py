@@ -12,6 +12,8 @@ def inbox(request):
 @login_required
 def conversation_detail(request, conversation_id):
     conversation = get_object_or_404(Conversation, pk=conversation_id, participants=request.user)
+    # Marquer les messages comme lus
+    conversation.messages.filter(is_read=False).exclude(sender=request.user).update(is_read=True)
     if request.method == 'POST':
         content = request.POST.get('content')
         if content:

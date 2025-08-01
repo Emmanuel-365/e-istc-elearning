@@ -44,6 +44,8 @@
         - Création des vues de base (boîte de réception, détail de la conversation) et des templates associés.
         - Intégration d'un lien "Messagerie" dans la barre de navigation.
         - Ajout de boutons "Contacter" pour démarrer des conversations depuis les pages de détail des cours.
+        - Ajout d'un compteur de messages non lus dans la barre de navigation.
+        - Amélioration de l'interface de conversation avec des bulles de chat.
 - **Fonctionnalité 5 : Gestion des Inscriptions - TERMINÉE**
     - **Partie Étudiant :**
         - Inscription et désinscription autonomes depuis le tableau de bord.
@@ -68,12 +70,13 @@
     - Ajout des URLs pour la messagerie.
     - Ajout d'un lien "Messagerie" dans la barre de navigation (`base.html`).
     - Ajout de boutons "Contacter" sur les pages de détail des cours.
+    - Création d'un template tag pour compter les messages non lus.
+    - Mise à jour de la vue `conversation_detail` pour marquer les messages comme lus.
+    - Amélioration de l'interface de `conversation_detail.html` avec des bulles de chat et un défilement automatique.
 
 ## Prochaines Étapes
 1.  **Améliorations de la Messagerie :**
-    *   Afficher un indicateur de messages non lus.
     *   Permettre de rechercher des utilisateurs pour démarrer une conversation.
-    *   Améliorer l'interface de la conversation (par exemple, avec des bulles de chat distinctes pour l'émetteur et le récepteur).
 2.  **Améliorations de l'Expérience Utilisateur (UX) :**
     *   **Feedback Visuel :** Remplacer les `alert()` JavaScript par des messages de succès/erreur plus élégants (par exemple, des toasts Bootstrap ou des messages Django).
     *   **Indicateurs de Chargement :** Ajouter des indicateurs visuels (spinners) pour toutes les opérations AJAX afin d'informer l'utilisateur que l'action est en cours.
