@@ -5,7 +5,7 @@
 {% block content %}
 <div class="container-fluid">
     <h2>Tableau de Bord Étudiant</h2>
-    <p>Bienvenue, {{ user.first_name }} !</p>
+    <p>Bienvenue, {{ user.first_name }} ! <a href="{% url 'users:my_grades' %}" class="btn btn-sm btn-info">Mes Notes</a></p>
 
     <div class="card mt-4">
         <div class="card-header">

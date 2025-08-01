@@ -75,7 +75,7 @@
                         <a href="{% url 'users:submit_assignment' activite.id %}" class="btn btn-primary btn-sm">Soumettre le devoir</a>
                     {% endif %}
                 {% elif activite.activity_type == 'QUIZ' %}
-                    <a href="#" class="btn btn-success btn-sm">Commencer le Quiz</a>
+                    <a href="{% url 'users:take_quiz' activite.id %}" class="btn btn-success btn-sm">Commencer le Quiz</a>
                 {% endif %}
             </div>
         {% empty %}

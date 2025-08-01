@@ -1,0 +1,79 @@
+{% extends "base.html" %}
+
+{% block title %}Mes Notes{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+    <h2 class="mb-4">Mes Notes</h2>
+
+    <div class="card mb-4">
+        <div class="card-header">
+            Notes des Devoirs
+        </div>
+        <div class="card-body">
+            {% if soumissions %}
+            <table class="table table-striped">
+                <thead>
+                    <tr>
+                        <th>Devoir</th>
+                        <th>Cours</th>
+                        <th>Date de Soumission</th>
+                        <th>Note</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for soumission in soumissions %}
+                    <tr>
+                        <td>{{ soumission.activite.title }}</td>
+                        <td>{{ soumission.activite.course.title }}</td>
+                        <td>{{ soumission.date_soumission|date:"d/m/Y H:i" }}</td>
+                        <td>
+                            {% if soumission.note is not None %}
+                                {{ soumission.note }}
+                            {% else %}
+                                En attente
+                            {% endif %}
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+            {% else %}
+            <p>Aucun devoir soumis pour le moment.</p>
+            {% endif %}
+        </div>
+    </div>
+
+    <div class="card">
+        <div class="card-header">
+            Notes des Quiz
+        </div>
+        <div class="card-body">
+            {% if tentatives %}
+            <table class="table table-striped">
+                <thead>
+                    <tr>
+                        <th>Quiz</th>
+                        <th>Cours</th>
+                        <th>Date de Tentative</th>
+                        <th>Score</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for tentative in tentatives %}
+                    <tr>
+                        <td>{{ tentative.activite.title }}</td>
+                        <td>{{ tentative.activite.course.title }}</td>
+                        <td>{{ tentative.date_tentative|date:"d/m/Y H:i" }}</td>
+                        <td>{{ tentative.score }} / {{ tentative.activite.questions.count }}</td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+            {% else %}
+            <p>Aucun quiz tenté pour le moment.</p>
+            {% endif %}
+        </div>
+    </div>
+</div>
+{% endblock %}

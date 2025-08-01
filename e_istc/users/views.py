@@ -1,7 +1,7 @@
 from django.shortcuts import render, redirect
 from django.urls import reverse_lazy
 from django.contrib.auth.decorators import login_required
-from django.http import JsonResponse
+from django.http import Http404, JsonResponse
 from django.views.decorators.http import require_POST
 from .decorators import role_required
 from .models import User
@@ -9,7 +9,7 @@ from django.contrib.auth.views import LoginView, PasswordResetView, PasswordRese
 from django.contrib.auth.forms import AuthenticationForm
 from courses.models import Course
 from courses.forms import CourseForm
-from evaluations.models import Activite, Soumission
+from evaluations.models import Activite, Soumission, Question, Choix, Tentative
 from evaluations.forms import SoumissionForm
 import json
 
@@ -202,5 +202,67 @@ def submit_assignment(request, activity_id):
     else:
         form = SoumissionForm()
     return render(request, 'users/submit_assignment.html', {'form': form, 'activite': activite})
+
+@login_required
+@role_required(User.Role.ETUDIANT)
+def take_quiz(request, activity_id):
+    try:
+        activite = Activite.objects.get(pk=activity_id, activity_type=Activite.ActivityType.QUIZ)
+    except Activite.DoesNotExist:
+        raise Http404("Quiz non trouvé.")
+
+    # Vérifier si l'étudiant a déjà soumis ce quiz
+    if Tentative.objects.filter(activite=activite, etudiant=request.user).exists():
+        # Rediriger vers une page de résultats ou un message indiquant que le quiz a déjà été passé
+        return render(request, 'users/quiz_already_taken.html', {'activite': activite})
+
+    questions = activite.questions.all().order_by('id')
+    if not questions.exists():
+        return render(request, 'users/quiz_no_questions.html', {'activite': activite})
+
+    if request.method == 'POST':
+        # Logique de traitement des réponses du quiz
+        score = 0
+        total_questions = questions.count()
+
+        for question in questions:
+            if question.type_question == Question.QuestionType.CHOIX_UNIQUE:
+                submitted_choice_id = request.POST.get(f'question_{question.id}')
+                correct_choice = question.choix.filter(est_correct=True).first()
+                if correct_choice and str(correct_choice.id) == submitted_choice_id:
+                    score += 1
+            elif question.type_question == Question.QuestionType.CHOIX_MULTIPLE:
+                submitted_choices_ids = request.POST.getlist(f'question_{question.id}')
+                correct_choices = set(question.choix.filter(est_correct=True).values_list('id', flat=True))
+                submitted_choices = set(map(int, submitted_choices_ids))
+
+                if correct_choices == submitted_choices:
+                    score += 1
+        
+        # Enregistrer la tentative
+        Tentative.objects.create(
+            activite=activite,
+            etudiant=request.user,
+            score=score
+        )
+        
+        # Rediriger vers une page de résultats ou le tableau de bord
+        return render(request, 'users/quiz_results.html', {'activite': activite, 'score': score, 'total_questions': total_questions})
+
+    # Afficher la première question (ou toutes les questions pour un quiz simple)
+    return render(request, 'users/take_quiz.html', {'activite': activite, 'questions': questions})
+
+@login_required
+@role_required(User.Role.ETUDIANT)
+def my_grades(request):
+    soumissions = Soumission.objects.filter(etudiant=request.user).order_by('-date_soumission')
+    tentatives = Tentative.objects.filter(etudiant=request.user).order_by('-date_tentative')
+
+    context = {
+        'soumissions': soumissions,
+        'tentatives': tentatives,
+    }
+    return render(request, 'users/my_grades.html', context)
+
 
 
