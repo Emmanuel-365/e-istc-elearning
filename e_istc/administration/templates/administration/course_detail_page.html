@@ -103,6 +103,9 @@
 
     <h3>Étudiants inscrits</h3>
     <div class="card mb-4">
+        <div class="card-header">
+            <button id="enrollStudentBtn" class="btn btn-primary">Inscrire un étudiant</button>
+        </div>
         <div class="card-body">
             <table class="table table-striped">
                 <thead>
@@ -120,11 +123,12 @@
                         <td>{{ student.email }}</td>
                         <td>{{ student.matricule }}</td>
                         <td>
+                            <a href="{% url 'messaging:new_conversation' student.id %}" class="btn btn-sm btn-outline-primary">Contacter</a>
                             <button class="btn btn-sm btn-danger remove-student-btn" data-id="{{ student.id }}">Retirer</button>
                         </td>
                     </tr>
                     {% empty %}
-                    <tr>
+                    <tr id="no-student-row">
                         <td colspan="4">Aucun étudiant inscrit.</td>
                     </tr>
                     {% endfor %}
@@ -164,6 +168,26 @@
                 <li class="list-group-item">Aucune annonce pour ce cours pour le moment.</li>
                 {% endfor %}
             </ul>
+        </div>
+    </div>
+
+    <!-- Modal pour Inscrire un Étudiant -->
+    <div class="modal fade" id="enrollStudentModal" tabindex="-1" aria-labelledby="enrollStudentModalLabel" aria-hidden="true">
+        <div class="modal-dialog modal-lg">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="enrollStudentModalLabel">Inscrire un Étudiant</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body">
+                    <ul class="list-group" id="enrollable-student-list">
+                        <!-- La liste des étudiants non-inscrits sera chargée ici -->
+                    </ul>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Fermer</button>
+                </div>
+            </div>
         </div>
     </div>
 
@@ -416,6 +440,7 @@ document.addEventListener('DOMContentLoaded', function () {
     const questionsModal = document.getElementById('questionsModal') ? new bootstrap.Modal(document.getElementById('questionsModal')) : null;
     const gradeAssignmentModal = document.getElementById('gradeAssignmentModal') ? new bootstrap.Modal(document.getElementById('gradeAssignmentModal')) : null;
     const annonceModal = document.getElementById('annonceModal') ? new bootstrap.Modal(document.getElementById('annonceModal')) : null;
+    const enrollStudentModal = document.getElementById('enrollStudentModal') ? new bootstrap.Modal(document.getElementById('enrollStudentModal')) : null;
 
     const moduleForm = document.getElementById('moduleForm');
     const ressourceForm = document.getElementById('ressourceForm');
@@ -430,6 +455,7 @@ document.addEventListener('DOMContentLoaded', function () {
     const saveEvaluationBtn = document.getElementById('saveEvaluationBtn');
     const addAnnonceBtn = document.getElementById('addAnnonceBtn');
     const saveAnnonceBtn = document.getElementById('saveAnnonceBtn');
+    const enrollStudentBtn = document.getElementById('enrollStudentBtn');
 
     const moduleList = document.getElementById('module-list');
     const studentTableBody = document.getElementById('student-table-body');
@@ -1116,6 +1142,69 @@ document.addEventListener('DOMContentLoaded', function () {
             deleteConfirmModal.show();
         }
     });
+
+    // --- Gestion de l'Inscription Manuelle ---
+    enrollStudentBtn.addEventListener('click', function() {
+        const list = document.getElementById('enrollable-student-list');
+        list.innerHTML = '<li class="list-group-item">Chargement...</li>';
+        enrollStudentModal.show();
+        fetch(`/courses/api/courses/${courseId}/students/enrollable/`)
+            .then(response => response.json())
+            .then(data => {
+                list.innerHTML = '';
+                if (data.students && data.students.length > 0) {
+                    data.students.forEach(student => {
+                        const item = document.createElement('li');
+                        item.className = 'list-group-item d-flex justify-content-between align-items-center';
+                        item.innerHTML = `
+                            <span>${student.name} (${student.matricule})</span>
+                            <button class="btn btn-sm btn-success enroll-now-btn" data-id="${student.id}">Inscrire</button>
+                        `;
+                        list.appendChild(item);
+                    });
+                } else {
+                    list.innerHTML = '<li class="list-group-item">Tous les étudiants sont déjà inscrits.</li>';
+                }
+            });
+    });
+
+    document.getElementById('enrollable-student-list').addEventListener('click', function(e) {
+        if (e.target.classList.contains('enroll-now-btn')) {
+            const studentId = e.target.dataset.id;
+            fetch(`/courses/api/courses/${courseId}/students/${studentId}/enroll/`, {
+                method: 'POST',
+                headers: { 'X-CSRFToken': csrftoken }
+            })
+            .then(response => response.json())
+            .then(result => {
+                if (result.status === 'success') {
+                    enrollStudentModal.hide();
+                    addStudentToTable(result.student);
+                    showToast('Étudiant inscrit avec succès !', 'success');
+                } else {
+                    showToast(result.message || 'Erreur lors de l\'inscription.', 'error');
+                }
+            });
+        }
+    });
+
+    function addStudentToTable(student) {
+        const noStudentRow = document.getElementById('no-student-row');
+        if (noStudentRow) {
+            noStudentRow.remove();
+        }
+        const newRow = document.createElement('tr');
+        newRow.id = `student-row-${student.id}`;
+        newRow.innerHTML = `
+            <td>${student.last_name} ${student.first_name}</td>
+            <td>${student.email}</td>
+            <td>${student.matricule}</td>
+            <td>
+                <button class="btn btn-sm btn-danger remove-student-btn" data-id="${student.id}">Retirer</button>
+            </td>
+        `;
+        studentTableBody.appendChild(newRow);
+    }
 });
 </script>
 {% endblock %}

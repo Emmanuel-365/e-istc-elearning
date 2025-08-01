@@ -217,3 +217,35 @@ def delete_annonce(request, annonce_id):
         return JsonResponse({'status': 'success'})
     except Annonce.DoesNotExist:
         return JsonResponse({'status': 'error', 'message': 'Annonce non trouvée'}, status=404)
+
+@course_owner_or_admin_required
+def list_enrollable_students(request, course_id):
+    course = Course.objects.get(pk=course_id)
+    enrolled_student_ids = course.students.values_list('id', flat=True)
+    enrollable_students = User.objects.filter(role=User.Role.ETUDIANT).exclude(id__in=enrolled_student_ids)
+    students_data = [
+        {
+            'id': student.id,
+            'name': f'{student.first_name} {student.last_name}',
+            'matricule': student.matricule
+        } for student in enrollable_students
+    ]
+    return JsonResponse({'students': students_data})
+
+@course_owner_or_admin_required
+@require_POST
+def enroll_student(request, course_id, student_id):
+    try:
+        course = Course.objects.get(pk=course_id)
+        student = User.objects.get(pk=student_id, role=User.Role.ETUDIANT)
+        course.students.add(student)
+        student_data = {
+            'id': student.id,
+            'first_name': student.first_name,
+            'last_name': student.last_name,
+            'email': student.email,
+            'matricule': student.matricule
+        }
+        return JsonResponse({'status': 'success', 'student': student_data})
+    except (Course.DoesNotExist, User.DoesNotExist):
+        return JsonResponse({'status': 'error', 'message': 'Cours ou étudiant non trouvé.'}, status=404)

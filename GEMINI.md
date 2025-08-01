@@ -34,72 +34,50 @@
         - Soumission de devoirs : page dédiée avec formulaire de téléversement et gestion de la soumission unique.
         - Passage de quiz : interface pour répondre aux questions, calcul du score et enregistrement de la tentative.
         - Consultation des notes : page récapitulative des notes obtenues aux devoirs et quiz.
+- **Fonctionnalité 4 : Annonces et Communication - EN COURS**
+    - **Annonces :**
+        - **Partie Enseignant/Admin :** Création du modèle `Annonce`, intégration du CRUD dynamique dans l'interface d'administration des cours.
+        - **Partie Étudiant :** Affichage des annonces sur la page de détail du cours.
+    - **Messagerie Interne :**
+        - Création de l'application `messaging`.
+        - Définition des modèles `Conversation` et `Message`.
+        - Création des vues de base (boîte de réception, détail de la conversation) et des templates associés.
+        - Intégration d'un lien "Messagerie" dans la barre de navigation.
+        - Ajout de boutons "Contacter" pour démarrer des conversations depuis les pages de détail des cours.
+- **Fonctionnalité 5 : Gestion des Inscriptions - TERMINÉE**
+    - **Partie Étudiant :**
+        - Inscription et désinscription autonomes depuis le tableau de bord.
+    - **Partie Enseignant/Admin :**
+        - Affichage de la liste des étudiants inscrits sur la page de détail du cours.
+        - Retrait d'un étudiant d'un cours.
+        - Inscription manuelle d'un ou plusieurs étudiants à un cours via une interface modale.
 
 ## Dernières Actions
-- **Gestion des Utilisateurs :**
-    - Amélioration de l'interface d'administration des utilisateurs : les opérations d'ajout et de modification se font désormais sans rechargement de page, offrant une expérience utilisateur plus fluide.
-    - Refonte de la page de connexion (`users/login.html`) : mise à jour du design, ajout d'un lien "Mot de passe oublié", et implémentation de la fonctionnalité "Se souvenir de moi".
-    - Correction des problèmes de déconnexion (passage de GET à POST pour le formulaire de déconnexion) et d'affichage des modales JavaScript sur la page d'administration (inclusion du bloc `extra_js` dans `base.html`).
-    - Correction des erreurs `NoReverseMatch` et `SyntaxError` liées aux namespaces d'URL et aux templates JavaScript.
-    - Ajout de logs pour le diagnostic de l'envoi d'e-mails de bienvenue.
-- **Gestion des Cours :**
-    - Création de l'application `courses` et ajout à `INSTALLED_APPS`.
-    - Définition des modèles `Course`, `Module`, et `Ressource` dans `courses/models.py`.
-    - Création et application des migrations pour les nouveaux modèles.
-    - Enregistrement des modèles `Course`, `Module`, `Ressource` dans l'interface d'administration par défaut.
-    - Intégration de la gestion des cours dans l'interface d'administration personnalisée :
-        - Ajout de la vue `course_management_page` dans `administration/views.py` et son URL associée.
-        - Création du template `administration/course_management.html` pour lister les cours.
-        - Création du `CourseForm` dans `courses/forms.py`.
-        - Implémentation des vues d'API (`create_course`, `update_course`, `delete_course`, `course_detail`) dans `administration/views.py` et leurs URLs.
-        - Ajout de la modale et du JavaScript pour le CRUD dynamique des cours dans `course_management.html`.
-        - Ajout d'un lien "Cours" dans la barre de navigation pour les administrateurs.
-        - Création de la page de détail d'un cours (`/administration/cours/<int:course_id>/`) avec la vue `course_detail_page` et le template `course_detail_page.html`.
-        - Déplacement des vues API des modules et ressources vers `courses/views.py` et création de `courses/urls.py`.
-        - Mise à jour des décorateurs (`module_owner_or_admin_required`, `ressource_owner_or_admin_required`) pour gérer les permissions des enseignants et administrateurs.
-        - Correction des URLs JavaScript dans `administration/course_detail_page.html` pour pointer vers les nouvelles API de `courses`.
-        - Mise à jour du tableau de bord enseignant (`users/dashboard_enseignant.html`) pour permettre le CRUD de leurs cours.
-        - Mise à jour du tableau de bord étudiant (`users/dashboard_etudiant.html`) pour lister les cours et gérer l'inscription/désinscription.
-        - Création de la vue et du template pour le détail du cours étudiant (`users/views.py`, `users/templates/users/course_detail_student.html`).
-        - Correction des erreurs JavaScript (`TypeError`, `SyntaxError`) et `NoReverseMatch` liées aux mises à jour dynamiques et aux URLs.
-- **Gestion des Évaluations :**
-    - Création de l'application `evaluations` (`python manage.py startapp evaluations`).
-    - Ajout de `evaluations` à `INSTALLED_APPS` dans `e_istc/settings.py`.
-    - Définition des modèles `Activite`, `Question`, `Choix`, `Soumission`, `Tentative` dans `evaluations/models.py`.
-    - Création et application des migrations pour les nouveaux modèles (`makemigrations`, `migrate`).
-    - Modification du template `administration/course_detail_page.html` pour ajouter la section "Évaluations" et les modales de gestion (ajout/modification/suppression).
-    - Création des URLs (`evaluations/urls.py`) et des vues (`evaluations/views.py`) pour le CRUD des activités (évaluations).
-    - Création des formulaires (`evaluations/forms.py`) pour les activités, questions et choix.
-    - Intégration des URLs `evaluations` dans le `urls.py` principal du projet.
-    - Mise à jour de la vue `administration.views.course_detail_page` pour passer les activités au template.
-    - Ajout des boutons "Gérer les questions" pour les quiz dans l'interface admin/enseignant.
-    - Implémentation des vues et URLs pour le CRUD des questions et choix de quiz.
-    - Création de décorateurs de permission spécifiques (`evaluations/decorators.py`) pour les activités et les questions (`activity_owner_or_admin_required`, `question_owner_or_admin_required`, `submission_owner_or_admin_required`).
-    - Correction des erreurs de permission (403) et d'importation (`NameError`, `ImportError`) rencontrées.
-    - **Partie Étudiant :**
-        - Mise à jour de la vue `users.views.student_course_detail` pour récupérer et passer les activités au template.
-        - Modification du template `users/templates/users/course_detail_student.html` pour afficher les évaluations.
-        - Ajout d'une URL (`users/urls.py`) et d'une vue (`users/views.py`) pour la soumission de devoirs (`submit_assignment`).
-        - Création du template `users/templates/users/submit_assignment.html`.
-        - Ajout d'une vérification pour empêcher les soumissions multiples pour le même devoir, avec mise à jour de l'interface étudiante.
-        - Ajout d'une URL (`users/urls.py`) et d'une vue (`users/views.py`) pour le passage de quiz (`take_quiz`).
-        - Création des templates (`users/templates/users/take_quiz.html`, `quiz_already_taken.html`, `quiz_no_questions.html`, `quiz_results.html`) pour l'interface de quiz.
-        - Ajout d'une URL (`users/urls.py`) et d'une vue (`users/views.py`) pour la consultation des notes (`my_grades`).
-        - Création du template `users/templates/users/my_grades.html`.
-        - Ajout d'un lien vers "Mes Notes" dans le tableau de bord étudiant.
-    - **Notation des devoirs (Enseignant/Admin) :**
-        - Ajout d'un bouton "Noter les devoirs" sur la page de détail du cours (admin/enseignant).
-        - Création d'une modale pour lister les soumissions d'un devoir et permettre la saisie des notes.
-        - Ajout des vues et URLs d'API (`evaluations/urls.py`, `evaluations/views.py`) pour lister les soumissions et mettre à jour les notes.
+- **Gestion des Inscriptions (Admin/Enseignant) :**
+    - Ajout des vues d'API `list_enrollable_students` et `enroll_student` dans `courses/views.py`.
+    - Ajout des URLs correspondantes dans `courses/urls.py`.
+    - Ajout d'un bouton "Inscrire un étudiant" et d'une modale dans `administration/course_detail_page.html`.
+    - Implémentation du JavaScript pour charger les étudiants non-inscrits et les inscrire de manière asynchrone.
+- **Messagerie Interne :**
+    - Création de l'application `messaging` (`python manage.py startapp messaging`).
+    - Ajout de `messaging` à `INSTALLED_APPS`.
+    - Définition des modèles `Conversation` et `Message` dans `messaging/models.py`.
+    - Création et application des migrations.
+    - Création des vues `inbox`, `conversation_detail`, et `new_conversation`.
+    - Création des templates `inbox.html` et `conversation_detail.html`.
+    - Ajout des URLs pour la messagerie.
+    - Ajout d'un lien "Messagerie" dans la barre de navigation (`base.html`).
+    - Ajout de boutons "Contacter" sur les pages de détail des cours.
 
-## Prochaines Étapes (lointaines)
-1.  **Améliorations de l'Expérience Utilisateur (UX) :**
+## Prochaines Étapes
+1.  **Améliorations de la Messagerie :**
+    *   Afficher un indicateur de messages non lus.
+    *   Permettre de rechercher des utilisateurs pour démarrer une conversation.
+    *   Améliorer l'interface de la conversation (par exemple, avec des bulles de chat distinctes pour l'émetteur et le récepteur).
+2.  **Améliorations de l'Expérience Utilisateur (UX) :**
     *   **Feedback Visuel :** Remplacer les `alert()` JavaScript par des messages de succès/erreur plus élégants (par exemple, des toasts Bootstrap ou des messages Django).
     *   **Indicateurs de Chargement :** Ajouter des indicateurs visuels (spinners) pour toutes les opérations AJAX afin d'informer l'utilisateur que l'action est en cours.
     *   **Validation Côté Client :** Implémenter une validation JavaScript plus robuste pour les formulaires des modales afin de fournir un feedback instantané avant l'envoi au serveur.
-2.  **Gestion des Inscriptions (Admin/Enseignant) :**
-    *   Permettre aux administrateurs et aux enseignants de voir la liste des étudiants inscrits à un cours spécifique.
-    *   Ajouter la possibilité pour les administrateurs/enseignants d'inscrire ou de désinscrire manuellement des étudiants à un cours.
 3.  **Tests et Préparation au Déploiement :**
     *   **Tests Automatisés :** Écrire des tests unitaires et d'intégration pour les fonctionnalités critiques (modèles, formulaires, vues, API).
     *   **Configuration de Déploiement :** Préparer le projet pour un environnement de production (gestion des fichiers statiques et médias, configuration de la base de données, sécurité).

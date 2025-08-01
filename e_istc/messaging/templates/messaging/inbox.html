@@ -1,0 +1,28 @@
+{% extends 'base.html' %}
+
+{% block title %}Boîte de réception{% endblock %}
+
+{% block content %}
+<div class="container">
+    <h2>Boîte de réception</h2>
+    <div class="list-group">
+        {% for conv in conversations %}
+            <a href="{% url 'messaging:conversation_detail' conv.id %}" class="list-group-item list-group-item-action">
+                <div class="d-flex w-100 justify-content-between">
+                    <h5 class="mb-1">
+                        {% for participant in conv.participants.all %}
+                            {% if participant != request.user %}
+                                {{ participant.first_name }} {{ participant.last_name }}
+                            {% endif %}
+                        {% endfor %}
+                    </h5>
+                    <small>{{ conv.updated_at|timesince }} ago</small>
+                </div>
+                <p class="mb-1">{{ conv.messages.last.content|truncatechars:100 }}</p>
+            </a>
+        {% empty %}
+            <p>Aucune conversation.</p>
+        {% endfor %}
+    </div>
+</div>
+{% endblock %}

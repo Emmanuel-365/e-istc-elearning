@@ -1,0 +1,32 @@
+{% extends 'base.html' %}
+
+{% block title %}Conversation{% endblock %}
+
+{% block content %}
+<div class="container">
+    <h2>Conversation avec 
+        {% for participant in conversation.participants.all %}
+            {% if participant != request.user %}
+                {{ participant.first_name }} {{ participant.last_name }}
+            {% endif %}
+        {% endfor %}
+    </h2>
+
+    <div class="chat-box" style="height: 400px; overflow-y: scroll; border: 1px solid #ccc; padding: 10px; margin-bottom: 10px;">
+        {% for message in conversation.messages.all %}
+            <div class="message {% if message.sender == request.user %}text-end{% endif %}">
+                <p><strong>{{ message.sender.first_name }}:</strong> {{ message.content }}</p>
+                <small class="text-muted">{{ message.timestamp|date:"d/m/Y H:i" }}</small>
+            </div>
+        {% endfor %}
+    </div>
+
+    <form method="post">
+        {% csrf_token %}
+        <div class="input-group">
+            <input type="text" name="content" class="form-control" placeholder="Votre message...">
+            <button type="submit" class="btn btn-primary">Envoyer</button>
+        </div>
+    </form>
+</div>
+{% endblock %}
