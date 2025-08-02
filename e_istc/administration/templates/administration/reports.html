@@ -1,0 +1,38 @@
+{% extends "base.html" %}
+
+{% block title %}Rapports - Administration{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+    <h2 class="mb-4">Rapports de Participation et de Performance</h2>
+
+    <div class="card">
+        <div class="card-body">
+            <table class="table table-striped">
+                <thead>
+                    <tr>
+                        <th>Cours</th>
+                        <th>Étudiants Inscrits</th>
+                        <th>Devoirs</th>
+                        <th>Quiz</th>
+                        <th>Note Moyenne (Devoirs)</th>
+                        <th>Score Moyen (Quiz)</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for report in reports %}
+                    <tr>
+                        <td>{{ report.course.title }}</td>
+                        <td>{{ report.student_count }}</td>
+                        <td>{{ report.assignment_count }}</td>
+                        <td>{{ report.quiz_count }}</td>
+                        <td>{{ report.avg_assignment_grade|floatformat:2|default:"N/A" }}</td>
+                        <td>{{ report.avg_quiz_score|floatformat:2|default:"N/A" }}</td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+{% endblock %}

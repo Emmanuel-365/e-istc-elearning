@@ -1,7 +1,8 @@
 from django.test import TestCase, Client
 from django.urls import reverse
 from users.models import User
-from courses.models import Course, CourseProgress, Ressource, Module
+from courses.models import Course, Module, Ressource, Category, CourseProgress
+from evaluations.models import Activite, Soumission, Tentative
 import json
 
 class AdministrationAPITest(TestCase):
@@ -197,3 +198,26 @@ class CategoryManagementTest(TestCase):
         response = self.client.post(reverse('administration:api_delete_category', args=[self.category.id]))
         self.assertEqual(response.status_code, 200)
         self.assertEqual(Category.objects.count(), 0)
+
+class ReportsViewTest(TestCase):
+    def setUp(self):
+        self.client = Client()
+        self.admin_user = User.objects.create_user(username='admin', email='admin@example.com', password='password', role=User.Role.ADMIN, is_staff=True, is_superuser=True)
+        self.teacher_user = User.objects.create_user(username='teacher', email='teacher@example.com', password='password', role=User.Role.ENSEIGNANT)
+        self.student1 = User.objects.create_user(username='student1', email='student1@example.com', password='password', role=User.Role.ETUDIANT)
+        self.student2 = User.objects.create_user(username='student2', email='student2@example.com', password='password', role=User.Role.ETUDIANT)
+        self.course = Course.objects.create(title='Reports Course', description='Desc', teacher=self.teacher_user)
+        self.course.students.add(self.student1, self.student2)
+        self.assignment = Activite.objects.create(course=self.course, title='Assignment 1', activity_type='DEVOIR')
+        self.quiz = Activite.objects.create(course=self.course, title='Quiz 1', activity_type='QUIZ')
+        Soumission.objects.create(activite=self.assignment, etudiant=self.student1, note=15)
+        Soumission.objects.create(activite=self.assignment, etudiant=self.student2, note=18)
+        Tentative.objects.create(activite=self.quiz, etudiant=self.student1, score=8)
+        Tentative.objects.create(activite=self.quiz, etudiant=self.student2, score=9)
+
+    def test_reports_page_view(self):
+        self.client.login(username='admin', password='password')
+        response = self.client.get(reverse('administration:reports_page'))
+        self.assertEqual(response.status_code, 200)
+        self.assertContains(response, '16.50') # Average assignment grade
+        self.assertContains(response, '8.50') # Average quiz score

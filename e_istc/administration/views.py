@@ -5,7 +5,8 @@ from users.models import User
 from users.forms import CustomUserCreationForm, CustomUserChangeForm
 from courses.models import Course, Module, Ressource, Category, CourseProgress
 from courses.forms import CourseForm, ModuleForm, RessourceForm, CategoryForm
-from evaluations.models import Activite
+from django.db.models import Avg
+from evaluations.models import Activite, Soumission, Tentative
 from .decorators import admin_required, course_owner_or_admin_required
 import json
 from django.contrib import messages
@@ -295,6 +296,27 @@ def update_category(request, category_id):
     except Category.DoesNotExist:
         messages.error(request, 'Catégorie non trouvée.')
         return JsonResponse({'status': 'error', 'message': 'Catégorie non trouvée'}, status=404)
+
+@admin_required
+def reports_page(request):
+    courses = Course.objects.all()
+    reports = []
+    for course in courses:
+        student_count = course.students.count()
+        assignment_count = Activite.objects.filter(course=course, activity_type='DEVOIR').count()
+        quiz_count = Activite.objects.filter(course=course, activity_type='QUIZ').count()
+        avg_assignment_grade = Soumission.objects.filter(activite__course=course).aggregate(Avg('note'))['note__avg'] or 0
+        avg_quiz_score = Tentative.objects.filter(activite__course=course).aggregate(Avg('score'))['score__avg'] or 0
+        
+        reports.append({
+            'course': course,
+            'student_count': student_count,
+            'assignment_count': assignment_count,
+            'quiz_count': quiz_count,
+            'avg_assignment_grade': avg_assignment_grade,
+            'avg_quiz_score': avg_quiz_score
+        })
+    return render(request, 'administration/reports.html', {'reports': reports})
 
 @admin_required
 @require_POST

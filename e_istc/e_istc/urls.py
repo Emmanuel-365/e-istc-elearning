@@ -30,6 +30,7 @@ urlpatterns = [
     path('forums/', include('forums.urls')),
     path('messaging/', include('messaging.urls')),
     path('notifications/', include('notifications.urls')),
+    path('platform_settings/', include('platform_settings.urls')),
     
     path('', user_views.home, name='home'),
 ] + static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)

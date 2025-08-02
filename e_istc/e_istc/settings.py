@@ -50,6 +50,7 @@ INSTALLED_APPS = [
     'forums.apps.ForumsConfig',
     'messaging.apps.MessagingConfig',
     'notifications.apps.NotificationsConfig',
+    'platform_settings.apps.PlatformSettingsConfig',
 ]
 
 AUTH_USER_MODEL = 'users.User'
@@ -81,6 +82,7 @@ TEMPLATES = [
                 'django.template.context_processors.request',
                 'django.contrib.auth.context_processors.auth',
                 'django.contrib.messages.context_processors.messages',
+                'platform_settings.context_processors.platform_settings',
             ],
         },
     },
