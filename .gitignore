@@ -77,3 +77,4 @@ MANIFEST
 # Fichiers spécifiques au projet qui ne doivent pas être versionnés.
 ressources/
 *.log
+backups/

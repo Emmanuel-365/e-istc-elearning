@@ -4,6 +4,51 @@ from users.models import User
 from courses.models import Course, Module, Ressource, Category, CourseProgress
 from evaluations.models import Activite, Soumission, Tentative
 import json
+import os
+from django.core.management import call_command
+from io import StringIO
+
+class BackupRestoreTest(TestCase):
+    def setUp(self):
+        self.client = Client()
+        self.admin_user = User.objects.create_user(username='admin', email='admin@example.com', password='password', role=User.Role.ADMIN, is_staff=True, is_superuser=True)
+        self.teacher_user = User.objects.create_user(username='teacher', email='teacher@example.com', password='password', role=User.Role.ENSEIGNANT)
+        self.student_user = User.objects.create_user(username='student', email='student@example.com', password='password', role=User.Role.ETUDIANT)
+
+    def test_backup_and_restore_commands(self):
+        # Create some data
+        course = Course.objects.create(title='Cours de Sauvegarde avec accent é', description='Desc', teacher=self.teacher_user)
+        
+        # Backup
+        out = StringIO()
+        call_command('backup', stdout=out)
+        self.assertIn('Successfully backed up the database to', out.getvalue())
+        
+        # Find the latest backup file
+        backup_dir = 'backups'
+        backup_files = os.listdir(backup_dir)
+        latest_backup = max(backup_files, key=lambda f: os.path.getmtime(os.path.join(backup_dir, f)))
+        backup_file_path = os.path.join(backup_dir, latest_backup)
+
+        # Delete the data
+        Course.objects.all().delete()
+        User.objects.all().delete()
+        self.assertEqual(Course.objects.count(), 0)
+        self.assertEqual(User.objects.count(), 0)
+
+        # Restore
+        out = StringIO()
+        call_command('restore', backup_file_path, stdout=out)
+        self.assertIn('Successfully restored the database.', out.getvalue())
+
+        # Verify data is restored
+        course_count = Course.objects.count()
+        user_count = User.objects.count()
+        print(f"DEBUG: Course count after restore = {course_count}")
+        print(f"DEBUG: User count after restore = {user_count}")
+        self.assertEqual(course_count, 1)
+        self.assertEqual(user_count, 3)
+        self.assertTrue(Course.objects.filter(title='Cours de Sauvegarde avec accent é').exists())
 
 class AdministrationAPITest(TestCase):
     def setUp(self):
