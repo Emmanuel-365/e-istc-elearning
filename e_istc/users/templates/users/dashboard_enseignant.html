@@ -25,6 +25,9 @@
                         {% for course in courses %}
                         <tr id="course-row-{{ course.id }}">
                             <td>
+                                {% if course.image %}
+                                    <img src="{{ course.image.url }}" alt="Image du cours" class="img-thumbnail" width="100">
+                                {% endif %}
                                 <div class="fw-bold">{{ course.title }}</div>
                                 <small class="text-muted">{{ course.description|truncatechars:100 }}</small>
                             </td>
@@ -56,15 +59,19 @@
                 <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
             </div>
             <div class="modal-body">
-                <form id="courseForm" novalidate>
+                <form id="courseForm" enctype="multipart/form-data" novalidate>
                     <input type="hidden" id="courseId" name="courseId">
                     <div class="form-floating mb-3">
                         <input type="text" class="form-control" id="title" name="title" placeholder="Titre du cours" required>
                         <label for="title">Titre</label>
                     </div>
-                    <div class="form-floating">
+                    <div class="form-floating mb-3">
                         <textarea class="form-control" id="description" name="description" placeholder="Description" style="height: 100px"></textarea>
                         <label for="description">Description</label>
+                    </div>
+                    <div class="mb-3">
+                        <label for="image" class="form-label">Image d'illustration</label>
+                        <input type="file" class="form-control" id="image" name="image">
                     </div>
                 </form>
             </div>
@@ -199,20 +206,14 @@ document.addEventListener('DOMContentLoaded', function () {
         saveCourseBtn.disabled = true;
 
         const formData = new FormData(courseForm);
-        const data = {
-            title: formData.get('title'),
-            description: formData.get('description'),
-            teacher: loggedInUserId
-        };
         const url = currentCourseId ? `/comptes/api/teacher/courses/${currentCourseId}/update/` : '/comptes/api/teacher/courses/create/';
         
         fetch(url, {
             method: 'POST',
             headers: {
-                'Content-Type': 'application/json',
                 'X-CSRFToken': csrftoken
             },
-            body: JSON.stringify(data)
+            body: formData
         })
         .then(response => {
             if (!response.ok) {

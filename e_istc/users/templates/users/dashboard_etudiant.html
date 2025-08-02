@@ -31,6 +31,9 @@
                         {% for course in courses %}
                         <tr id="course-row-{{ course.id }}">
                             <td>
+                                {% if course.image %}
+                                    <img src="{{ course.image.url }}" alt="Image du cours" class="img-thumbnail" width="100">
+                                {% endif %}
                                 <div class="fw-bold">{{ course.title }}</div>
                                 <small class="text-muted">{{ course.description|truncatechars:100 }}</small>
                             </td>

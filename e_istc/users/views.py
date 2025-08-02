@@ -11,7 +11,7 @@ from django.contrib.auth.views import LoginView, PasswordResetView, PasswordRese
 from django.db.models import Q
 from django.contrib.auth.forms import AuthenticationForm
 from courses.models import Course
-from courses.forms import CourseForm
+from courses.forms import CourseForm, TeacherCourseForm
 from courses.models import CourseProgress
 from evaluations.models import Activite, Soumission, Question, Choix, Tentative, QuestionSondage, ReponseSondage
 from evaluations.forms import SoumissionForm
@@ -91,11 +91,11 @@ def enseignant_dashboard(request):
 @role_required(User.Role.ENSEIGNANT)
 @require_POST
 def create_course_teacher(request):
-    data = json.loads(request.body)
-    data['teacher'] = request.user.id # Assigne l'enseignant connecté
-    form = CourseForm(data)
+    form = TeacherCourseForm(request.POST, request.FILES)
     if form.is_valid():
-        course = form.save()
+        course = form.save(commit=False)
+        course.teacher = request.user
+        course.save()
         course_data = {
             'id': course.id,
             'title': course.title,
@@ -129,8 +129,7 @@ def course_detail_teacher(request, course_id):
 def update_course_teacher(request, course_id):
     try:
         course = Course.objects.get(pk=course_id, teacher=request.user)
-        data = json.loads(request.body)
-        form = CourseForm(data, instance=course)
+        form = TeacherCourseForm(request.POST, request.FILES, instance=course)
         if form.is_valid():
             course = form.save()
             course_data = {
@@ -143,10 +142,11 @@ def update_course_teacher(request, course_id):
             return JsonResponse({'course': course_data})
         else:
             messages.error(request, 'Erreur lors de la mise à jour du cours.')
-            return JsonResponse({'errors': form.errors}, status=400)
+            return JsonResponse({'status': 'error', 'errors': form.errors}, status=400)
     except Course.DoesNotExist:
         messages.error(request, 'Cours non trouvé ou vous n\'êtes pas l\'enseignant de ce cours.')
-        return JsonResponse({'message': 'Cours non trouvé ou vous n\'êtes pas l\'enseignant de ce cours.'}, status=404)
+        return JsonResponse({'status': 'error', 'message': 'Cours non trouvé ou vous n\'êtes pas l\'enseignant de ce cours.'}, status=404)
+
 
 @login_required
 @role_required(User.Role.ENSEIGNANT)
@@ -340,7 +340,7 @@ def take_sondage(request, activity_id):
 @login_required
 def profile_view(request):
     if request.method == 'POST':
-        form = UserProfileForm(request.POST, instance=request.user)
+        form = UserProfileForm(request.POST, request.FILES, instance=request.user)
         if form.is_valid():
             form.save()
             messages.success(request, 'Votre profil a été mis à jour avec succès !')

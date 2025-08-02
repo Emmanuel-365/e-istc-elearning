@@ -52,7 +52,7 @@
                 <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
             </div>
             <div class="modal-body">
-                <form id="userForm">
+                <form id="userForm" enctype="multipart/form-data">
                     <input type="hidden" id="userId" name="userId">
                     <div id="form-errors" class="alert alert-danger d-none"></div>
                     
@@ -89,6 +89,10 @@
                     <div id="specialite-field" class="mb-3 d-none">
                         <label for="specialite" class="form-label">Spécialité</label>
                         <input type="text" class="form-control" id="specialite" name="specialite">
+                    </div>
+                    <div class="mb-3">
+                        <label for="photo" class="form-label">Photo de profil</label>
+                        <input type="file" class="form-control" id="photo" name="photo">
                     </div>
                 </form>
             </div>
@@ -248,16 +252,14 @@ document.addEventListener('DOMContentLoaded', function () {
         saveUserBtn.disabled = true;
 
         const formData = new FormData(userForm);
-        const data = Object.fromEntries(formData.entries());
         const url = currentUserId ? `/administration/api/users/${currentUserId}/update/` : '/administration/api/users/create/';
         
         fetch(url, {
             method: 'POST',
             headers: {
-                'Content-Type': 'application/json',
                 'X-CSRFToken': csrftoken
             },
-            body: JSON.stringify(data)
+            body: formData
         })
         .then(response => response.json())
         .then(result => {

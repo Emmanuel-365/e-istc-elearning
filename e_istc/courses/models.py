@@ -4,6 +4,7 @@ from users.models import User
 class Category(models.Model):
     name = models.CharField(max_length=100)
     slug = models.SlugField(unique=True)
+    icon = models.ImageField(upload_to='categories/icons/', null=True, blank=True, verbose_name="Icône")
 
     def __str__(self):
         return self.name
@@ -11,6 +12,7 @@ class Category(models.Model):
 class Course(models.Model):
     title = models.CharField(max_length=200)
     description = models.TextField()
+    image = models.ImageField(upload_to='courses/images/', null=True, blank=True, verbose_name="Image d'illustration")
     teacher = models.ForeignKey(User, on_delete=models.CASCADE, limit_choices_to={'role': User.Role.ENSEIGNANT})
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)

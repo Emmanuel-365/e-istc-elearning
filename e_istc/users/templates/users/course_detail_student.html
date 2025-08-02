@@ -13,6 +13,10 @@
 
     <h2 class="mb-4">{{ course.title }}</h2>
 
+    {% if course.image %}
+        <img src="{{ course.image.url }}" alt="Image du cours" class="img-fluid rounded mb-4">
+    {% endif %}
+
     <div class="card mb-4">
         <div class="card-header">
             Informations sur le Cours

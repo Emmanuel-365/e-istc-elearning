@@ -61,8 +61,7 @@ class AdministrationAPITest(TestCase):
     def test_create_user_api_admin(self):
         self.client.login(username='admin', password='password')
         response = self.client.post(reverse('administration:api_create_user'),
-                                    json.dumps({'username': 'newuser', 'email': 'new@example.com', 'first_name': 'New', 'last_name': 'User', 'role': User.Role.ETUDIANT, 'matricule': 'NEW001'}),
-                                    content_type='application/json')
+                                    {'username': 'newuser', 'email': 'new@example.com', 'first_name': 'New', 'last_name': 'User', 'role': User.Role.ETUDIANT, 'matricule': 'NEW001'})
         self.assertEqual(response.status_code, 200)
         self.assertEqual(User.objects.count(), 4)
 
@@ -88,8 +87,7 @@ class AdministrationAPITest(TestCase):
     def test_update_user_api_admin(self):
         self.client.login(username='admin', password='password')
         response = self.client.post(reverse('administration:api_update_user', args=[self.student_user.id]),
-                                    json.dumps({'username': 'updatedstudent', 'email': 'updated@example.com', 'first_name': 'Updated', 'last_name': 'Student', 'role': User.Role.ETUDIANT, 'matricule': 'UPD001', 'specialite': '', 'is_active': True}),
-                                    content_type='application/json')
+                                    {'username': 'updatedstudent', 'email': 'updated@example.com', 'first_name': 'Updated', 'last_name': 'Student', 'role': User.Role.ETUDIANT, 'matricule': 'UPD001', 'specialite': '', 'is_active': True})
         self.assertEqual(response.status_code, 200)
         self.student_user.refresh_from_db()
         self.assertEqual(self.student_user.email, 'updated@example.com')
@@ -116,8 +114,7 @@ class AdministrationAPITest(TestCase):
     def test_create_course_api_admin(self):
         self.client.login(username='admin', password='password')
         response = self.client.post(reverse('administration:api_create_course'),
-                                    json.dumps({'title': 'New Course', 'description': 'Desc', 'teacher': self.teacher_user.id}),
-                                    content_type='application/json')
+                                    {'title': 'New Course', 'description': 'Desc', 'teacher': self.teacher_user.id})
         self.assertEqual(response.status_code, 200)
         self.assertEqual(Course.objects.count(), 1)
 
@@ -146,8 +143,7 @@ class AdministrationAPITest(TestCase):
         course = Course.objects.create(title='Update Course', description='Desc', teacher=self.teacher_user)
         self.client.login(username='admin', password='password')
         response = self.client.post(reverse('administration:api_update_course', args=[course.id]),
-                                    json.dumps({'title': 'Updated Course', 'description': 'Updated Desc', 'teacher': self.teacher_user.id}),
-                                    content_type='application/json')
+                                    {'title': 'Updated Course', 'description': 'Updated Desc', 'teacher': self.teacher_user.id})
         self.assertEqual(response.status_code, 200)
         course.refresh_from_db()
         self.assertEqual(course.title, 'Updated Course')
@@ -224,16 +220,14 @@ class CategoryManagementTest(TestCase):
     def test_create_category_api(self):
         self.client.login(username='admin', password='password')
         response = self.client.post(reverse('administration:api_create_category'),
-                                    json.dumps({'name': 'New Category', 'slug': 'new-category'}),
-                                    content_type='application/json')
+                                    {'name': 'New Category', 'slug': 'new-category'})
         self.assertEqual(response.status_code, 200)
         self.assertEqual(Category.objects.count(), 2)
 
     def test_update_category_api(self):
         self.client.login(username='admin', password='password')
         response = self.client.post(reverse('administration:api_update_category', args=[self.category.id]),
-                                    json.dumps({'name': 'Updated Category', 'slug': 'updated-category'}),
-                                    content_type='application/json')
+                                    {'name': 'Updated Category', 'slug': 'updated-category'})
         self.assertEqual(response.status_code, 200)
         self.category.refresh_from_db()
         self.assertEqual(self.category.name, 'Updated Category')

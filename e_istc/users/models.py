@@ -19,6 +19,7 @@ class User(AbstractUser):
         ETUDIANT = "ETUDIANT", "Etudiant"
 
     role = models.CharField(max_length=50, choices=Role.choices, default=Role.ETUDIANT)
+    photo = models.ImageField(upload_to='users/photos/', null=True, blank=True, verbose_name="Photo de profil")
     matricule = models.CharField(max_length=254, unique=True, null=True, blank=True)
     specialite = models.CharField(max_length=254, null=True, blank=True)
     courses = models.ManyToManyField('courses.Course', related_name='students', blank=True)

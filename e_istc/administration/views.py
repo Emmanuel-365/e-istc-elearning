@@ -40,8 +40,7 @@ def course_detail_page(request, course_id):
 @admin_required
 @require_POST
 def create_user(request):
-    data = json.loads(request.body)
-    form = CustomUserCreationForm(data)
+    form = CustomUserCreationForm(request.POST, request.FILES)
     if form.is_valid():
         user = form.save()
         user_data = {
@@ -85,8 +84,7 @@ def user_detail(request, user_id):
 def update_user(request, user_id):
     try:
         user = User.objects.get(pk=user_id)
-        data = json.loads(request.body)
-        form = CustomUserChangeForm(data, instance=user)
+        form = CustomUserChangeForm(request.POST, request.FILES, instance=user)
         if form.is_valid():
             user = form.save()
             user_data = {
@@ -109,6 +107,7 @@ def update_user(request, user_id):
         messages.error(request, 'Utilisateur non trouvé.')
         return JsonResponse({'status': 'error', 'message': 'Utilisateur non trouvé'}, status=404)
 
+
 @admin_required
 @require_POST
 def delete_user(request, user_id):
@@ -126,11 +125,7 @@ def delete_user(request, user_id):
 @admin_required
 @require_POST
 def create_course(request):
-    data = json.loads(request.body)
-    # Si l\'utilisateur est un enseignant, attribuer le cours à lui-même
-    if request.user.role == User.Role.ENSEIGNANT:
-        data['teacher'] = request.user.id
-    form = CourseForm(data)
+    form = CourseForm(request.POST, request.FILES)
     if form.is_valid():
         course = form.save()
         course_data = {
@@ -168,8 +163,7 @@ def course_detail(request, course_id):
 def update_course(request, course_id):
     try:
         course = Course.objects.get(pk=course_id)
-        data = json.loads(request.body)
-        form = CourseForm(data, instance=course)
+        form = CourseForm(request.POST, request.FILES, instance=course)
         if form.is_valid():
             course = form.save()
             course_data = {
@@ -246,8 +240,7 @@ def category_management_page(request):
 @admin_required
 @require_POST
 def create_category(request):
-    data = json.loads(request.body)
-    form = CategoryForm(data)
+    form = CategoryForm(request.POST, request.FILES)
     if form.is_valid():
         category = form.save()
         category_data = {
@@ -280,8 +273,7 @@ def category_detail(request, category_id):
 def update_category(request, category_id):
     try:
         category = Category.objects.get(pk=category_id)
-        data = json.loads(request.body)
-        form = CategoryForm(data, instance=category)
+        form = CategoryForm(request.POST, request.FILES, instance=category)
         if form.is_valid():
             category = form.save()
             category_data = {

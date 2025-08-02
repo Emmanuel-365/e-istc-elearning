@@ -10,7 +10,7 @@ class CourseForm(forms.ModelForm):
 
     class Meta:
         model = Course
-        fields = ['title', 'description', 'teacher', 'visio_link', 'visio_date']
+        fields = ['title', 'description', 'teacher', 'visio_link', 'visio_date', 'image']
         widgets = {
             'title': forms.TextInput(attrs={'class': 'form-control'}),
             'description': forms.Textarea(attrs={'class': 'form-control', 'rows': 4}),
@@ -48,8 +48,17 @@ class AnnonceForm(forms.ModelForm):
 class CategoryForm(forms.ModelForm):
     class Meta:
         model = Category
-        fields = ['name', 'slug']
+        fields = ['name', 'slug', 'icon']
         widgets = {
             'name': forms.TextInput(attrs={'class': 'form-control'}),
             'slug': forms.TextInput(attrs={'class': 'form-control'}),
+        }
+
+class TeacherCourseForm(forms.ModelForm):
+    class Meta:
+        model = Course
+        fields = ['title', 'description', 'image', 'visio_link', 'visio_date']
+        widgets = {
+            'title': forms.TextInput(attrs={'class': 'form-control'}),
+            'description': forms.Textarea(attrs={'class': 'form-control', 'rows': 4}),
         }

@@ -7,7 +7,7 @@ class CustomUserCreationForm(forms.ModelForm):
 
     class Meta:
         model = User
-        fields = ('username', 'email', 'first_name', 'last_name', 'role', 'matricule', 'specialite')
+        fields = ('username', 'email', 'first_name', 'last_name', 'role', 'matricule', 'specialite', 'photo')
 
     def save(self, commit=True):
         user = super().save(commit=False)
@@ -21,12 +21,12 @@ class CustomUserCreationForm(forms.ModelForm):
 class CustomUserChangeForm(forms.ModelForm):
     class Meta:
         model = User
-        fields = ('username', 'email', 'first_name', 'last_name', 'role', 'matricule', 'specialite', 'is_active')
+        fields = ('username', 'email', 'first_name', 'last_name', 'role', 'matricule', 'specialite', 'is_active', 'photo')
 
 class UserProfileForm(forms.ModelForm):
     class Meta:
         model = User
-        fields = ('first_name', 'last_name', 'email', 'matricule', 'specialite')
+        fields = ('first_name', 'last_name', 'email', 'matricule', 'specialite', 'photo')
         widgets = {
             'first_name': forms.TextInput(attrs={'class': 'form-control'}),
             'last_name': forms.TextInput(attrs={'class': 'form-control'}),

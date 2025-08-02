@@ -137,8 +137,7 @@ class UserAPITest(TestCase):
     def test_create_user_api(self):
         self.client.login(username='admin', password='password')
         response = self.client.post(reverse('administration:api_create_user'),
-                                    json.dumps({'username': 'newapiuser', 'email': 'newapi@example.com', 'first_name': 'API', 'last_name': 'User', 'role': User.Role.ETUDIANT, 'matricule': 'API001'}),
-                                    content_type='application/json')
+                                    {'username': 'newapiuser', 'email': 'newapi@example.com', 'first_name': 'API', 'last_name': 'User', 'role': User.Role.ETUDIANT, 'matricule': 'API001'})
         self.assertEqual(response.status_code, 200)
         self.assertEqual(User.objects.count(), 4) # 3 initial users + 1 new
 
@@ -152,8 +151,7 @@ class UserAPITest(TestCase):
     def test_update_user_api(self):
         self.client.login(username='admin', password='password')
         response = self.client.post(reverse('administration:api_update_user', args=[self.student_user.id]),
-                                    json.dumps({'username': 'updatedstudent', 'email': 'updated@example.com', 'first_name': 'Updated', 'last_name': 'Student', 'role': User.Role.ETUDIANT, 'matricule': 'UPD001'}),
-                                    content_type='application/json')
+                                    {'username': 'updatedstudent', 'email': 'updated@example.com', 'first_name': 'Updated', 'last_name': 'Student', 'role': User.Role.ETUDIANT, 'matricule': 'UPD001'})
         self.assertEqual(response.status_code, 200)
         self.student_user.refresh_from_db()
         self.assertEqual(self.student_user.username, 'updatedstudent')

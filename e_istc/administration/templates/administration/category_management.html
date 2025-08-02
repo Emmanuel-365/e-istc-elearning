@@ -45,7 +45,7 @@
                 <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
             </div>
             <div class="modal-body">
-                <form id="categoryForm">
+                <form id="categoryForm" enctype="multipart/form-data">
                     <input type="hidden" id="categoryId" name="categoryId">
                     <div id="form-errors" class="alert alert-danger d-none"></div>
                     
@@ -56,6 +56,10 @@
                     <div class="mb-3">
                         <label for="slug" class="form-label">Slug</label>
                         <input type="text" class="form-control" id="slug" name="slug" required>
+                    </div>
+                    <div class="mb-3">
+                        <label for="icon" class="form-label">Icône</label>
+                        <input type="file" class="form-control" id="icon" name="icon">
                     </div>
                 </form>
             </div>
@@ -186,19 +190,14 @@ document.addEventListener('DOMContentLoaded', function () {
         saveCategoryBtn.disabled = true;
 
         const formData = new FormData(categoryForm);
-        const data = {
-            name: formData.get('name'),
-            slug: formData.get('slug')
-        };
         const url = currentCategoryId ? `/administration/api/categories/${currentCategoryId}/update/` : '/administration/api/categories/create/';
         
         fetch(url, {
             method: 'POST',
             headers: {
-                'Content-Type': 'application/json',
                 'X-CSRFToken': csrftoken
             },
-            body: JSON.stringify(data)
+            body: formData
         })
         .then(response => response.json())
         .then(result => {

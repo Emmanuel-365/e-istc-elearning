@@ -47,7 +47,7 @@
                 <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
             </div>
             <div class="modal-body">
-                <form id="courseForm">
+                <form id="courseForm" enctype="multipart/form-data">
                     <input type="hidden" id="courseId" name="courseId">
                     <div id="form-errors" class="alert alert-danger d-none"></div>
                     
@@ -67,6 +67,10 @@
                                 <option value="{{ teacher.id }}">{{ teacher.first_name }} {{ teacher.last_name }}</option>
                             {% endfor %}
                         </select>
+                    </div>
+                    <div class="mb-3">
+                        <label for="image" class="form-label">Image d'illustration</label>
+                        <input type="file" class="form-control" id="image" name="image">
                     </div>
                 </form>
             </div>
@@ -201,20 +205,14 @@ document.addEventListener('DOMContentLoaded', function () {
         saveCourseBtn.disabled = true;
 
         const formData = new FormData(courseForm);
-        const data = {
-            title: formData.get('title'),
-            description: formData.get('description'),
-            teacher: formData.get('teacher')
-        };
         const url = currentCourseId ? `/administration/api/courses/${currentCourseId}/update/` : '/administration/api/courses/create/';
         
         fetch(url, {
             method: 'POST',
             headers: {
-                'Content-Type': 'application/json',
                 'X-CSRFToken': csrftoken
             },
-            body: JSON.stringify(data)
+            body: formData
         })
         .then(response => response.json())
         .then(result => {
