@@ -23,6 +23,7 @@
             <p><strong>Enseignant :</strong> {{ course.teacher.first_name }} {{ course.teacher.last_name }}</p>
             <p><strong>Date de Création :</strong> {{ course.created_at|date:"d/m/Y H:i" }}</p>
             <p><strong>Dernière mise à jour :</strong> {{ course.updated_at|date:"d/m/Y H:i" }}</p>
+            <p><strong>Lien de la visioconférence :</strong> {{ course.visio_link|default:"Non défini" }}</p>
         </div>
     </div>
 

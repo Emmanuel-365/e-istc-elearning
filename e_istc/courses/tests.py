@@ -113,6 +113,19 @@ class CourseModelTest(TestCase):
         )
         self.assertIn(ressource, module.ressources.all())
 
+    def test_visio_link_display(self):
+        course = Course.objects.create(
+            title='Visio Course',
+            description='This is a visio course.',
+            teacher=self.teacher_user,
+            visio_link='https://meet.google.com/xyz-abc-def'
+        )
+        self.client.login(username='student', password='password')
+        course.students.add(self.student_user)
+        response = self.client.get(reverse('users:student_course_detail', args=[course.id]))
+        self.assertEqual(response.status_code, 200)
+        self.assertContains(response, 'https://meet.google.com/xyz-abc-def')
+
 
 class CourseFormTest(TestCase):
     def setUp(self):

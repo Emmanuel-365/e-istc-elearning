@@ -20,6 +20,9 @@
         <div class="card-body">
             <p><strong>Description :</strong> {{ course.description }}</p>
             <p><strong>Enseignant :</strong> {{ course.teacher.first_name }} {{ course.teacher.last_name }} <a href="{% url 'messaging:new_conversation' course.teacher.id %}" class="btn btn-sm btn-outline-primary">Contacter</a></p>
+            {% if course.visio_link %}
+                <p><strong>Lien de la visioconférence :</strong> <a href="{{ course.visio_link }}" target="_blank">Rejoindre la session</a></p>
+            {% endif %}
         </div>
     </div>
 
