@@ -10,7 +10,7 @@ class CourseForm(forms.ModelForm):
 
     class Meta:
         model = Course
-        fields = ['title', 'description', 'teacher', 'visio_link']
+        fields = ['title', 'description', 'teacher', 'visio_link', 'visio_date']
         widgets = {
             'title': forms.TextInput(attrs={'class': 'form-control'}),
             'description': forms.Textarea(attrs={'class': 'form-control', 'rows': 4}),

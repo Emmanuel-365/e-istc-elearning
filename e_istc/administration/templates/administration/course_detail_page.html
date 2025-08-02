@@ -24,6 +24,7 @@
             <p><strong>Date de Création :</strong> {{ course.created_at|date:"d/m/Y H:i" }}</p>
             <p><strong>Dernière mise à jour :</strong> {{ course.updated_at|date:"d/m/Y H:i" }}</p>
             <p><strong>Lien de la visioconférence :</strong> {{ course.visio_link|default:"Non défini" }}</p>
+            <p><strong>Date et heure de la visioconférence :</strong> {{ course.visio_date|date:"d/m/Y H:i"|default:"Non défini" }}</p>
         </div>
     </div>
 

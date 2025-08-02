@@ -16,6 +16,7 @@ class Course(models.Model):
     updated_at = models.DateTimeField(auto_now=True)
     category = models.ForeignKey(Category, on_delete=models.SET_NULL, null=True, blank=True, related_name='courses')
     visio_link = models.URLField(blank=True, null=True)
+    visio_date = models.DateTimeField(blank=True, null=True)
 
     def __str__(self):
         return self.title

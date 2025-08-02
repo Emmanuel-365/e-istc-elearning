@@ -126,6 +126,21 @@ class CourseModelTest(TestCase):
         self.assertEqual(response.status_code, 200)
         self.assertContains(response, 'https://meet.google.com/xyz-abc-def')
 
+    def test_visio_date_display(self):
+        from datetime import datetime
+        course = Course.objects.create(
+            title='Visio Date Course',
+            description='This is a visio date course.',
+            teacher=self.teacher_user,
+            visio_link='https://meet.google.com/xyz-abc-def',
+            visio_date=datetime(2025, 12, 25, 10, 30, 0)
+        )
+        self.client.login(username='student', password='password')
+        course.students.add(self.student_user)
+        response = self.client.get(reverse('users:student_course_detail', args=[course.id]))
+        self.assertEqual(response.status_code, 200)
+        self.assertContains(response, '25/12/2025 10:30')
+
 
 class CourseFormTest(TestCase):
     def setUp(self):

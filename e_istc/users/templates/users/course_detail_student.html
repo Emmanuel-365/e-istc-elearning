@@ -23,6 +23,9 @@
             {% if course.visio_link %}
                 <p><strong>Lien de la visioconférence :</strong> <a href="{{ course.visio_link }}" target="_blank">Rejoindre la session</a></p>
             {% endif %}
+            {% if course.visio_date %}
+                <p><strong>Date et heure de la visioconférence :</strong> {{ course.visio_date|date:"d/m/Y H:i" }}</p>
+            {% endif %}
         </div>
     </div>
 

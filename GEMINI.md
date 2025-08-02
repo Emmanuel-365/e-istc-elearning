@@ -110,4 +110,4 @@
 10. **Maintenance : - TERMINÉE**
     *   Gestion des mises à jour (commande `maintenance` pour les migrations et les fichiers statiques).
 11. **Interaction et Collaboration : - TERMINÉE**
-    *   Accès à des classes virtuelles ou visioconférences (intégration d'un champ de lien de visioconférence pour les cours).
+    *   Accès à des classes virtuelles ou visioconférences (intégration d'un champ de lien et de date/heure de visioconférence pour les cours).
