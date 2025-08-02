@@ -31,4 +31,5 @@ urlpatterns = [
     path('api/categories/<int:category_id>/update/', views.update_category, name='api_update_category'),
     path('api/categories/<int:category_id>/delete/', views.delete_category, name='api_delete_category'),
     path('reports/', views.reports_page, name='reports_page'),
+    path('audit-logs/', views.audit_logs_page, name='audit_logs_page'),
 ]

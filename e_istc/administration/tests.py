@@ -266,3 +266,14 @@ class ReportsViewTest(TestCase):
         self.assertEqual(response.status_code, 200)
         self.assertContains(response, '16.50') # Average assignment grade
         self.assertContains(response, '8.50') # Average quiz score
+
+class AuditLogsViewTest(TestCase):
+    def setUp(self):
+        self.client = Client()
+        self.admin_user = User.objects.create_user(username='admin', email='admin@example.com', password='password', role=User.Role.ADMIN, is_staff=True, is_superuser=True)
+
+    def test_audit_logs_page_view(self):
+        self.client.login(username='admin', password='password')
+        response = self.client.get(reverse('administration:audit_logs_page'))
+        self.assertEqual(response.status_code, 200)
+        self.assertContains(response, 'Journaux d\'Audit')

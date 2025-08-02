@@ -10,6 +10,7 @@ from evaluations.models import Activite, Soumission, Tentative
 from .decorators import admin_required, course_owner_or_admin_required
 import json
 from django.contrib import messages
+from django.contrib.admin.models import LogEntry
 
 @admin_required
 def user_management_page(request):
@@ -317,6 +318,11 @@ def reports_page(request):
             'avg_quiz_score': avg_quiz_score
         })
     return render(request, 'administration/reports.html', {'reports': reports})
+
+@admin_required
+def audit_logs_page(request):
+    logs = LogEntry.objects.all().order_by('-action_time')[:100] # Get last 100 logs
+    return render(request, 'administration/audit_logs.html', {'logs': logs})
 
 @admin_required
 @require_POST

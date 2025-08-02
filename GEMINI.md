@@ -24,16 +24,18 @@
         - Page de détail d'un cours (`/comptes/courses/<id>/`) pour les étudiants inscrits (lecture seule).
 - **Fonctionnalité 3 : Gestion des Évaluations - TERMINÉE**
     - **Partie Enseignant/Admin :**
-        - Création de l'application `evaluations` et de ses modèles (`Activite`, `Question`, `Choix`, `Soumission`, `Tentative`) basés sur le schéma SQL.
+        - Création de l'application `evaluations` et de ses modèles (`Activite`, `Question`, `Choix`, `Soumission`, `Tentative`, `QuestionSondage`, `ReponseSondage`) basés sur le schéma SQL.
         - Intégration de la gestion des évaluations dans l'interface d'administration des cours (CRUD dynamique des activités).
         - Interface dédiée pour la gestion des questions et choix de quiz.
         - Mise en place de décorateurs de permission spécifiques (`activity_owner_or_admin_required`, `question_owner_or_admin_required`, `submission_owner_or_admin_required`).
         - **Notation des devoirs :** Interface pour les enseignants/admins pour noter les soumissions de devoirs.
+        - **Sondages :** Interface pour les enseignants/admins pour créer et gérer les questions de sondage, et voir les résultats.
     - **Partie Étudiant :**
         - Affichage des évaluations sur la page de détail du cours étudiant.
         - Soumission de devoirs : page dédiée avec formulaire de téléversement et gestion de la soumission unique.
         - Passage de quiz : interface pour répondre aux questions, calcul du score et enregistrement de la tentative.
         - Consultation des notes : page récapitulative des notes obtenues aux devoirs et quiz.
+        - **Participation aux sondages :** Interface pour les étudiants pour répondre aux questions de sondage.
 - **Fonctionnalité 4 : Annonces et Communication - TERMINÉE**
     - **Annonces :**
         - **Partie Enseignant/Admin :** Création du modèle `Annonce`, intégration du CRUD dynamique dans l'interface d'administration des cours.
@@ -102,7 +104,7 @@
 8.  **Rapports et Statistiques (Admin/Enseignant) :- TERMINÉE**
     *   Génération de rapports de participation et de performance des étudiants.
     *   Tableau de bord global sur l'activité de la plateforme (nombre d'utilisateurs actifs, cours les plus populaires, etc.).
-    *   Journaux d'audit et de logs.
+    *   Journaux d'audit et de logs (interface dédiée pour consulter les logs d'administration).
 9.  **Sauvegarde et Restauration : - TERMINÉE**
     *   Outils de planification et d'exécution des sauvegardes de données (commandes `backup` et `restore` fonctionnelles et testées).
 10. **Maintenance : - TERMINÉE**
