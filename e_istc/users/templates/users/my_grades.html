@@ -19,6 +19,7 @@
                         <th>Cours</th>
                         <th>Date de Soumission</th>
                         <th>Note</th>
+                        <th>Commentaires Enseignant</th>
                     </tr>
                 </thead>
                 <tbody>
@@ -34,6 +35,7 @@
                                 En attente
                             {% endif %}
                         </td>
+                        <td>{{ soumission.commentaires_enseignant|default:"Aucun commentaire" }}</td>
                     </tr>
                     {% endfor %}
                 </tbody>

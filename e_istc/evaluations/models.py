@@ -45,6 +45,7 @@ class Soumission(models.Model):
     fichier = models.FileField(upload_to='soumissions/%Y/%m/%d/')
     date_soumission = models.DateTimeField(auto_now_add=True)
     note = models.FloatField(null=True, blank=True)
+    commentaires_enseignant = models.TextField(blank=True, null=True)
 
     class Meta:
         unique_together = ('activite', 'etudiant')

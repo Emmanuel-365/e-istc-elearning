@@ -204,10 +204,12 @@ def grade_submission(request, submission_id):
         soumission = Soumission.objects.get(pk=submission_id)
         data = json.loads(request.body)
         note = data.get('note')
+        commentaires = data.get('commentaires_enseignant', '')
         if note is not None:
             soumission.note = float(note)
+            soumission.commentaires_enseignant = commentaires
             soumission.save()
-            messages.success(request, 'Note enregistrée avec succès !')
+            messages.success(request, 'Note et commentaires enregistrés avec succès !')
             return JsonResponse({})
         else:
             messages.error(request, 'Note manquante.')
