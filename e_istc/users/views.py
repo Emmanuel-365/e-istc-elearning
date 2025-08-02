@@ -21,8 +21,8 @@ from django.contrib import messages
 class CustomAuthenticationForm(AuthenticationForm):
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
-        self.fields['username'].widget.attrs.update({'placeholder': "Matricule ou Nom d'utilisateur"})
-        self.fields['password'].widget.attrs.update({'placeholder': 'Mot de passe'})
+        self.fields['username'].widget.attrs.update({'placeholder': "Matricule ou Nom d'utilisateur", 'class': 'form-control'})
+        self.fields['password'].widget.attrs.update({'placeholder': 'Mot de passe', 'class': 'form-control'})
 
 class CustomLoginView(LoginView):
     template_name = 'users/login.html'
