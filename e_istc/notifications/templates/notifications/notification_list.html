@@ -1,0 +1,60 @@
+{% extends "base.html" %}
+
+{% block title %}Notifications{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+    <h2 class="mb-4">Notifications</h2>
+
+    <div class="list-group">
+        {% for notification in notifications %}
+            <a href="{{ notification.link }}" class="list-group-item list-group-item-action {% if not notification.is_read %}list-group-item-info{% endif %}" data-notification-id="{{ notification.id }}">
+                <div class="d-flex w-100 justify-content-between">
+                    <p class="mb-1">{{ notification.message }}</p>
+                    <small>{{ notification.created_at|timesince }} ago</small>
+                </div>
+            </a>
+        {% empty %}
+            <p>Aucune notification.</p>
+        {% endfor %}
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+document.addEventListener('DOMContentLoaded', function () {
+    const notificationLinks = document.querySelectorAll('.list-group-item-action');
+    const csrftoken = getCookie('csrftoken');
+
+    notificationLinks.forEach(link => {
+        link.addEventListener('click', function (e) {
+            const notificationId = this.dataset.notificationId;
+            const url = `/notifications/${notificationId}/read/`;
+
+            fetch(url, {
+                method: 'POST',
+                headers: {
+                    'X-CSRFToken': csrftoken
+                }
+            });
+        });
+    });
+
+    function getCookie(name) {
+        let cookieValue = null;
+        if (document.cookie && document.cookie !== '') {
+            const cookies = document.cookie.split(';');
+            for (let i = 0; i < cookies.length; i++) {
+                const cookie = cookies[i].trim();
+                if (cookie.substring(0, name.length + 1) === (name + '=')) {
+                    cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
+                    break;
+                }
+            }
+        }
+        return cookieValue;
+    }
+});
+</script>
+{% endblock %}

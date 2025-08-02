@@ -29,5 +29,7 @@ urlpatterns = [
     path('evaluations/', include('evaluations.urls')),
     path('forums/', include('forums.urls')),
     path('messaging/', include('messaging.urls')),
+    path('notifications/', include('notifications.urls')),
+    
     path('', user_views.home, name='home'),
 ] + static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)

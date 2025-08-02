@@ -37,7 +37,10 @@
                 <ul class="list-group list-group-flush">
                     {% for ressource in module.ressources.all %}
                     <li class="list-group-item d-flex justify-content-between align-items-center">
-                        {{ ressource.title }}
+                        <div>
+                            <input type="checkbox" class="form-check-input me-2" data-ressource-id="{{ ressource.id }}" {% if ressource.id in completed_ressources_ids %}checked{% endif %}>
+                            {{ ressource.title }}
+                        </div>
                         <div>
                             {% if ressource.file %}
                                 <a href="{{ ressource.file.url }}" target="_blank" class="btn btn-sm btn-info">Voir Fichier</a>
@@ -112,4 +115,49 @@
     </div>
 
 </div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+document.addEventListener('DOMContentLoaded', function () {
+    const checkboxes = document.querySelectorAll('.form-check-input');
+    const csrftoken = getCookie('csrftoken');
+
+    checkboxes.forEach(checkbox => {
+        checkbox.addEventListener('change', function () {
+            const ressourceId = this.dataset.ressourceId;
+            const url = `/courses/api/ressources/${ressourceId}/complete/`;
+
+            fetch(url, {
+                method: 'POST',
+                headers: {
+                    'X-CSRFToken': csrftoken
+                }
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.status !== 'success') {
+                    // Handle error
+                    console.error('Failed to mark ressource as complete');
+                }
+            });
+        });
+    });
+
+    function getCookie(name) {
+        let cookieValue = null;
+        if (document.cookie && document.cookie !== '') {
+            const cookies = document.cookie.split(';');
+            for (let i = 0; i < cookies.length; i++) {
+                const cookie = cookies[i].trim();
+                if (cookie.substring(0, name.length + 1) === (name + '=')) {
+                    cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
+                    break;
+                }
+            }
+        }
+        return cookieValue;
+    }
+});
+</script>
 {% endblock %}

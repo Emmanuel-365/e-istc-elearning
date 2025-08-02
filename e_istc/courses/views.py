@@ -1,8 +1,11 @@
-from django.shortcuts import render
+from django.contrib.auth.decorators import login_required
+from django.shortcuts import render, get_object_or_404
+
 from django.http import JsonResponse
 from django.views.decorators.http import require_POST
 from users.models import User
-from courses.models import Course, Module, Ressource, Annonce
+from .models import Course, Module, Ressource, Annonce, CourseProgress
+
 from courses.forms import ModuleForm, RessourceForm, AnnonceForm
 from administration.decorators import admin_required, course_owner_or_admin_required, module_owner_or_admin_required, ressource_owner_or_admin_required, annonce_owner_or_admin_required
 import json
@@ -271,3 +274,12 @@ def enroll_student(request, course_id, student_id):
     except (Course.DoesNotExist, User.DoesNotExist):
         messages.error(request, 'Cours ou étudiant non trouvé.')
         return JsonResponse({'message': 'Cours ou étudiant non trouvé.'}, status=404)
+
+@require_POST
+@login_required
+def complete_ressource(request, ressource_id):
+    ressource = get_object_or_404(Ressource, pk=ressource_id)
+    course = ressource.module.course
+    progress, created = CourseProgress.objects.get_or_create(student=request.user, course=course)
+    progress.completed_ressources.add(ressource)
+    return JsonResponse({'status': 'success'})

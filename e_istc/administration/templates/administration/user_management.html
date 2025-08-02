@@ -29,6 +29,11 @@
                         <td>
                             <button class="btn btn-sm btn-secondary edit-btn" data-id="{{ user.id }}">Modifier</button>
                             <button class="btn btn-sm btn-danger delete-btn" data-id="{{ user.id }}">Supprimer</button>
+                            {% if user.is_locked %}
+                                <button class="btn btn-sm btn-success lock-btn" data-id="{{ user.id }}" data-action="unlock">Déverrouiller</button>
+                            {% else %}
+                                <button class="btn btn-sm btn-warning lock-btn" data-id="{{ user.id }}" data-action="lock">Verrouiller</button>
+                            {% endif %}
                         </td>
                     </tr>
                     {% endfor %}
@@ -293,6 +298,25 @@ document.addEventListener('DOMContentLoaded', function () {
             spinner.classList.add('d-none');
             confirmDeleteBtn.disabled = false;
         });
+    });
+
+    userTableBody.addEventListener('click', function (e) {
+        if (e.target.classList.contains('lock-btn')) {
+            const userId = e.target.dataset.id;
+            const action = e.target.dataset.action;
+            fetch(`/administration/api/users/${userId}/${action}/`, {
+                method: 'POST',
+                headers: { 'X-CSRFToken': csrftoken }
+            })
+            .then(response => response.json())
+            .then(result => {
+                if (response.ok) {
+                    location.reload();
+                } else {
+                    // Handle error
+                }
+            });
+        }
     });
 });
 </script>

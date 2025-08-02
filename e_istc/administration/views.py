@@ -1,10 +1,10 @@
-from django.shortcuts import render, redirect
+from django.shortcuts import render, redirect, get_object_or_404
 from django.http import JsonResponse
 from django.views.decorators.http import require_POST
 from users.models import User
 from users.forms import CustomUserCreationForm, CustomUserChangeForm
-from courses.models import Course, Module, Ressource
-from courses.forms import CourseForm, ModuleForm, RessourceForm
+from courses.models import Course, Module, Ressource, Category, CourseProgress
+from courses.forms import CourseForm, ModuleForm, RessourceForm, CategoryForm
 from evaluations.models import Activite
 from .decorators import admin_required, course_owner_or_admin_required
 import json
@@ -107,6 +107,17 @@ def update_user(request, user_id):
         messages.error(request, 'Utilisateur non trouvé.')
         return JsonResponse({'status': 'error', 'message': 'Utilisateur non trouvé'}, status=404)
 
+@admin_required
+@require_POST
+def delete_user(request, user_id):
+    try:
+        user = User.objects.get(pk=user_id)
+        user.delete()
+        messages.success(request, 'Utilisateur supprimé avec succès !')
+        return JsonResponse({'status': 'success'})
+    except User.DoesNotExist:
+        messages.error(request, 'Utilisateur non trouvé.')
+        return JsonResponse({'status': 'error', 'message': 'Utilisateur non trouvé'}, status=404)
 
 # API pour les cours
 
@@ -114,7 +125,7 @@ def update_user(request, user_id):
 @require_POST
 def create_course(request):
     data = json.loads(request.body)
-    # Si l'utilisateur est un enseignant, attribuer le cours à lui-même
+    # Si l\'utilisateur est un enseignant, attribuer le cours à lui-même
     if request.user.role == User.Role.ENSEIGNANT:
         data['teacher'] = request.user.id
     form = CourseForm(data)
@@ -191,12 +202,108 @@ def delete_course(request, course_id):
 
 @admin_required
 @require_POST
-def delete_user(request, user_id):
+def lock_user(request, user_id):
+    user = get_object_or_404(User, pk=user_id)
+    user.is_locked = True
+    user.save()
+    messages.success(request, "L'utilisateur a été verrouillé.")
+    return JsonResponse({'status': 'success'})
+
+@admin_required
+@require_POST
+def unlock_user(request, user_id):
+    user = get_object_or_404(User, pk=user_id)
+    user.is_locked = False
+    user.save()
+    messages.success(request, "L'utilisateur a été déverrouillé.")
+    return JsonResponse({'status': 'success'})
+
+@admin_required
+def course_progress_view(request, course_id):
+    course = get_object_or_404(Course, pk=course_id)
+    students = course.students.all()
+    progress_data = []
+    for student in students:
+        progress, created = CourseProgress.objects.get_or_create(student=student, course=course)
+        total_ressources = Ressource.objects.filter(module__course=course).count()
+        completed_ressources = progress.completed_ressources.count()
+        progress_percentage = (completed_ressources / total_ressources) * 100 if total_ressources > 0 else 0
+        progress_data.append({
+            'student': student,
+            'progress': progress_percentage,
+            'completed_ressources': completed_ressources,
+            'total_ressources': total_ressources
+        })
+    return render(request, 'administration/course_progress.html', {'course': course, 'progress_data': progress_data})
+
+@admin_required
+def category_management_page(request):
+    categories = Category.objects.all().order_by('name')
+    return render(request, 'administration/category_management.html', {'categories': categories})
+
+@admin_required
+@require_POST
+def create_category(request):
+    data = json.loads(request.body)
+    form = CategoryForm(data)
+    if form.is_valid():
+        category = form.save()
+        category_data = {
+            'id': category.id,
+            'name': category.name,
+            'slug': category.slug
+        }
+        messages.success(request, 'Catégorie créée avec succès !')
+        return JsonResponse({'status': 'success', 'category': category_data})
+    else:
+        messages.error(request, 'Erreur lors de la création de la catégorie.')
+        return JsonResponse({'status': 'error', 'errors': form.errors}, status=400)
+
+@admin_required
+def category_detail(request, category_id):
     try:
-        user = User.objects.get(pk=user_id)
-        user.delete()
-        messages.success(request, 'Utilisateur supprimé avec succès !')
+        category = Category.objects.get(pk=category_id)
+        data = {
+            'id': category.id,
+            'name': category.name,
+            'slug': category.slug
+        }
+        return JsonResponse(data)
+    except Category.DoesNotExist:
+        messages.error(request, 'Catégorie non trouvée.')
+        return JsonResponse({'error': 'Catégorie non trouvée'}, status=404)
+
+@admin_required
+@require_POST
+def update_category(request, category_id):
+    try:
+        category = Category.objects.get(pk=category_id)
+        data = json.loads(request.body)
+        form = CategoryForm(data, instance=category)
+        if form.is_valid():
+            category = form.save()
+            category_data = {
+                'id': category.id,
+                'name': category.name,
+                'slug': category.slug
+            }
+            messages.success(request, 'Catégorie mise à jour avec succès !')
+            return JsonResponse({'status': 'success', 'category': category_data})
+        else:
+            messages.error(request, 'Erreur lors de la mise à jour de la catégorie.')
+            return JsonResponse({'status': 'error', 'errors': form.errors}, status=400)
+    except Category.DoesNotExist:
+        messages.error(request, 'Catégorie non trouvée.')
+        return JsonResponse({'status': 'error', 'message': 'Catégorie non trouvée'}, status=404)
+
+@admin_required
+@require_POST
+def delete_category(request, category_id):
+    try:
+        category = Category.objects.get(pk=category_id)
+        category.delete()
+        messages.success(request, 'Catégorie supprimée avec succès !')
         return JsonResponse({'status': 'success'})
-    except User.DoesNotExist:
-        messages.error(request, 'Utilisateur non trouvé.')
-        return JsonResponse({'status': 'error', 'message': 'Utilisateur non trouvé'}, status=404)
+    except Category.DoesNotExist:
+        messages.error(request, 'Catégorie non trouvée.')
+        return JsonResponse({'status': 'error', 'message': 'Catégorie non trouvée'}, status=404)

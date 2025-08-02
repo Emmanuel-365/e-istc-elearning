@@ -49,6 +49,7 @@ INSTALLED_APPS = [
     'evaluations.apps.EvaluationsConfig',
     'forums.apps.ForumsConfig',
     'messaging.apps.MessagingConfig',
+    'notifications.apps.NotificationsConfig',
 ]
 
 AUTH_USER_MODEL = 'users.User'

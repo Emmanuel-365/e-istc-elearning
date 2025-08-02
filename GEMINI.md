@@ -83,3 +83,29 @@
     - **Validation Côté Client :** Implémentation d'une validation JavaScript plus robuste pour les formulaires des modales afin de fournir un feedback instantané avant l'envoi au serveur.
 
 ## Prochaines Étapes
+1.  **Gestion du Profil (Étudiant/Enseignant) :**
+    *   Consultation et mise à jour des informations personnelles.
+2.  **Navigation et Accès aux Cours :**
+    *   Recherche de cours par mots-clés.
+3.  **Suivi de la Progression :**
+    *   Suivi de la progression dans chaque cours (pour étudiants).
+    *   Consultation de la progression des étudiants par cours et par activité (pour enseignants/admins).
+4.  **Notifications :**
+    *   Alertes pour les nouvelles annonces, devoirs, ou messages.
+5.  **Gestion des Comptes Utilisateurs (Admin) :**
+    *   Verrouillage des comptes.
+6.  **Gestion des Cours et Catégories (Admin) :**
+    *   Création et gestion des catégories de cours.
+7.  **Paramètres Généraux de la Plateforme (Admin) :**
+    *   Configuration du thème et de la personnalisation de la plateforme (logo ISTC, couleurs).
+    *   Gestion des plugins/extensions.
+8.  **Rapports et Statistiques (Admin/Enseignant) :**
+    *   Génération de rapports de participation et de performance des étudiants.
+    *   Tableau de bord global sur l'activité de la plateforme (nombre d'utilisateurs actifs, cours les plus populaires, etc.).
+    *   Journaux d'audit et de logs.
+9.  **Sauvegarde et Restauration :**
+    *   Outils de planification et d'exécution des sauvegardes de données.
+10. **Maintenance :**
+    *   Gestion des mises à jour.
+11. **Interaction et Collaboration :**
+    *   Accès à des classes virtuelles ou visioconférences (intégration).

@@ -22,6 +22,7 @@ class User(AbstractUser):
     matricule = models.CharField(max_length=254, unique=True, null=True, blank=True)
     specialite = models.CharField(max_length=254, null=True, blank=True)
     courses = models.ManyToManyField('courses.Course', related_name='students', blank=True)
+    is_locked = models.BooleanField(default=False)
 
     def save(self, *args, **kwargs):
         if self.role != self.Role.ETUDIANT:

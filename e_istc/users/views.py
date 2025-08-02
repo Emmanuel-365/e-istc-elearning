@@ -3,12 +3,16 @@ from django.urls import reverse_lazy
 from django.contrib.auth.decorators import login_required
 from django.http import Http404, JsonResponse
 from django.views.decorators.http import require_POST
+
+from users.forms import UserProfileForm
 from .decorators import role_required
 from .models import User
 from django.contrib.auth.views import LoginView, PasswordResetView, PasswordResetConfirmView
+from django.db.models import Q
 from django.contrib.auth.forms import AuthenticationForm
 from courses.models import Course
 from courses.forms import CourseForm
+from courses.models import CourseProgress
 from evaluations.models import Activite, Soumission, Question, Choix, Tentative
 from evaluations.forms import SoumissionForm
 import json
@@ -25,6 +29,10 @@ class CustomLoginView(LoginView):
     authentication_form = CustomAuthenticationForm
 
     def form_valid(self, form):
+        user = form.get_user()
+        if user.is_locked:
+            messages.error(self.request, "Ce compte a été verrouillé.")
+            return self.form_invalid(form)
         remember_me = self.request.POST.get('remember_me')
         if not remember_me:
             self.request.session.set_expiry(0) # Session expire à la fermeture du navigateur
@@ -58,7 +66,11 @@ def home(request):
 @login_required
 @role_required(User.Role.ETUDIANT)
 def etudiant_dashboard(request):
-    courses = Course.objects.all().order_by('-created_at')
+    query = request.GET.get('q')
+    if query:
+        courses = Course.objects.filter(Q(title__icontains=query) | Q(description__icontains=query)).order_by('-created_at')
+    else:
+        courses = Course.objects.all().order_by('-created_at')
     return render(request, 'users/dashboard_etudiant.html', {'courses': courses})
 
 @login_required
@@ -161,11 +173,16 @@ def student_course_detail(request, course_id):
             activite__in=activites
         ).values_list('activite_id', flat=True)
 
+        progress, created = CourseProgress.objects.get_or_create(student=request.user, course=course)
+        completed_ressources_ids = progress.completed_ressources.values_list('id', flat=True)
+
         context = {
             'course': course,
             'activites': activites,
             'submitted_activities_ids': submitted_activities_ids,
             'annonces': annonces,
+            'progress': progress,
+            'completed_ressources_ids': completed_ressources_ids,
         }
         return render(request, 'users/course_detail_student.html', context)
     except Course.DoesNotExist:
@@ -278,6 +295,21 @@ def my_grades(request):
         'tentatives': tentatives,
     }
     return render(request, 'users/my_grades.html', context)
+
+
+@login_required
+def profile_view(request):
+    if request.method == 'POST':
+        form = UserProfileForm(request.POST, instance=request.user)
+        if form.is_valid():
+            form.save()
+            messages.success(request, 'Votre profil a été mis à jour avec succès !')
+            return redirect('users:profile')
+        else:
+            messages.error(request, 'Veuillez corriger les erreurs ci-dessous.')
+    else:
+        form = UserProfileForm(instance=request.user)
+    return render(request, 'users/profile.html', {'form': form})
 
 
 

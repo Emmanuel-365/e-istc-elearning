@@ -26,4 +26,5 @@ urlpatterns = [
     path('api/annonces/<int:annonce_id>/', views.annonce_detail, name='api_annonce_detail'),
     path('api/annonces/<int:annonce_id>/update/', views.update_annonce, name='api_update_annonce'),
     path('api/annonces/<int:annonce_id>/delete/', views.delete_annonce, name='api_delete_annonce'),
+    path('api/ressources/<int:ressource_id>/complete/', views.complete_ressource, name='api_complete_ressource'),
 ]

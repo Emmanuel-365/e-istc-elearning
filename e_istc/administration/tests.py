@@ -1,7 +1,7 @@
 from django.test import TestCase, Client
 from django.urls import reverse
 from users.models import User
-from courses.models import Course
+from courses.models import Course, CourseProgress, Ressource, Module
 import json
 
 class AdministrationAPITest(TestCase):
@@ -126,3 +126,74 @@ class AdministrationAPITest(TestCase):
         self.client.login(username='teacher', password='password')
         response = self.client.post(reverse('administration:api_delete_course', args=[course.id]))
         self.assertEqual(response.status_code, 403) # Forbidden
+
+    def test_lock_user(self):
+        self.client.login(username='admin', password='password')
+        response = self.client.post(reverse('administration:api_lock_user', args=[self.student_user.id]))
+        self.assertEqual(response.status_code, 200)
+        self.student_user.refresh_from_db()
+        self.assertTrue(self.student_user.is_locked)
+
+    def test_unlock_user(self):
+        self.student_user.is_locked = True
+        self.student_user.save()
+        self.client.login(username='admin', password='password')
+        response = self.client.post(reverse('administration:api_unlock_user', args=[self.student_user.id]))
+        self.assertEqual(response.status_code, 200)
+        self.student_user.refresh_from_db()
+        self.assertFalse(self.student_user.is_locked)
+
+class CourseProgressViewTest(TestCase):
+    def setUp(self):
+        self.client = Client()
+        self.admin_user = User.objects.create_user(username='admin', email='admin@example.com', password='password', role=User.Role.ADMIN, is_staff=True, is_superuser=True)
+        self.teacher_user = User.objects.create_user(username='teacher', email='teacher@example.com', password='password', role=User.Role.ENSEIGNANT)
+        self.student_user = User.objects.create_user(username='student', email='student@example.com', password='password', role=User.Role.ETUDIANT)
+        self.course = Course.objects.create(title='Progress Course', description='Desc', teacher=self.teacher_user)
+        self.module = Module.objects.create(course=self.course, title='Module 1', order=1)
+        self.ressource1 = Ressource.objects.create(module=self.module, title='Ressource 1')
+        self.ressource2 = Ressource.objects.create(module=self.module, title='Ressource 2')
+        self.course.students.add(self.student_user)
+
+    def test_course_progress_view(self):
+        progress, created = CourseProgress.objects.get_or_create(student=self.student_user, course=self.course)
+        progress.completed_ressources.add(self.ressource1)
+        self.client.login(username='admin', password='password')
+        response = self.client.get(reverse('administration:course_progress', args=[self.course.id]))
+        self.assertEqual(response.status_code, 200)
+        self.assertContains(response, '50.00%')
+
+class CategoryManagementTest(TestCase):
+    def setUp(self):
+        self.client = Client()
+        self.admin_user = User.objects.create_user(username='admin', email='admin@example.com', password='password', role=User.Role.ADMIN, is_staff=True, is_superuser=True)
+        self.category = Category.objects.create(name='Test Category', slug='test-category')
+
+    def test_category_list_view(self):
+        self.client.login(username='admin', password='password')
+        response = self.client.get(reverse('administration:category_management_page'))
+        self.assertEqual(response.status_code, 200)
+        self.assertContains(response, 'Test Category')
+
+    def test_create_category_api(self):
+        self.client.login(username='admin', password='password')
+        response = self.client.post(reverse('administration:api_create_category'),
+                                    json.dumps({'name': 'New Category', 'slug': 'new-category'}),
+                                    content_type='application/json')
+        self.assertEqual(response.status_code, 200)
+        self.assertEqual(Category.objects.count(), 2)
+
+    def test_update_category_api(self):
+        self.client.login(username='admin', password='password')
+        response = self.client.post(reverse('administration:api_update_category', args=[self.category.id]),
+                                    json.dumps({'name': 'Updated Category', 'slug': 'updated-category'}),
+                                    content_type='application/json')
+        self.assertEqual(response.status_code, 200)
+        self.category.refresh_from_db()
+        self.assertEqual(self.category.name, 'Updated Category')
+
+    def test_delete_category_api(self):
+        self.client.login(username='admin', password='password')
+        response = self.client.post(reverse('administration:api_delete_category', args=[self.category.id]))
+        self.assertEqual(response.status_code, 200)
+        self.assertEqual(Category.objects.count(), 0)

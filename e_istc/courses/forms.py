@@ -1,5 +1,5 @@
 from django import forms
-from .models import Course, Module, Ressource, Annonce
+from .models import Course, Module, Ressource, Annonce, Category
 from users.models import User
 
 class CourseForm(forms.ModelForm):
@@ -43,4 +43,13 @@ class AnnonceForm(forms.ModelForm):
         widgets = {
             'titre': forms.TextInput(attrs={'class': 'form-control'}),
             'contenu': forms.Textarea(attrs={'class': 'form-control', 'rows': 3}),
+        }
+
+class CategoryForm(forms.ModelForm):
+    class Meta:
+        model = Category
+        fields = ['name', 'slug']
+        widgets = {
+            'name': forms.TextInput(attrs={'class': 'form-control'}),
+            'slug': forms.TextInput(attrs={'class': 'form-control'}),
         }

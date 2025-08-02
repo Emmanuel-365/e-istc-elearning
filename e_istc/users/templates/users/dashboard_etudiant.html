@@ -12,6 +12,12 @@
             Cours Disponibles
         </div>
         <div class="card-body">
+            <form method="get" action="" class="mb-4">
+                <div class="input-group">
+                    <input type="text" name="q" class="form-control" placeholder="Rechercher un cours..." value="{{ request.GET.q }}">
+                    <button class="btn btn-primary" type="submit">Rechercher</button>
+                </div>
+            </form>
             <table class="table table-striped table-hover">
                 <thead>
                     <tr>

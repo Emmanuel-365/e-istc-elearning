@@ -1,15 +1,31 @@
 from django.db import models
 from users.models import User
 
+class Category(models.Model):
+    name = models.CharField(max_length=100)
+    slug = models.SlugField(unique=True)
+
+    def __str__(self):
+        return self.name
+
 class Course(models.Model):
     title = models.CharField(max_length=200)
     description = models.TextField()
     teacher = models.ForeignKey(User, on_delete=models.CASCADE, limit_choices_to={'role': User.Role.ENSEIGNANT})
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
+    category = models.ForeignKey(Category, on_delete=models.SET_NULL, null=True, blank=True, related_name='courses')
 
     def __str__(self):
         return self.title
+
+class CourseProgress(models.Model):
+    student = models.ForeignKey(User, on_delete=models.CASCADE, related_name='course_progress')
+    course = models.ForeignKey(Course, on_delete=models.CASCADE, related_name='progress')
+    completed_ressources = models.ManyToManyField('Ressource', blank=True)
+
+    class Meta:
+        unique_together = ('student', 'course')
 
 class Annonce(models.Model):
     cours = models.ForeignKey(Course, on_delete=models.CASCADE, related_name='annonces')

@@ -3,6 +3,7 @@ from django.test import TestCase, Client
 from django.urls import reverse
 from users.models import User
 from users.forms import CustomUserCreationForm, CustomUserChangeForm
+from courses.models import Course
 
 class UserModelTest(TestCase):
     def test_user_creation(self):
@@ -115,6 +116,15 @@ class UserViewTest(TestCase):
         self.assertEqual(response.status_code, 200)
         self.assertContains(response, 'Gestion des Utilisateurs')
 
+    def test_course_search(self):
+        Course.objects.create(title='Python Basics', description='Learn Python', teacher=self.teacher_user)
+        Course.objects.create(title='Java Advanced', description='Learn Java', teacher=self.teacher_user)
+        self.client.login(username='student', password='password')
+        response = self.client.get(reverse('users:etudiant_dashboard') + '?q=Python')
+        self.assertEqual(response.status_code, 200)
+        self.assertContains(response, 'Python Basics')
+        self.assertNotContains(response, 'Java Advanced')
+
 
 class UserAPITest(TestCase):
     def setUp(self):
@@ -152,3 +162,28 @@ class UserAPITest(TestCase):
         response = self.client.post(reverse('administration:api_delete_user', args=[self.student_user.id]))
         self.assertEqual(response.status_code, 200)
         self.assertEqual(User.objects.count(), 2) # 3 initial users - 1 deleted
+
+class ProfileViewTest(TestCase):
+    def setUp(self):
+        self.client = Client()
+        self.student_user = User.objects.create_user(username='student', email='student@example.com', password='password', role=User.Role.ETUDIANT, first_name='John', last_name='Doe', matricule='ETU12345')
+
+    def test_profile_view_get(self):
+        self.client.login(username='student', password='password')
+        response = self.client.get(reverse('users:profile'))
+        self.assertEqual(response.status_code, 200)
+        self.assertContains(response, 'Mon Profil')
+        self.assertContains(response, 'John')
+
+    def test_profile_view_post_update(self):
+        self.client.login(username='student', password='password')
+        response = self.client.post(reverse('users:profile'), {
+            'first_name': 'John-Updated',
+            'last_name': 'Doe',
+            'email': 'student@example.com',
+            'matricule': self.student_user.matricule,
+            'specialite': ''
+        })
+        self.assertEqual(response.status_code, 302) # Redirect on success
+        self.student_user.refresh_from_db()
+        self.assertEqual(self.student_user.first_name, 'John-Updated')

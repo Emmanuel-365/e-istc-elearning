@@ -54,6 +54,9 @@
                         <li class="nav-item">
                             <a class="nav-link" href="{% url 'administration:course_management' %}">Cours</a>
                         </li>
+                        <li class="nav-item">
+                            <a class="nav-link" href="{% url 'administration:category_management_page' %}">Catégories</a>
+                        </li>
                     {% endif %}
                 </ul>
                 <ul class="navbar-nav ms-auto">
@@ -62,14 +65,21 @@
                             {% unread_messages_count as unread_count %}
                             <a class="nav-link" href="{% url 'messaging:inbox' %}">Messagerie {% if unread_count > 0 %}<span class="badge bg-danger">{{ unread_count }}</span>{% endif %}</a>
                         </li>
-                        <li class="nav-item">
-                            <span class="nav-link">Bonjour, {{ user.first_name }}</span>
-                        </li>
-                        <li class="nav-item">
-                            <form method="post" action="{% url 'users:logout' %}" id="logout-form" class="d-inline">
-                                {% csrf_token %}
-                                <button type="submit" class="nav-link btn btn-link">Déconnexion</button>
-                            </form>
+                        
+                        <li class="nav-item dropdown">
+                            <a class="nav-link dropdown-toggle" href="#" id="navbarDropdown" role="button" data-bs-toggle="dropdown" aria-expanded="false">
+                                Bonjour, {{ user.first_name }}
+                            </a>
+                            <ul class="dropdown-menu dropdown-menu-end" aria-labelledby="navbarDropdown">
+                                <li><a class="dropdown-item" href="{% url 'users:profile' %}">Mon Profil</a></li>
+                                <li><hr class="dropdown-divider"></li>
+                                <li>
+                                    <form method="post" action="{% url 'users:logout' %}" id="logout-form" class="d-inline">
+                                        {% csrf_token %}
+                                        <button type="submit" class="dropdown-item">Déconnexion</button>
+                                    </form>
+                                </li>
+                            </ul>
                         </li>
                     {% else %}
                         <li class="nav-item">
@@ -141,6 +151,24 @@
                 newToast.remove();
             });
         }
+
+        function updateNotificationBadge() {
+            fetch("{% url 'notifications:notification_list' %}")
+                .then(response => response.json())
+                .then(data => {
+                    const unreadCount = data.unread_count;
+                    const badge = document.getElementById('notification-badge');
+                    if (unreadCount > 0) {
+                        badge.textContent = unreadCount;
+                        badge.style.display = ''
+                    } else {
+                        badge.style.display = 'none'
+                    }
+                });
+        }
+
+        updateNotificationBadge();
+        setInterval(updateNotificationBadge, 60000); // Update every minute
     </script>
     {% block extra_js %}{% endblock %}
 </body>

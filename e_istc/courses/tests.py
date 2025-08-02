@@ -1,7 +1,7 @@
 from django.test import TestCase, Client
 from django.urls import reverse
 from users.models import User
-from courses.models import Course, Module, Ressource, Annonce
+from courses.models import Course, Module, Ressource, Annonce, CourseProgress
 from courses.forms import CourseForm, ModuleForm, RessourceForm, AnnonceForm
 import json
 
@@ -294,3 +294,20 @@ class CourseAPITest(TestCase):
         response = self.client.post(reverse('courses:api_enroll_student', args=[self.course.id, self.student_user.id]))
         self.assertEqual(response.status_code, 200)
         self.assertIn(self.student_user, self.course.students.all())
+
+class CourseProgressTest(TestCase):
+    def setUp(self):
+        self.client = Client()
+        self.teacher_user = User.objects.create_user(username='teacher', email='teacher@example.com', password='password', role=User.Role.ENSEIGNANT)
+        self.student_user = User.objects.create_user(username='student', email='student@example.com', password='password', role=User.Role.ETUDIANT)
+        self.course = Course.objects.create(title='Progress Course', description='Desc', teacher=self.teacher_user)
+        self.module = Module.objects.create(course=self.course, title='Module 1', order=1)
+        self.ressource = Ressource.objects.create(module=self.module, title='Ressource 1')
+        self.course.students.add(self.student_user)
+
+    def test_complete_ressource_api(self):
+        self.client.login(username='student', password='password')
+        response = self.client.post(reverse('courses:api_complete_ressource', args=[self.ressource.id]))
+        self.assertEqual(response.status_code, 200)
+        progress = CourseProgress.objects.get(student=self.student_user, course=self.course)
+        self.assertIn(self.ressource, progress.completed_ressources.all())
