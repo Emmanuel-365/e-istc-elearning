@@ -38,21 +38,21 @@
                                     {{ ressource.title }}
                                     <div>
                                         {% if ressource.file %}
-                                            <a href="{{ ressource.file.url }}" target="_blank" class="btn btn-sm btn-info">Voir Fichier</a>
+                                            <a href="{{ ressource.file.url }}" target="_blank" class="btn btn-sm btn-outline-info">Voir Fichier</a>
                                         {% endif %}
                                         {% if ressource.url %}
-                                            <a href="{{ ressource.url }}" target="_blank" class="btn btn-sm btn-info">Voir URL</a>
+                                            <a href="{{ ressource.url }}" target="_blank" class="btn btn-sm btn-outline-info">Voir URL</a>
                                         {% endif %}
-                                        <button class="btn btn-sm btn-secondary edit-ressource-btn" data-id="{{ ressource.id }}" data-module-id="{{ module.id }}">Modifier</button>
-                                        <button class="btn btn-sm btn-danger delete-ressource-btn" data-id="{{ ressource.id }}">Supprimer</button>
+                                        <button class="btn btn-sm btn-outline-secondary edit-ressource-btn" data-id="{{ ressource.id }}" data-module-id="{{ module.id }}">Modifier</button>
+                                        <button class="btn btn-sm btn-outline-danger delete-ressource-btn" data-id="{{ ressource.id }}">Supprimer</button>
                                     </div>
                                 </li>
                                 {% endfor %}
                             </ul>
-                            <button class="btn btn-sm btn-success mt-2 add-ressource-btn" data-module-id="{{ module.id }}">Ajouter Ressource</button>
+                            <button class="btn btn-sm btn-outline-success mt-2 add-ressource-btn" data-module-id="{{ module.id }}">Ajouter Ressource</button>
                             <div class="mt-2">
-                                <button class="btn btn-sm btn-secondary edit-module-btn" data-id="{{ module.id }}">Modifier Module</button>
-                                <button class="btn btn-sm btn-danger delete-module-btn" data-id="{{ module.id }}">Supprimer Module</button>
+                                <button class="btn btn-sm btn-outline-secondary edit-module-btn" data-id="{{ module.id }}">Modifier Module</button>
+                                <button class="btn btn-sm btn-outline-danger delete-module-btn" data-id="{{ module.id }}">Supprimer Module</button>
                             </div>
                         </li>
                         {% empty %}
@@ -77,8 +77,8 @@
                                 <small>Publié le: {{ annonce.cree_le|date:"d/m/Y H:i" }}</small>
                             </div>
                             <div>
-                                <button class="btn btn-sm btn-secondary edit-annonce-btn" data-id="{{ annonce.id }}">Modifier</button>
-                                <button class="btn btn-sm btn-danger delete-annonce-btn" data-id="{{ annonce.id }}">Supprimer</button>
+                                <button class="btn btn-sm btn-outline-secondary edit-annonce-btn" data-id="{{ annonce.id }}">Modifier</button>
+                                <button class="btn btn-sm btn-outline-danger delete-annonce-btn" data-id="{{ annonce.id }}">Supprimer</button>
                             </div>
                         </li>
                         {% empty %}
@@ -115,15 +115,15 @@
                             <small>Date limite: {{ activite.due_date|date:"d/m/Y H:i" }}</small>
                             <div class="mt-2">
                                 {% if activite.activity_type == 'QUIZ' %}
-                                    <button class="btn btn-sm btn-info manage-questions-btn" data-id="{{ activite.id }}">Gérer les questions</button>
+                                    <button class="btn btn-sm btn-outline-info manage-questions-btn" data-id="{{ activite.id }}">Gérer les questions</button>
                                 {% elif activite.activity_type == 'DEVOIR' %}
-                                    <button class="btn btn-sm btn-warning grade-assignment-btn" data-id="{{ activite.id }}">Noter les devoirs</button>
+                                    <button class="btn btn-sm btn-outline-warning grade-assignment-btn" data-id="{{ activite.id }}">Noter les devoirs</button>
                                 {% elif activite.activity_type == 'SONDAGE' %}
-                                    <button class="btn btn-sm btn-info manage-sondage-questions-btn" data-id="{{ activite.id }}">Gérer les questions</button>
-                                    <a href="{% url 'evaluations:sondage_results' activite.id %}" class="btn btn-sm btn-success">Voir les résultats</a>
+                                    <button class="btn btn-sm btn-outline-info manage-sondage-questions-btn" data-id="{{ activite.id }}">Gérer les questions</button>
+                                    <a href="{% url 'evaluations:sondage_results' activite.id %}" class="btn btn-sm btn-outline-success">Voir les résultats</a>
                                 {% endif %}
-                                <button class="btn btn-sm btn-secondary edit-evaluation-btn" data-id="{{ activite.id }}">Modifier</button>
-                                <button class="btn btn-sm btn-danger delete-evaluation-btn" data-id="{{ activite.id }}">Supprimer</button>
+                                <button class="btn btn-sm btn-outline-secondary edit-evaluation-btn" data-id="{{ activite.id }}">Modifier</button>
+                                <button class="btn btn-sm btn-outline-danger delete-evaluation-btn" data-id="{{ activite.id }}">Supprimer</button>
                             </div>
                         </li>
                         {% empty %}
@@ -155,7 +155,7 @@
                                 <td>{{ student.last_name }} {{ student.first_name }}</td>
                                 <td>
                                     <a href="{% url 'messaging:new_conversation' student.id %}" class="btn btn-sm btn-outline-primary">Contacter</a>
-                                    <button class="btn btn-sm btn-danger remove-student-btn" data-id="{{ student.id }}">Retirer</button>
+                                    <button class="btn btn-sm btn-outline-danger remove-student-btn" data-id="{{ student.id }}">Retirer</button>
                                 </td>
                             </tr>
                             {% empty %}
