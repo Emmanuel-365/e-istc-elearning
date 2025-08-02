@@ -10,43 +10,31 @@
     </div>
     <p class="lead text-muted">Bienvenue, {{ user.first_name }} ! Gérez vos cours ici.</p>
 
-    <div class="card mt-4 border-0 shadow-sm">
-        <div class="card-body">
-            <div class="table-responsive">
-                <table class="table table-hover align-middle">
-                    <thead>
-                        <tr>
-                            <th>Titre</th>
-                            <th>Date de Création</th>
-                            <th class="text-center">Actions</th>
-                        </tr>
-                    </thead>
-                    <tbody id="course-table-body">
-                        {% for course in courses %}
-                        <tr id="course-row-{{ course.id }}">
-                            <td>
-                                {% if course.image %}
-                                    <img src="{{ course.image.url }}" alt="Image du cours" class="img-thumbnail" width="100">
-                                {% endif %}
-                                <div class="fw-bold">{{ course.title }}</div>
-                                <small class="text-muted">{{ course.description|truncatechars:100 }}</small>
-                            </td>
-                            <td>{{ course.created_at|date:"d/m/Y" }}</td>
-                            <td class="text-center">
-                                <a href="{% url 'administration:course_detail_page' course.id %}" class="btn btn-sm btn-outline-info">Gérer</a>
-                                <button class="btn btn-sm btn-outline-secondary edit-btn" data-id="{{ course.id }}">Modifier</button>
-                                <button class="btn btn-sm btn-outline-danger delete-btn" data-id="{{ course.id }}">Supprimer</button>
-                            </td>
-                        </tr>
-                        {% empty %}
-                        <tr>
-                            <td colspan="3" class="text-center text-muted py-4">Vous n'avez pas encore créé de cours.</td>
-                        </tr>
-                        {% endfor %}
-                    </tbody>
-                </table>
+    <div class="row mt-4" id="course-list">
+        {% for course in courses %}
+        <div class="col-md-6 col-lg-4 mb-4" id="course-card-{{ course.id }}">
+            <div class="card h-100">
+                {% if course.image %}
+                    <img src="{{ course.image.url }}" class="card-img-top" alt="Image du cours">
+                {% endif %}
+                <div class="card-body d-flex flex-column">
+                    <h5 class="card-title">{{ course.title }}</h5>
+                    <p class="card-text text-muted">{{ course.description|truncatechars:100 }}</p>
+                    <div class="mt-auto d-flex justify-content-between">
+                        <a href="{% url 'administration:course_detail_page' course.id %}" class="btn btn-sm btn-outline-info">Gérer</a>
+                        <div>
+                            <button class="btn btn-sm btn-outline-secondary edit-btn" data-id="{{ course.id }}">Modifier</button>
+                            <button class="btn btn-sm btn-outline-danger delete-btn" data-id="{{ course.id }}">Supprimer</button>
+                        </div>
+                    </div>
+                </div>
             </div>
         </div>
+        {% empty %}
+        <div class="col-12">
+            <p class="text-center text-muted py-4">Vous n'avez pas encore créé de cours.</p>
+        </div>
+        {% endfor %}
     </div>
 </div>
 
@@ -117,9 +105,8 @@ document.addEventListener('DOMContentLoaded', function () {
     const courseForm = document.getElementById('courseForm');
     const addCourseBtn = document.getElementById('addCourseBtn');
     const saveCourseBtn = document.getElementById('saveCourseBtn');
-    const courseTableBody = document.getElementById('course-table-body');
+    const courseList = document.getElementById('course-list');
     let currentCourseId = null;
-    const loggedInUserId = {{ user.id|default:"null" }};
 
     function getCookie(name) {
         let cookieValue = null;
@@ -137,27 +124,31 @@ document.addEventListener('DOMContentLoaded', function () {
     }
     const csrftoken = getCookie('csrftoken');
 
-    function upsertCourseInTable(course) {
-        let row = document.getElementById(`course-row-${course.id}`);
-        const newRowHtml = `
-            <td>
-                <div class="fw-bold">${course.title}</div>
-                <small class="text-muted">${course.description.substring(0, 100)}</small>
-            </td>
-            <td>${course.created_at}</td>
-            <td class="text-center">
-                <a href="/administration/cours/${course.id}/" class="btn btn-sm btn-outline-info">Gérer</a>
-                <button class="btn btn-sm btn-outline-secondary edit-btn" data-id="${course.id}">Modifier</button>
-                <button class="btn btn-sm btn-outline-danger delete-btn" data-id="${course.id}">Supprimer</button>
-            </td>
+    function upsertCourseInList(course) {
+        let card = document.getElementById(`course-card-${course.id}`);
+        const newCardHtml = `
+            <div class="card h-100">
+                <div class="card-body d-flex flex-column">
+                    <h5 class="card-title">${course.title}</h5>
+                    <p class="card-text text-muted">${course.description.substring(0, 100)}</p>
+                    <div class="mt-auto d-flex justify-content-between">
+                        <a href="/administration/cours/${course.id}/" class="btn btn-sm btn-outline-info">Gérer</a>
+                        <div>
+                            <button class="btn btn-sm btn-outline-secondary edit-btn" data-id="${course.id}">Modifier</button>
+                            <button class="btn btn-sm btn-outline-danger delete-btn" data-id="${course.id}">Supprimer</button>
+                        </div>
+                    </div>
+                </div>
+            </div>
         `;
-        if (row) {
-            row.innerHTML = newRowHtml;
+        if (card) {
+            card.innerHTML = newCardHtml;
         } else {
-            row = document.createElement('tr');
-            row.id = `course-row-${course.id}`;
-            row.innerHTML = newRowHtml;
-            courseTableBody.appendChild(row);
+            card = document.createElement('div');
+            card.className = 'col-md-6 col-lg-4 mb-4';
+            card.id = `course-card-${course.id}`;
+            card.innerHTML = newCardHtml;
+            courseList.appendChild(card);
         }
     }
 
@@ -168,7 +159,7 @@ document.addEventListener('DOMContentLoaded', function () {
         courseModal.show();
     });
 
-    courseTableBody.addEventListener('click', function (e) {
+    courseList.addEventListener('click', function (e) {
         const target = e.target.closest('button');
         if (!target) return;
 
@@ -178,7 +169,6 @@ document.addEventListener('DOMContentLoaded', function () {
                 .then(response => response.json())
                 .then(data => {
                     if (data.error) {
-                        // Error will be shown via Django messages toast
                         return;
                     }
                     courseForm.reset();
@@ -223,7 +213,7 @@ document.addEventListener('DOMContentLoaded', function () {
         })
         .then(result => {
             courseModal.hide();
-            upsertCourseInTable(result.course);
+            upsertCourseInList(result.course);
         })
         .catch(error => console.error('Error:', error))
         .finally(() => {
@@ -248,7 +238,7 @@ document.addEventListener('DOMContentLoaded', function () {
             return response.json();
         })
         .then(() => {
-            document.getElementById(`course-row-${currentCourseId}`).remove();
+            document.getElementById(`course-card-${currentCourseId}`).remove();
             deleteModal.hide();
         })
         .catch(error => console.error('Error:', error))

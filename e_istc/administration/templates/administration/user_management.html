@@ -4,41 +4,43 @@
 
 {% block content %}
 <div class="container-fluid">
-    <h2 class="mb-4">Gestion des Utilisateurs</h2>
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <h2 class="mb-0">Gestion des Utilisateurs</h2>
+        <button id="addUserBtn" class="btn btn-primary">Ajouter un utilisateur</button>
+    </div>
 
-    <div class="card">
-        <div class="card-header">
-            <button id="addUserBtn" class="btn btn-primary">Ajouter un utilisateur</button>
-        </div>
+    <div class="card border-0 shadow-sm">
         <div class="card-body">
-            <table class="table table-striped table-hover">
-                <thead>
-                    <tr>
-                        <th>Nom</th>
-                        <th>Email</th>
-                        <th>Rôle</th>
-                        <th>Actions</th>
-                    </tr>
-                </thead>
-                <tbody id="user-table-body">
-                    {% for user in users %}
-                    <tr id="user-row-{{ user.id }}">
-                        <td>{{ user.last_name }} {{ user.first_name }}</td>
-                        <td>{{ user.email }}</td>
-                        <td><span class="badge bg-info">{{ user.get_role_display }}</span></td>
-                        <td>
-                            <button class="btn btn-sm btn-secondary edit-btn" data-id="{{ user.id }}">Modifier</button>
-                            <button class="btn btn-sm btn-danger delete-btn" data-id="{{ user.id }}">Supprimer</button>
-                            {% if user.is_locked %}
-                                <button class="btn btn-sm btn-success lock-btn" data-id="{{ user.id }}" data-action="unlock">Déverrouiller</button>
-                            {% else %}
-                                <button class="btn btn-sm btn-warning lock-btn" data-id="{{ user.id }}" data-action="lock">Verrouiller</button>
-                            {% endif %}
-                        </td>
-                    </tr>
-                    {% endfor %}
-                </tbody>
-            </table>
+            <div class="table-responsive">
+                <table class="table table-hover align-middle">
+                    <thead>
+                        <tr>
+                            <th>Nom</th>
+                            <th>Email</th>
+                            <th>Rôle</th>
+                            <th class="text-center">Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody id="user-table-body">
+                        {% for user in users %}
+                        <tr id="user-row-{{ user.id }}">
+                            <td>{{ user.last_name }} {{ user.first_name }}</td>
+                            <td>{{ user.email }}</td>
+                            <td><span class="badge bg-info">{{ user.get_role_display }}</span></td>
+                            <td class="text-center">
+                                <button class="btn btn-sm btn-outline-secondary edit-btn" data-id="{{ user.id }}">Modifier</button>
+                                <button class="btn btn-sm btn-outline-danger delete-btn" data-id="{{ user.id }}">Supprimer</button>
+                                {% if user.is_locked %}
+                                    <button class="btn btn-sm btn-outline-success lock-btn" data-id="{{ user.id }}" data-action="unlock">Déverrouiller</button>
+                                {% else %}
+                                    <button class="btn btn-sm btn-outline-warning lock-btn" data-id="{{ user.id }}" data-action="lock">Verrouiller</button>
+                                {% endif %}
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
         </div>
     </div>
 </div>
@@ -181,9 +183,9 @@ document.addEventListener('DOMContentLoaded', function () {
             <td>${user.last_name} ${user.first_name}</td>
             <td>${user.email}</td>
             <td><span class="badge ${getRoleBadge(user.role)}">${user.get_role_display}</span></td>
-            <td>
-                <button class="btn btn-sm btn-secondary edit-btn" data-id="${user.id}">Modifier</button>
-                <button class="btn btn-sm btn-danger delete-btn" data-id="${user.id}">Supprimer</button>
+            <td class="text-center">
+                <button class="btn btn-sm btn-outline-secondary edit-btn" data-id="${user.id}">Modifier</button>
+                <button class="btn btn-sm btn-outline-danger delete-btn" data-id="${user.id}">Supprimer</button>
             </td>
         `;
         if (row) {
@@ -214,7 +216,6 @@ document.addEventListener('DOMContentLoaded', function () {
                 .then(response => response.json())
                 .then(data => {
                     if (data.error) {
-                        // Django messages will handle the error display
                         return;
                     }
                     userForm.reset();
@@ -241,7 +242,6 @@ document.addEventListener('DOMContentLoaded', function () {
     });
 
     saveUserBtn.addEventListener('click', function () {
-        // Client-side validation
         if (!userForm.checkValidity()) {
             userForm.reportValidity();
             return;
@@ -267,9 +267,6 @@ document.addEventListener('DOMContentLoaded', function () {
                 userModal.hide();
                 upsertUserInTable(result.user);
             } else {
-                // Django messages will handle the error display
-                // For form-specific errors, we can re-enable the form-errors div if needed
-                // For now, rely on Django messages for general errors
             }
         })
         .finally(() => {
@@ -293,7 +290,6 @@ document.addEventListener('DOMContentLoaded', function () {
                 document.getElementById(`user-row-${currentUserId}`).remove();
                 deleteModal.hide();
             } else {
-                // Django messages will handle the error display
             }
         })
         .finally(() => {
@@ -315,7 +311,6 @@ document.addEventListener('DOMContentLoaded', function () {
                 if (response.ok) {
                     location.reload();
                 } else {
-                    // Handle error
                 }
             });
         }

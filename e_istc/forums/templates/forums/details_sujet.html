@@ -20,7 +20,7 @@
     <h2 class="mb-3">{{ sujet.titre }}</h2>
 
     {% for message in messages %}
-    <div class="card mb-3" id="message-{{ message.id }}">
+    <div class="card mb-3 border-0 shadow-sm" id="message-{{ message.id }}">
         <div class="card-header d-flex justify-content-between">
             <strong>{{ message.auteur.first_name }} {{ message.auteur.last_name }}</strong>
             <small class="text-muted">{{ message.cree_le|date:"d/m/Y à H:i" }}</small>
@@ -41,7 +41,7 @@
 
     <hr>
 
-    <div class="card mt-4">
+    <div class="card mt-4 border-0 shadow-sm">
         <div class="card-header">
             <h5>Répondre</h5>
         </div>

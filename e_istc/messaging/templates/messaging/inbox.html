@@ -6,7 +6,7 @@
 <div class="container">
     <h2 class="mb-4">Boîte de réception</h2>
 
-    <div class="card mb-4">
+    <div class="card border-0 shadow-sm mb-4">
         <div class="card-header">
             Démarrer une nouvelle conversation
         </div>
@@ -38,7 +38,7 @@
                 <p class="mb-1">{{ conv.messages.last.content|truncatechars:100 }}</p>
             </a>
         {% empty %}
-            <p>Aucune conversation.</p>
+            <p class="text-center text-muted py-4">Aucune conversation.</p>
         {% endfor %}
     </div>
 </div>

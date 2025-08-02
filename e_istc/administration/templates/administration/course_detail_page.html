@@ -11,482 +11,176 @@
         </ol>
     </nav>
 
-    <h2 class="mb-4">{{ course.title }}</h2>
-
-    <div class="card mb-4">
-        <div class="card-header">
-            Informations sur le Cours
-        </div>
-        <div class="card-body">
-            <p><strong>Titre :</strong> {{ course.title }}</p>
-            <p><strong>Description :</strong> {{ course.description }}</p>
-            <p><strong>Enseignant :</strong> {{ course.teacher.first_name }} {{ course.teacher.last_name }}</p>
-            <p><strong>Date de Création :</strong> {{ course.created_at|date:"d/m/Y H:i" }}</p>
-            <p><strong>Dernière mise à jour :</strong> {{ course.updated_at|date:"d/m/Y H:i" }}</p>
-            <p><strong>Lien de la visioconférence :</strong> {{ course.visio_link|default:"Non défini" }}</p>
-            <p><strong>Date et heure de la visioconférence :</strong> {{ course.visio_date|date:"d/m/Y H:i"|default:"Non défini" }}</p>
-        </div>
-    </div>
-
-    <h3>Modules du Cours</h3>
-    <div class="card">
-        <div class="card-header">
-            <button id="addModuleBtn" class="btn btn-primary">Ajouter un module</button>
-        </div>
-        <div class="card-body">
-            <ul class="list-group" id="module-list">
-                {% for module in course.modules.all %}
-                <li class="list-group-item d-flex justify-content-between align-items-center" id="module-item-{{ module.id }}">
-                    <div>
-                        <h5>{{ module.title }} (Ordre: {{ module.order }})</h5>
-                        <p>{{ module.description }}</p>
-                        <h6>Ressources:</h6>
-                        <ul class="list-group list-group-flush" id="ressource-list-{{ module.id }}">
-                            {% for ressource in module.ressources.all %}
-                            <li class="list-group-item d-flex justify-content-between align-items-center" id="ressource-item-{{ ressource.id }}">
-                                {{ ressource.title }}
-                                <div>
-                                    {% if ressource.file %}
-                                        <a href="{{ ressource.file.url }}" target="_blank" class="btn btn-sm btn-info">Voir Fichier</a>
-                                    {% endif %}
-                                    {% if ressource.url %}
-                                        <a href="{{ ressource.url }}" target="_blank" class="btn btn-sm btn-info">Voir URL</a>
-                                    {% endif %}
-                                    <button class="btn btn-sm btn-secondary edit-ressource-btn" data-id="{{ ressource.id }}" data-module-id="{{ module.id }}">Modifier</button>
-                                    <button class="btn btn-sm btn-danger delete-ressource-btn" data-id="{{ ressource.id }}">Supprimer</button>
-                                </div>
-                            </li>
-                            {% endfor %}
-                        </ul>
-                        <button class="btn btn-sm btn-success mt-2 add-ressource-btn" data-module-id="{{ module.id }}">Ajouter Ressource</button>
-                    </div>
-                    <div>
-                        <button class="btn btn-sm btn-secondary edit-module-btn" data-id="{{ module.id }}">Modifier</button>
-                        <button class="btn btn-sm btn-danger delete-module-btn" data-id="{{ module.id }}">Supprimer</button>
-                    </div>
-                </li>
-                {% empty %}
-                <li class="list-group-item">Aucun module pour ce cours pour le moment.</li>
-                {% endfor %}
-            </ul>
-        </div>
-    </div>
-
-    <h3>Évaluations</h3>
-    <div class="card mb-4">
-        <div class="card-header">
-            <button id="addEvaluationBtn" class="btn btn-primary">Ajouter une évaluation</button>
-        </div>
-        <div class="card-body">
-            <ul class="list-group" id="evaluation-list">
-                {% for activite in activites %}
-                <li class="list-group-item d-flex justify-content-between align-items-center" id="evaluation-item-{{ activite.id }}">
-                    <div>
-                        <h5>{{ activite.title }} <span class="badge bg-info">{{ activite.get_activity_type_display }}</span></h5>
-                        <p>{{ activite.description }}</p>
-                        <small>Date limite: {{ activite.due_date|date:"d/m/Y H:i" }}</small>
-                    </div>
-                    <div>
-                        {% if activite.activity_type == 'QUIZ' %}
-                            <button class="btn btn-sm btn-info manage-questions-btn" data-id="{{ activite.id }}">Gérer les questions</button>
-                        {% elif activite.activity_type == 'DEVOIR' %}
-                            <button class="btn btn-sm btn-warning grade-assignment-btn" data-id="{{ activite.id }}">Noter les devoirs</button>
-                        {% elif activite.activity_type == 'SONDAGE' %}
-                            <button class="btn btn-sm btn-info manage-sondage-questions-btn" data-id="{{ activite.id }}">Gérer les questions</button>
-                            <a href="{% url 'evaluations:sondage_results' activite.id %}" class="btn btn-sm btn-success">Voir les résultats</a>
-                        {% endif %}
-                        <button class="btn btn-sm btn-secondary edit-evaluation-btn" data-id="{{ activite.id }}">Modifier</button>
-                        <button class="btn btn-sm btn-danger delete-evaluation-btn" data-id="{{ activite.id }}">Supprimer</button>
-                    </div>
-                </li>
-                {% empty %}
-                <li class="list-group-item">Aucune évaluation pour ce cours pour le moment.</li>
-                {% endfor %}
-            </ul>
-        </div>
-    </div>
-
-    <h3>Étudiants inscrits</h3>
-    <div class="card mb-4">
-        <div class="card-header">
-            <button id="enrollStudentBtn" class="btn btn-primary">Inscrire un étudiant</button>
-            <a href="{% url 'administration:course_progress' course.id %}" class="btn btn-info">Voir la Progression</a>
-        </div>
-        <div class="card-body">
-            <table class="table table-striped">
-                <thead>
-                    <tr>
-                        <th>Nom</th>
-                        <th>Email</th>
-                        <th>Matricule</th>
-                        <th>Actions</th>
-                    </tr>
-                </thead>
-                <tbody id="student-table-body">
-                    {% for student in enrolled_students %}
-                    <tr id="student-row-{{ student.id }}">
-                        <td>{{ student.last_name }} {{ student.first_name }}</td>
-                        <td>{{ student.email }}</td>
-                        <td>{{ student.matricule }}</td>
-                        <td>
-                            <a href="{% url 'messaging:new_conversation' student.id %}" class="btn btn-sm btn-outline-primary">Contacter</a>
-                            <button class="btn btn-sm btn-danger remove-student-btn" data-id="{{ student.id }}">Retirer</button>
-                        </td>
-                    </tr>
-                    {% empty %}
-                    <tr id="no-student-row">
-                        <td colspan="4">Aucun étudiant inscrit.</td>
-                    </tr>
-                    {% endfor %}
-                </tbody>
-            </table>
-        </div>
-    </div>
-
-    <h3>Forum du Cours</h3>
-    <div class="card mb-4">
-        <div class="card-body">
-            <p>Espace de discussion pour ce cours.</p>
-            <a href="{% url 'forums:forum_cours' course.id %}" class="btn btn-primary">Accéder au Forum</a>
-        </div>
-    </div>
-
-    <h3>Annonces</h3>
-    <div class="card mb-4">
-        <div class="card-header">
-            <button id="addAnnonceBtn" class="btn btn-primary">Ajouter une annonce</button>
-        </div>
-        <div class="card-body">
-            <ul class="list-group" id="annonce-list">
-                {% for annonce in annonces %}
-                <li class="list-group-item d-flex justify-content-between align-items-center" id="annonce-item-{{ annonce.id }}">
-                    <div>
-                        <h5>{{ annonce.titre }}</h5>
-                        <p>{{ annonce.contenu|linebreaksbr }}</p>
-                        <small>Publié le: {{ annonce.cree_le|date:"d/m/Y H:i" }}</small>
-                    </div>
-                    <div>
-                        <button class="btn btn-sm btn-secondary edit-annonce-btn" data-id="{{ annonce.id }}">Modifier</button>
-                        <button class="btn btn-sm btn-danger delete-annonce-btn" data-id="{{ annonce.id }}">Supprimer</button>
-                    </div>
-                </li>
-                {% empty %}
-                <li class="list-group-item">Aucune annonce pour ce cours pour le moment.</li>
-                {% endfor %}
-            </ul>
-        </div>
-    </div>
-
-    <!-- Modal pour Inscrire un Étudiant -->
-    <div class="modal fade" id="enrollStudentModal" tabindex="-1" aria-labelledby="enrollStudentModalLabel" aria-hidden="true">
-        <div class="modal-dialog modal-lg">
-            <div class="modal-content">
-                <div class="modal-header">
-                    <h5 class="modal-title" id="enrollStudentModalLabel">Inscrire un Étudiant</h5>
-                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+    <div class="row">
+        <div class="col-lg-8">
+            <div class="card mb-4">
+                <div class="card-body">
+                    <h2 class="card-title">{{ course.title }}</h2>
+                    <p class="card-text">{{ course.description }}</p>
                 </div>
-                <div class="modal-body">
-                    <ul class="list-group" id="enrollable-student-list">
-                        <!-- La liste des étudiants non-inscrits sera chargée ici -->
+            </div>
+
+            <div class="card mb-4">
+                <div class="card-header d-flex justify-content-between align-items-center">
+                    <h5 class="mb-0">Modules du Cours</h5>
+                    <button id="addModuleBtn" class="btn btn-primary">Ajouter un module</button>
+                </div>
+                <div class="card-body">
+                    <ul class="list-group" id="module-list">
+                        {% for module in course.modules.all %}
+                        <li class="list-group-item" id="module-item-{{ module.id }}">
+                            <h5>{{ module.title }} (Ordre: {{ module.order }})</h5>
+                            <p>{{ module.description }}</p>
+                            <h6>Ressources:</h6>
+                            <ul class="list-group list-group-flush" id="ressource-list-{{ module.id }}">
+                                {% for ressource in module.ressources.all %}
+                                <li class="list-group-item d-flex justify-content-between align-items-center" id="ressource-item-{{ ressource.id }}">
+                                    {{ ressource.title }}
+                                    <div>
+                                        {% if ressource.file %}
+                                            <a href="{{ ressource.file.url }}" target="_blank" class="btn btn-sm btn-info">Voir Fichier</a>
+                                        {% endif %}
+                                        {% if ressource.url %}
+                                            <a href="{{ ressource.url }}" target="_blank" class="btn btn-sm btn-info">Voir URL</a>
+                                        {% endif %}
+                                        <button class="btn btn-sm btn-secondary edit-ressource-btn" data-id="{{ ressource.id }}" data-module-id="{{ module.id }}">Modifier</button>
+                                        <button class="btn btn-sm btn-danger delete-ressource-btn" data-id="{{ ressource.id }}">Supprimer</button>
+                                    </div>
+                                </li>
+                                {% endfor %}
+                            </ul>
+                            <button class="btn btn-sm btn-success mt-2 add-ressource-btn" data-module-id="{{ module.id }}">Ajouter Ressource</button>
+                            <div class="mt-2">
+                                <button class="btn btn-sm btn-secondary edit-module-btn" data-id="{{ module.id }}">Modifier Module</button>
+                                <button class="btn btn-sm btn-danger delete-module-btn" data-id="{{ module.id }}">Supprimer Module</button>
+                            </div>
+                        </li>
+                        {% empty %}
+                        <li class="list-group-item">Aucun module pour ce cours pour le moment.</li>
+                        {% endfor %}
                     </ul>
                 </div>
-                <div class="modal-footer">
-                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Fermer</button>
+            </div>
+
+            <div class="card mb-4">
+                <div class="card-header d-flex justify-content-between align-items-center">
+                    <h5 class="mb-0">Annonces</h5>
+                    <button id="addAnnonceBtn" class="btn btn-primary">Ajouter une annonce</button>
+                </div>
+                <div class="card-body">
+                    <ul class="list-group" id="annonce-list">
+                        {% for annonce in annonces %}
+                        <li class="list-group-item d-flex justify-content-between align-items-center" id="annonce-item-{{ annonce.id }}">
+                            <div>
+                                <h5>{{ annonce.titre }}</h5>
+                                <p>{{ annonce.contenu|linebreaksbr }}</p>
+                                <small>Publié le: {{ annonce.cree_le|date:"d/m/Y H:i" }}</small>
+                            </div>
+                            <div>
+                                <button class="btn btn-sm btn-secondary edit-annonce-btn" data-id="{{ annonce.id }}">Modifier</button>
+                                <button class="btn btn-sm btn-danger delete-annonce-btn" data-id="{{ annonce.id }}">Supprimer</button>
+                            </div>
+                        </li>
+                        {% empty %}
+                        <li class="list-group-item">Aucune annonce pour ce cours pour le moment.</li>
+                        {% endfor %}
+                    </ul>
                 </div>
             </div>
         </div>
-    </div>
 
-    <!-- Modal pour Ajouter/Modifier Annonce -->
-    <div class="modal fade" id="annonceModal" tabindex="-1" aria-labelledby="annonceModalLabel" aria-hidden="true">
-        <div class="modal-dialog">
-            <div class="modal-content">
-                <div class="modal-header">
-                    <h5 class="modal-title" id="annonceModalLabel">Ajouter une annonce</h5>
-                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
-                </div>
-                <div class="modal-body">
-                    <form id="annonceForm">
-                        <input type="hidden" id="annonceId" name="annonceId">
-                        <div id="annonce-form-errors" class="alert alert-danger d-none"></div>
-                        
-                        <div class="mb-3">
-                            <label for="annonceTitre" class="form-label">Titre</label>
-                            <input type="text" class="form-control" id="annonceTitre" name="titre" required>
-                        </div>
-                        <div class="mb-3">
-                            <label for="annonceContenu" class="form-label">Contenu</label>
-                            <textarea class="form-control" id="annonceContenu" name="contenu" rows="4" required></textarea>
-                        </div>
-                    </form>
-                </div>
-                <div class="modal-footer">
-                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Annuler</button>
-                    <button type="button" id="saveAnnonceBtn" class="btn btn-primary">
-                    <span class="spinner-border spinner-border-sm d-none" role="status" aria-hidden="true"></span>
-                    Sauvegarder
-                </button>
+        <div class="col-lg-4">
+            <div class="card mb-4">
+                <div class="card-header">Informations</div>
+                <div class="card-body">
+                    <p><strong>Enseignant :</strong> {{ course.teacher.first_name }} {{ course.teacher.last_name }}</p>
+                    <p><strong>Date de Création :</strong> {{ course.created_at|date:"d/m/Y H:i" }}</p>
+                    <p><strong>Dernière mise à jour :</strong> {{ course.updated_at|date:"d/m/Y H:i" }}</p>
+                    <p><strong>Lien de la visioconférence :</strong> {{ course.visio_link|default:"Non défini" }}</p>
+                    <p><strong>Date et heure de la visioconférence :</strong> {{ course.visio_date|date:"d/m/Y H:i"|default:"Non défini" }}</p>
                 </div>
             </div>
-        </div>
-    </div>
 
-    <!-- Modal pour Ajouter/Modifier Module -->
-    <div class="modal fade" id="moduleModal" tabindex="-1" aria-labelledby="moduleModalLabel" aria-hidden="true">
-        <div class="modal-dialog">
-            <div class="modal-content">
-                <div class="modal-header">
-                    <h5 class="modal-title" id="moduleModalLabel">Ajouter un module</h5>
-                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            <div class="card mb-4">
+                <div class="card-header d-flex justify-content-between align-items-center">
+                    <h5 class="mb-0">Évaluations</h5>
+                    <button id="addEvaluationBtn" class="btn btn-primary">Ajouter</button>
                 </div>
-                <div class="modal-body">
-                    <form id="moduleForm">
-                        <input type="hidden" id="moduleId" name="moduleId">
-                        <div id="module-form-errors" class="alert alert-danger d-none"></div>
-                        
-                        <div class="mb-3">
-                            <label for="moduleTitle" class="form-label">Titre</label>
-                            <input type="text" class="form-control" id="moduleTitle" name="title" required>
-                        </div>
-                        <div class="mb-3">
-                            <label for="moduleDescription" class="form-label">Description</label>
-                            <textarea class="form-control" id="moduleDescription" name="description" rows="3"></textarea>
-                        </div>
-                        <div class="mb-3">
-                            <label for="moduleOrder" class="form-label">Ordre</label>
-                            <input type="number" class="form-control" id="moduleOrder" name="order" required>
-                        </div>
-                    </form>
-                </div>
-                <div class="modal-footer">
-                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Annuler</button>
-                    <button type="button" id="saveModuleBtn" class="btn btn-primary">
-                    <span class="spinner-border spinner-border-sm d-none" role="status" aria-hidden="true"></span>
-                    Sauvegarder
-                </button>
+                <div class="card-body">
+                    <ul class="list-group" id="evaluation-list">
+                        {% for activite in activites %}
+                        <li class="list-group-item" id="evaluation-item-{{ activite.id }}">
+                            <h5>{{ activite.title }} <span class="badge bg-info">{{ activite.get_activity_type_display }}</span></h5>
+                            <p>{{ activite.description }}</p>
+                            <small>Date limite: {{ activite.due_date|date:"d/m/Y H:i" }}</small>
+                            <div class="mt-2">
+                                {% if activite.activity_type == 'QUIZ' %}
+                                    <button class="btn btn-sm btn-info manage-questions-btn" data-id="{{ activite.id }}">Gérer les questions</button>
+                                {% elif activite.activity_type == 'DEVOIR' %}
+                                    <button class="btn btn-sm btn-warning grade-assignment-btn" data-id="{{ activite.id }}">Noter les devoirs</button>
+                                {% elif activite.activity_type == 'SONDAGE' %}
+                                    <button class="btn btn-sm btn-info manage-sondage-questions-btn" data-id="{{ activite.id }}">Gérer les questions</button>
+                                    <a href="{% url 'evaluations:sondage_results' activite.id %}" class="btn btn-sm btn-success">Voir les résultats</a>
+                                {% endif %}
+                                <button class="btn btn-sm btn-secondary edit-evaluation-btn" data-id="{{ activite.id }}">Modifier</button>
+                                <button class="btn btn-sm btn-danger delete-evaluation-btn" data-id="{{ activite.id }}">Supprimer</button>
+                            </div>
+                        </li>
+                        {% empty %}
+                        <li class="list-group-item">Aucune évaluation pour ce cours.</li>
+                        {% endfor %}
+                    </ul>
                 </div>
             </div>
-        </div>
-    </div>
 
-    <!-- Modal pour Ajouter/Modifier Ressource -->
-    <div class="modal fade" id="ressourceModal" tabindex="-1" aria-labelledby="ressourceModalLabel" aria-hidden="true">
-        <div class="modal-dialog">
-            <div class="modal-content">
-                <div class="modal-header">
-                    <h5 class="modal-title" id="ressourceModalLabel">Ajouter une ressource</h5>
-                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
-                </div>
-                <div class="modal-body">
-                    <form id="ressourceForm" enctype="multipart/form-data">
-                        <input type="hidden" id="ressourceId" name="ressourceId">
-                        <input type="hidden" id="ressourceModuleId" name="ressourceModuleId">
-                        <div id="ressource-form-errors" class="alert alert-danger d-none"></div>
-                        
-                        <div class="mb-3">
-                            <label for="ressourceTitle" class="form-label">Titre</label>
-                            <input type="text" class="form-control" id="ressourceTitle" name="title" required>
-                        </div>
-                        <div class="mb-3">
-                            <label for="ressourceFile" class="form-label">Fichier</label>
-                            <input type="file" class="form-control" id="ressourceFile" name="file">
-                        </div>
-                        <div class="mb-3">
-                            <label for="ressourceUrl" class="form-label">URL</label>
-                            <input type="url" class="form-control" id="ressourceUrl" name="url">
-                        </div>
-                    </form>
-                </div>
-                <div class="modal-footer">
-                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Annuler</button>
-                    <button type="button" id="saveRessourceBtn" class="btn btn-primary">
-                    <span class="spinner-border spinner-border-sm d-none" role="status" aria-hidden="true"></span>
-                    Sauvegarder
-                </button>
-                </div>
-            </div>
-        </div>
-    </div>
-
-    <!-- Modal de Confirmation de Suppression (Module/Ressource) -->
-    <div class="modal fade" id="deleteConfirmModal" tabindex="-1" aria-hidden="true">
-        <div class="modal-dialog">
-            <div class="modal-content">
-                <div class="modal-header">
-                    <h5 class="modal-title">Confirmer la suppression</h5>
-                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
-                </div>
-                <div class="modal-body">
-                    <p>Êtes-vous sûr de vouloir supprimer cet élément ? Cette action est irréversible.</p>
-                </div>
-                <div class="modal-footer">
-                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Annuler</button>
-                    <button type="button" id="confirmDeleteBtn" class="btn btn-danger">
-                    <span class="spinner-border spinner-border-sm d-none" role="status" aria-hidden="true"></span>
-                    Supprimer
-                </button>
-                </div>
-            </div>
-        </div>
-    </div>
-
-    <!-- Modal pour Ajouter/Modifier Évaluation -->
-    <div class="modal fade" id="evaluationModal" tabindex="-1" aria-labelledby="evaluationModalLabel" aria-hidden="true">
-        <div class="modal-dialog">
-            <div class="modal-content">
-                <div class="modal-header">
-                    <h5 class="modal-title" id="evaluationModalLabel">Ajouter une évaluation</h5>
-                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
-                </div>
-                <div class="modal-body">
-                    <form id="evaluationForm">
-                        <input type="hidden" id="evaluationId" name="evaluationId">
-                        <div id="evaluation-form-errors" class="alert alert-danger d-none"></div>
-                        
-                        <div class="mb-3">
-                            <label for="evaluationTitle" class="form-label">Titre</label>
-                            <input type="text" class="form-control" id="evaluationTitle" name="title" required>
-                        </div>
-                        <div class="mb-3">
-                            <label for="evaluationDescription" class="form-label">Description</label>
-                            <textarea class="form-control" id="evaluationDescription" name="description" rows="3"></textarea>
-                        </div>
-                        <div class="mb-3">
-                            <label for="evaluationType" class="form-label">Type</label>
-                            <select class="form-select" id="evaluationType" name="activity_type" required>
-                                <option value="DEVOIR">Devoir</option>
-                                <option value="QUIZ">Quiz</option>
-                            </select>
-                        </div>
-                        <div class="mb-3">
-                            <label for="evaluationDueDate" class="form-label">Date Limite</label>
-                            <input type="datetime-local" class="form-control" id="evaluationDueDate" name="due_date">
-                        </div>
-                    </form>
-                </div>
-                <div class="modal-footer">
-                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Annuler</button>
-                    <button type="button" id="saveEvaluationBtn" class="btn btn-primary">
-                    <span class="spinner-border spinner-border-sm d-none" role="status" aria-hidden="true"></span>
-                    Sauvegarder
-                </button>
-                </div>
-            </div>
-        </div>
-    </div>
-
-    <!-- Modal pour Gérer les Questions d'un Quiz -->
-    <div class="modal fade" id="questionsModal" tabindex="-1" aria-labelledby="questionsModalLabel" aria-hidden="true">
-        <div class="modal-dialog modal-xl">
-            <div class="modal-content">
-                <div class="modal-header">
-                    <h5 class="modal-title" id="questionsModalLabel">Gérer les Questions</h5>
-                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
-                </div>
-                <div class="modal-body">
-                    <div class="row">
-                        <div class="col-md-5">
-                            <h5>Ajouter/Modifier une Question</h5>
-                            <form id="questionForm">
-                                <input type="hidden" id="questionId" name="questionId">
-                                <input type="hidden" id="quizId" name="quizId">
-                                <div id="question-form-errors" class="alert alert-danger d-none"></div>
-                                <div class="mb-3">
-                                    <label for="questionIntitule" class="form-label">Intitulé de la question</label>
-                                    <textarea class="form-control" id="questionIntitule" name="intitule" rows="3" required></textarea>
-                                </div>
-                                <div class="mb-3">
-                                    <label for="questionType" class="form-label">Type de question</label>
-                                    <select class="form-select" id="questionType" name="type_question">
-                                        <option value="UNIQUE">Choix Unique</option>
-                                        <option value="MULTIPLE">Choix Multiple</option>
-                                    </select>
-                                </div>
-                                <hr>
-                                <h6>Choix de réponse</h6>
-                                <div id="choices-container">
-                                    <!-- Les choix seront ajoutés ici par JS -->
-                                </div>
-                                <button type="button" id="addChoiceBtn" class="btn btn-sm btn-success mt-2">Ajouter un choix</button>
-                                <div class="mt-3">
-                                    <button type="submit" id="saveQuestionBtn" class="btn btn-primary">
-                    <span class="spinner-border spinner-border-sm d-none" role="status" aria-hidden="true"></span>
-                    Sauvegarder la question
-                </button>
-                                    <button type="button" id="clearQuestionFormBtn" class="btn btn-secondary">Nouvelle Question</button>
-                                </div>
-                            </form>
-                        </div>
-                        <div class="col-md-7">
-                            <h5>Questions du Quiz</h5>
-                            <ul class="list-group" id="question-list-in-modal">
-                                <!-- La liste des questions sera chargée ici -->
-                            </ul>
-                        </div>
+            <div class="card mb-4">
+                <div class="card-header d-flex justify-content-between align-items-center">
+                    <h5 class="mb-0">Étudiants inscrits</h5>
+                    <div>
+                        <button id="enrollStudentBtn" class="btn btn-primary">Inscrire</button>
+                        <a href="{% url 'administration:course_progress' course.id %}" class="btn btn-info">Progression</a>
                     </div>
                 </div>
-            </div>
-        </div>
-    </div>
-
-    <!-- Modal pour Gérer les Questions d'un Sondage -->
-    <div class="modal fade" id="sondageQuestionsModal" tabindex="-1" aria-labelledby="sondageQuestionsModalLabel" aria-hidden="true">
-        <div class="modal-dialog modal-lg">
-            <div class="modal-content">
-                <div class="modal-header">
-                    <h5 class="modal-title" id="sondageQuestionsModalLabel">Gérer les Questions du Sondage</h5>
-                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
-                </div>
-                <div class="modal-body">
-                    <div class="row">
-                        <div class="col-md-6">
-                            <h5>Ajouter une Question de Sondage</h5>
-                            <form id="sondageQuestionForm">
-                                <input type="hidden" id="sondageActivityId" name="sondageActivityId">
-                                <div id="sondage-question-form-errors" class="alert alert-danger d-none"></div>
-                                <div class="mb-3">
-                                    <label for="sondageQuestionIntitule" class="form-label">Intitulé de la question</label>
-                                    <textarea class="form-control" id="sondageQuestionIntitule" name="intitule" rows="3" required></textarea>
-                                </div>
-                                <button type="submit" id="saveSondageQuestionBtn" class="btn btn-primary">
-                                    <span class="spinner-border spinner-border-sm d-none" role="status" aria-hidden="true"></span>
-                                    Ajouter la question
-                                </button>
-                            </form>
-                        </div>
-                        <div class="col-md-6">
-                            <h5>Questions du Sondage</h5>
-                            <ul class="list-group" id="sondage-question-list-in-modal">
-                                <!-- La liste des questions sera chargée ici -->
-                            </ul>
-                        </div>
-                    </div>
+                <div class="card-body">
+                    <table class="table table-striped">
+                        <thead>
+                            <tr>
+                                <th>Nom</th>
+                                <th>Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody id="student-table-body">
+                            {% for student in enrolled_students %}
+                            <tr id="student-row-{{ student.id }}">
+                                <td>{{ student.last_name }} {{ student.first_name }}</td>
+                                <td>
+                                    <a href="{% url 'messaging:new_conversation' student.id %}" class="btn btn-sm btn-outline-primary">Contacter</a>
+                                    <button class="btn btn-sm btn-danger remove-student-btn" data-id="{{ student.id }}">Retirer</button>
+                                </td>
+                            </tr>
+                            {% empty %}
+                            <tr id="no-student-row">
+                                <td colspan="2">Aucun étudiant inscrit.</td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
                 </div>
             </div>
-        </div>
-    </div>
 
-    <!-- Modal pour Noter les Devoirs -->
-    <div class="modal fade" id="gradeAssignmentModal" tabindex="-1" aria-labelledby="gradeAssignmentModalLabel" aria-hidden="true">
-        <div class="modal-dialog modal-lg">
-            <div class="modal-content">
-                <div class="modal-header">
-                    <h5 class="modal-title" id="gradeAssignmentModalLabel">Noter les Devoirs</h5>
-                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
-                </div>
-                <div class="modal-body">
-                    <h6 id="assignmentTitleForGrading"></h6>
-                    <div id="submissionsList">
-                        <!-- Les soumissions seront chargées ici par JS -->
-                    </div>
-                </div>
-                <div class="modal-footer">
-                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Fermer</button>
+            <div class="card">
+                <div class="card-header">Forum</div>
+                <div class="card-body">
+                    <p>Accéder à l'espace de discussion.</p>
+                    <a href="{% url 'forums:forum_cours' course.id %}" class="btn btn-primary">Accéder au Forum</a>
                 </div>
             </div>
         </div>
     </div>
 
+    <!-- All Modals from the original file should be here -->
+    {% include "administration/course_detail_modals.html" %}
+</div>
 {% endblock %}
 
 {% block extra_js %}

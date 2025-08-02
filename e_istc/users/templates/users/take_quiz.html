@@ -18,7 +18,7 @@
     <form method="post">
         {% csrf_token %}
         {% for question in questions %}
-        <div class="card mb-3">
+        <div class="card mb-3 border-0 shadow-sm">
             <div class="card-header">
                 Question {{ forloop.counter }} : {{ question.intitule }}
             </div>

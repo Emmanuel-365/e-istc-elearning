@@ -18,48 +18,38 @@
                     <button class="btn btn-primary" type="submit"><i class="bi bi-search"></i></button>
                 </div>
             </form>
-            <div class="table-responsive">
-                <table class="table table-hover align-middle">
-                    <thead>
-                        <tr>
-                            <th>Titre</th>
-                            <th>Enseignant</th>
-                            <th class="text-center">Actions</th>
-                        </tr>
-                    </thead>
-                    <tbody id="courses-table-body">
-                        {% for course in courses %}
-                        <tr id="course-row-{{ course.id }}">
-                            <td>
-                                {% if course.image %}
-                                    <img src="{{ course.image.url }}" alt="Image du cours" class="img-thumbnail" width="100">
-                                {% endif %}
-                                <div class="fw-bold">{{ course.title }}</div>
-                                <small class="text-muted">{{ course.description|truncatechars:100 }}</small>
-                            </td>
-                            <td>{{ course.teacher.first_name }} {{ course.teacher.last_name }}</td>
-                            <td class="text-center">
+            <div class="row" id="courses-list">
+                {% for course in courses %}
+                <div class="col-md-6 col-lg-4 mb-4" id="course-card-{{ course.id }}">
+                    <div class="card h-100">
+                        {% if course.image %}
+                            <img src="{{ course.image.url }}" class="card-img-top" alt="Image du cours">
+                        {% endif %}
+                        <div class="card-body d-flex flex-column">
+                            <h5 class="card-title">{{ course.title }}</h5>
+                            <p class="card-text text-muted">{{ course.description|truncatechars:100 }}</p>
+                            <div class="mt-auto">
                                 {% if course in user.courses.all %}
-                                    <a href="{% url 'users:student_course_detail' course.id %}" class="btn btn-sm btn-info">Voir Détails</a>
-                                    <button class="btn btn-sm btn-danger unenroll-btn" data-id="{{ course.id }}">
+                                    <a href="{% url 'users:student_course_detail' course.id %}" class="btn btn-info">Voir Détails</a>
+                                    <button class="btn btn-danger unenroll-btn" data-id="{{ course.id }}">
                                         <span class="spinner-border spinner-border-sm d-none" role="status" aria-hidden="true"></span>
                                         Se désinscrire
                                     </button>
                                 {% else %}
-                                    <button class="btn btn-sm btn-success enroll-btn" data-id="{{ course.id }}">
+                                    <button class="btn btn-success enroll-btn" data-id="{{ course.id }}">
                                         <span class="spinner-border spinner-border-sm d-none" role="status" aria-hidden="true"></span>
                                         S'inscrire
                                     </button>
                                 {% endif %}
-                            </td>
-                        </tr>
-                        {% empty %}
-                        <tr>
-                            <td colspan="3" class="text-center text-muted py-4">Aucun cours disponible pour le moment.</td>
-                        </tr>
-                        {% endfor %}
-                    </tbody>
-                </table>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                {% empty %}
+                <div class="col-12">
+                    <p class="text-center text-muted py-4">Aucun cours disponible pour le moment.</p>
+                </div>
+                {% endfor %}
             </div>
         </div>
     </div>
@@ -69,7 +59,7 @@
 {% block extra_js %}
 <script>
 document.addEventListener('DOMContentLoaded', function () {
-    const coursesTableBody = document.getElementById('courses-table-body');
+    const coursesList = document.getElementById('courses-list');
 
     function getCookie(name) {
         let cookieValue = null;
@@ -87,7 +77,7 @@ document.addEventListener('DOMContentLoaded', function () {
     }
     const csrftoken = getCookie('csrftoken');
 
-    coursesTableBody.addEventListener('click', function (e) {
+    coursesList.addEventListener('click', function (e) {
         const clickedButton = e.target.closest('button.enroll-btn, button.unenroll-btn');
         if (!clickedButton) return;
 
@@ -119,19 +109,19 @@ document.addEventListener('DOMContentLoaded', function () {
             return response.json();
         })
         .then(result => {
-            const row = document.getElementById(`course-row-${courseId}`);
-            const actionsCell = row.querySelector('td:last-child');
+            const card = document.getElementById(`course-card-${courseId}`);
+            const actionsDiv = card.querySelector('.mt-auto');
             if (isEnroll) {
-                actionsCell.innerHTML = `
-                    <a href="/comptes/courses/${courseId}/" class="btn btn-sm btn-info">Voir Détails</a>
-                    <button class="btn btn-sm btn-danger unenroll-btn" data-id="${courseId}">
+                actionsDiv.innerHTML = `
+                    <a href="/comptes/courses/${courseId}/" class="btn btn-info">Voir Détails</a>
+                    <button class="btn btn-danger unenroll-btn" data-id="${courseId}">
                         <span class="spinner-border spinner-border-sm d-none" role="status" aria-hidden="true"></span>
                         Se désinscrire
                     </button>
                 `;
             } else {
-                actionsCell.innerHTML = `
-                    <button class="btn btn-sm btn-success enroll-btn" data-id="${courseId}">
+                actionsDiv.innerHTML = `
+                    <button class="btn btn-success enroll-btn" data-id="${courseId}">
                         <span class="spinner-border spinner-border-sm d-none" role="status" aria-hidden="true"></span>
                         S'inscrire
                     </button>
@@ -140,7 +130,6 @@ document.addEventListener('DOMContentLoaded', function () {
         })
         .catch(error => {
             console.error('Error:', error);
-            // Django messages will handle the display of errors, which are now shown as toasts by base.html
         })
         .finally(() => {
             spinner.classList.add('d-none');
