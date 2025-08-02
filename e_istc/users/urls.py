@@ -27,4 +27,5 @@ urlpatterns = [
     path('api/teacher/courses/<int:course_id>/update/', views.update_course_teacher, name='api_update_course_teacher'),
     path('api/teacher/courses/<int:course_id>/delete/', views.delete_course_teacher, name='api_delete_course_teacher'),
     path('profile/', views.profile_view, name='profile'),
+    path('landing/', views.landing_page, name='landing_page'),
 ]

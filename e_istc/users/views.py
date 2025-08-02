@@ -51,17 +51,23 @@ class CustomPasswordResetConfirmView(PasswordResetConfirmView):
     def get_success_url(self):
         return reverse_lazy('users:password_reset_complete')
 
-@login_required
 def home(request):
-    if request.user.role == User.Role.ETUDIANT:
-        return redirect('users:etudiant_dashboard')
-    elif request.user.role == User.Role.ENSEIGNANT:
-        return redirect('users:enseignant_dashboard')
-    elif request.user.is_staff:
-        return redirect('/admin/')
-    else:
-        # Fallback, au cas où
-        return redirect('users:login')
+    if request.user.is_authenticated:
+        if request.user.role == User.Role.ETUDIANT:
+            return redirect('users:etudiant_dashboard')
+        elif request.user.role == User.Role.ENSEIGNANT:
+            return redirect('users:enseignant_dashboard')
+        elif request.user.is_staff:
+            return redirect('administration:user_management')
+        else:
+            # Fallback, au cas où
+            return redirect('users:login')
+    return redirect('users:landing_page')
+
+
+def landing_page(request):
+    courses = Course.objects.order_by('-created_at')[:3]  # Get the 3 latest courses
+    return render(request, 'users/landing_page.html', {'courses': courses})
 
 @login_required
 @role_required(User.Role.ETUDIANT)
@@ -249,7 +255,7 @@ def take_quiz(request, activity_id):
     except Activite.DoesNotExist:
         raise Http404("Quiz non trouvé.")
 
-    # Vérifier si l'étudiant a déjà soumis ce quiz
+    # Vérifier si l\'étudiant a déjà soumis ce quiz
     if Tentative.objects.filter(activite=activite, etudiant=request.user).exists():
         # Rediriger vers une page de résultats ou un message indiquant que le quiz a déjà été passé
         return render(request, 'users/quiz_already_taken.html', {'activite': activite})
@@ -344,6 +350,3 @@ def profile_view(request):
     else:
         form = UserProfileForm(instance=request.user)
     return render(request, 'users/profile.html', {'form': form})
-
-
-
