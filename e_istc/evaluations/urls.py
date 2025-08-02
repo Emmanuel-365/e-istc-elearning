@@ -19,4 +19,9 @@ urlpatterns = [
     # API pour la notation des devoirs
     path('api/activities/<int:activity_id>/submissions/', views.list_submissions, name='api_list_submissions'),
     path('api/submissions/<int:submission_id>/grade/', views.grade_submission, name='api_grade_submission'),
+    path('sondage/<int:activity_id>/results/', views.sondage_results, name='sondage_results'),
+    path('api/sondages/<int:activity_id>/questions/create/', views.create_sondage_question, name='api_create_sondage_question'),
+    path('api/sondages/questions/<int:question_id>/submit_response/', views.submit_sondage_response, name='api_submit_sondage_response'),
+    path('api/sondages/<int:activity_id>/questions/', views.list_sondage_questions, name='api_list_sondage_questions'),
+    path('api/sondages/questions/<int:question_id>/delete/', views.delete_sondage_question, name='api_delete_sondage_question'),
 ]

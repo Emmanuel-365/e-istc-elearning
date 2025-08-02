@@ -1,4 +1,4 @@
-from django.shortcuts import render, redirect
+from django.shortcuts import render, redirect, get_object_or_404
 from django.urls import reverse_lazy
 from django.contrib.auth.decorators import login_required
 from django.http import Http404, JsonResponse
@@ -13,7 +13,7 @@ from django.contrib.auth.forms import AuthenticationForm
 from courses.models import Course
 from courses.forms import CourseForm
 from courses.models import CourseProgress
-from evaluations.models import Activite, Soumission, Question, Choix, Tentative
+from evaluations.models import Activite, Soumission, Question, Choix, Tentative, QuestionSondage, ReponseSondage
 from evaluations.forms import SoumissionForm
 import json
 from django.contrib import messages
@@ -173,6 +173,11 @@ def student_course_detail(request, course_id):
             activite__in=activites
         ).values_list('activite_id', flat=True)
 
+        submitted_sondages_ids = ReponseSondage.objects.filter(
+            etudiant=request.user,
+            question__activite__in=activites
+        ).values_list('question__activite_id', flat=True).distinct()
+
         progress, created = CourseProgress.objects.get_or_create(student=request.user, course=course)
         completed_ressources_ids = progress.completed_ressources.values_list('id', flat=True)
 
@@ -183,6 +188,7 @@ def student_course_detail(request, course_id):
             'annonces': annonces,
             'progress': progress,
             'completed_ressources_ids': completed_ressources_ids,
+            'submitted_sondages_ids': submitted_sondages_ids,
         }
         return render(request, 'users/course_detail_student.html', context)
     except Course.DoesNotExist:
@@ -296,6 +302,34 @@ def my_grades(request):
     }
     return render(request, 'users/my_grades.html', context)
 
+@login_required
+@role_required(User.Role.ETUDIANT)
+def take_sondage(request, activity_id):
+    activite = get_object_or_404(Activite, pk=activity_id, activity_type=Activite.ActivityType.SONDAGE)
+    questions = activite.questions_sondage.all()
+
+    if not questions.exists():
+        messages.warning(request, "Ce sondage ne contient pas encore de questions.")
+        return redirect('users:student_course_detail', course_id=activite.course.id)
+
+    if request.method == 'POST':
+        for question in questions:
+            response_content = request.POST.get(f'question_{question.id}')
+            if response_content:
+                # Check if response already exists
+                existing_response = ReponseSondage.objects.filter(question=question, etudiant=request.user).first()
+                if existing_response:
+                    messages.warning(request, f"Vous avez déjà répondu à la question '{question.intitule}'. Votre réponse n'a pas été modifiée.")
+                else:
+                    ReponseSondage.objects.create(
+                        question=question,
+                        etudiant=request.user,
+                        reponse=response_content
+                    )
+        messages.success(request, "Votre participation au sondage a été enregistrée avec succès !")
+        return redirect('users:student_course_detail', course_id=activite.course.id)
+
+    return render(request, 'users/take_sondage.html', {'activite': activite, 'questions': questions})
 
 @login_required
 def profile_view(request):

@@ -12,6 +12,7 @@ urlpatterns = [
     path('courses/<int:course_id>/', views.student_course_detail, name='student_course_detail'),
     path('activity/<int:activity_id>/submit/', views.submit_assignment, name='submit_assignment'),
     path('activity/<int:activity_id>/take_quiz/', views.take_quiz, name='take_quiz'),
+    path('activity/<int:activity_id>/take_sondage/', views.take_sondage, name='take_sondage'),
     path('password_reset/', views.CustomPasswordResetView.as_view(template_name='users/registration/password_reset_form.html'), name='password_reset'),
     path('password_reset/done/', auth_views.PasswordResetDoneView.as_view(template_name='users/registration/password_reset_done.html'), name='password_reset_done'),
     path('reset/<uidb64>/<token>/', views.CustomPasswordResetConfirmView.as_view(template_name='users/registration/password_reset_confirm.html'), name='password_reset_confirm'),

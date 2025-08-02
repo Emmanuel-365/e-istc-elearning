@@ -1,6 +1,6 @@
 from django.core.exceptions import PermissionDenied
 from users.models import User
-from .models import Activite, Question, Soumission
+from .models import Activite, Question, Soumission, QuestionSondage
 
 def activity_owner_or_admin_required(view_func):
     """
@@ -83,6 +83,41 @@ def submission_owner_or_admin_required(view_func):
             raise PermissionDenied
 
         if user.role == User.Role.ADMIN or user == course_teacher:
+            return view_func(request, *args, **kwargs)
+        else:
+            raise PermissionDenied
+
+    return wrapper
+
+def sondage_participant_required(view_func):
+    """
+    Decorator for views that checks that the user is logged in and is a participant
+    (student enrolled in the course) of the sondage's activity's course.
+    It assumes that the view kwargs contain 'question_id' or 'activity_id'.
+    """
+    def wrapper(request, *args, **kwargs):
+        question_id = kwargs.get('question_id')
+        activity_id = kwargs.get('activity_id')
+
+        if not request.user.is_authenticated:
+            raise PermissionDenied
+
+        if question_id:
+            try:
+                question = QuestionSondage.objects.select_related('activite__course').get(pk=question_id)
+                course = question.activite.course
+            except QuestionSondage.DoesNotExist:
+                raise PermissionDenied
+        elif activity_id:
+            try:
+                activite = Activite.objects.select_related('course').get(pk=activity_id)
+                course = activite.course
+            except Activite.DoesNotExist:
+                raise PermissionDenied
+        else:
+            raise PermissionDenied
+
+        if request.user.role == User.Role.ADMIN or request.user == course.teacher or request.user in course.students.all():
             return view_func(request, *args, **kwargs)
         else:
             raise PermissionDenied

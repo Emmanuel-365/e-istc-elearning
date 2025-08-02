@@ -6,6 +6,7 @@ class Activite(models.Model):
     class ActivityType(models.TextChoices):
         DEVOIR = 'DEVOIR', 'Devoir'
         QUIZ = 'QUIZ', 'Quiz'
+        SONDAGE = 'SONDAGE', 'Sondage'
 
     course = models.ForeignKey(Course, on_delete=models.CASCADE, related_name='activites')
     title = models.CharField(max_length=255)
@@ -56,3 +57,18 @@ class Tentative(models.Model):
 
     class Meta:
         unique_together = ('activite', 'etudiant')
+
+class QuestionSondage(models.Model):
+    activite = models.ForeignKey(Activite, on_delete=models.CASCADE, related_name='questions_sondage', limit_choices_to={'activity_type': 'SONDAGE'})
+    intitule = models.TextField()
+
+    def __str__(self):
+        return self.intitule
+
+class ReponseSondage(models.Model):
+    question = models.ForeignKey(QuestionSondage, on_delete=models.CASCADE, related_name='reponses')
+    etudiant = models.ForeignKey(User, on_delete=models.CASCADE, related_name='reponses_sondage')
+    reponse = models.TextField()
+
+    class Meta:
+        unique_together = ('question', 'etudiant')

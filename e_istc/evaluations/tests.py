@@ -2,8 +2,8 @@ from django.test import TestCase, Client
 from django.urls import reverse
 from users.models import User
 from courses.models import Course
-from evaluations.models import Activite, Question, Choix, Soumission, Tentative
-from evaluations.forms import ActiviteForm, QuestionForm, ChoixForm, SoumissionForm
+from evaluations.models import Activite, Question, Choix, Soumission, Tentative, QuestionSondage, ReponseSondage
+from evaluations.forms import ActiviteForm, QuestionForm, ChoixForm, SoumissionForm, QuestionSondageForm, ReponseSondageForm
 import json
 from datetime import datetime, timedelta
 from django.core.files.uploadedfile import SimpleUploadedFile
@@ -91,6 +91,38 @@ class EvaluationModelTest(TestCase):
         self.assertEqual(tentative.etudiant, self.student_user)
         self.assertEqual(tentative.score, 10.5)
 
+    def test_question_sondage_creation(self):
+        activite = Activite.objects.create(
+            course=self.course,
+            title='Sondage 1',
+            activity_type=Activite.ActivityType.SONDAGE,
+        )
+        question = QuestionSondage.objects.create(
+            activite=activite,
+            intitule='Votre avis sur le cours ?',
+        )
+        self.assertEqual(question.intitule, 'Votre avis sur le cours ?')
+        self.assertEqual(question.activite, activite)
+
+    def test_reponse_sondage_creation(self):
+        activite = Activite.objects.create(
+            course=self.course,
+            title='Sondage 1',
+            activity_type=Activite.ActivityType.SONDAGE,
+        )
+        question = QuestionSondage.objects.create(
+            activite=activite,
+            intitule='Votre avis sur le cours ?',
+        )
+        reponse = ReponseSondage.objects.create(
+            question=question,
+            etudiant=self.student_user,
+            reponse='Très intéressant !',
+        )
+        self.assertEqual(reponse.reponse, 'Très intéressant !')
+        self.assertEqual(reponse.question, question)
+        self.assertEqual(reponse.etudiant, self.student_user)
+
 
 class EvaluationFormTest(TestCase):
     def setUp(self):
@@ -148,6 +180,20 @@ class EvaluationFormTest(TestCase):
         form = SoumissionForm(data=form_data, files=file_data)
         self.assertTrue(form.is_valid())
 
+    def test_question_sondage_form_valid(self):
+        form_data = {
+            'intitule': 'Nouvelle question de sondage',
+        }
+        form = QuestionSondageForm(data=form_data)
+        self.assertTrue(form.is_valid())
+
+    def test_reponse_sondage_form_valid(self):
+        form_data = {
+            'reponse': 'Ma réponse au sondage',
+        }
+        form = ReponseSondageForm(data=form_data)
+        self.assertTrue(form.is_valid())
+
 
 class EvaluationAPITest(TestCase):
     def setUp(self):
@@ -158,10 +204,12 @@ class EvaluationAPITest(TestCase):
         self.course = Course.objects.create(title='API Course', description='Desc', teacher=self.teacher_user)
         self.quiz_activity = Activite.objects.create(course=self.course, title='API Quiz', activity_type=Activite.ActivityType.QUIZ)
         self.devoir_activity = Activite.objects.create(course=self.course, title='API Devoir', activity_type=Activite.ActivityType.DEVOIR)
+        self.sondage_activity = Activite.objects.create(course=self.course, title='API Sondage', activity_type=Activite.ActivityType.SONDAGE)
         self.question = Question.objects.create(activite=self.quiz_activity, intitule='Q1', type_question=Question.QuestionType.CHOIX_UNIQUE)
         self.choix1 = Choix.objects.create(question=self.question, texte='C1', est_correct=True)
         self.choix2 = Choix.objects.create(question=self.question, texte='C2', est_correct=False)
         self.submission = Soumission.objects.create(activite=self.devoir_activity, etudiant=self.student_user, fichier='dummy.pdf')
+        self.course.students.add(self.student_user)
 
     def test_create_activity_api(self):
         self.client.login(username='teacher', password='password')
@@ -226,3 +274,39 @@ class EvaluationAPITest(TestCase):
         data = json.loads(response.content)
         self.assertEqual(len(data['soumissions']), 1)
         self.assertEqual(data['soumissions'][0]['id'], self.submission.id)
+
+    def test_create_sondage_question_api(self):
+        self.client.login(username='teacher', password='password')
+        sondage_activity = Activite.objects.create(course=self.course, title='API Sondage', activity_type=Activite.ActivityType.SONDAGE)
+        response = self.client.post(reverse('evaluations:api_create_sondage_question', args=[sondage_activity.id]),
+                                    json.dumps({'intitule': 'Question Sondage 1'}),
+                                    content_type='application/json')
+        self.assertEqual(response.status_code, 200)
+        self.assertEqual(QuestionSondage.objects.count(), 1)
+
+    def test_submit_sondage_response_api(self):
+        sondage_activity = Activite.objects.create(course=self.course, title='API Sondage', activity_type=Activite.ActivityType.SONDAGE)
+        question_sondage = QuestionSondage.objects.create(activite=sondage_activity, intitule='Question Sondage 1')
+        self.client.login(username='student', password='password')
+        response = self.client.post(reverse('evaluations:api_submit_sondage_response', args=[question_sondage.id]),
+                                    json.dumps({'reponse': 'Ma réponse au sondage'}),
+                                    content_type='application/json')
+        self.assertEqual(response.status_code, 200)
+        self.assertEqual(ReponseSondage.objects.count(), 1)
+
+    def test_list_sondage_questions_api(self):
+        sondage_activity = Activite.objects.create(course=self.course, title='API Sondage', activity_type=Activite.ActivityType.SONDAGE)
+        QuestionSondage.objects.create(activite=sondage_activity, intitule='Question Sondage 1')
+        self.client.login(username='teacher', password='password')
+        response = self.client.get(reverse('evaluations:api_list_sondage_questions', args=[sondage_activity.id]))
+        self.assertEqual(response.status_code, 200)
+        data = json.loads(response.content)
+        self.assertEqual(len(data['questions']), 1)
+
+    def test_delete_sondage_question_api(self):
+        sondage_activity = Activite.objects.create(course=self.course, title='API Sondage', activity_type=Activite.ActivityType.SONDAGE)
+        question_sondage = QuestionSondage.objects.create(activite=sondage_activity, intitule='Question Sondage 1')
+        self.client.login(username='teacher', password='password')
+        response = self.client.post(reverse('evaluations:api_delete_sondage_question', args=[question_sondage.id]))
+        self.assertEqual(response.status_code, 200)
+        self.assertEqual(QuestionSondage.objects.count(), 0)

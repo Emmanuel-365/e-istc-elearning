@@ -102,6 +102,12 @@
                     {% endif %}
                 {% elif activite.activity_type == 'QUIZ' %}
                     <a href="{% url 'users:take_quiz' activite.id %}" class="btn btn-success btn-sm">Commencer le Quiz</a>
+                {% elif activite.activity_type == 'SONDAGE' %}
+                    {% if activite.id in submitted_sondages_ids %}
+                        <button class="btn btn-secondary btn-sm" disabled>Déjà répondu</button>
+                    {% else %}
+                        <a href="{% url 'users:take_sondage' activite.id %}" class="btn btn-primary btn-sm">Participer au sondage</a>
+                    {% endif %}
                 {% endif %}
             </div>
         {% empty %}

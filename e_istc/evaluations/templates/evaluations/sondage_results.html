@@ -1,0 +1,27 @@
+{% extends "base.html" %}
+
+{% block title %}Résultats du Sondage : {{ activite.title }}{% endblock %}
+
+{% block content %}
+<div class="container mt-5">
+    <h2 class="mb-4">Résultats du Sondage : {{ activite.title }}</h2>
+
+    {% if results %}
+        {% for result in results %}
+        <div class="card mb-3">
+            <div class="card-header">
+                <h5>{{ result.question }}</h5>
+            </div>
+            <div class="card-body">
+                <p>Nombre total de réponses : <strong>{{ result.total_responses }}</strong></p>
+                <!-- Ici, on pourrait ajouter des graphiques ou des détails sur les réponses si le sondage avait des options prédéfinies -->
+            </div>
+        </div>
+        {% endfor %}
+    {% else %}
+        <p>Aucune question ou aucune réponse pour ce sondage pour le moment.</p>
+    {% endif %}
+
+    <a href="{% url 'administration:course_detail_page' activite.course.id %}" class="btn btn-primary">Retour au cours</a>
+</div>
+{% endblock %}

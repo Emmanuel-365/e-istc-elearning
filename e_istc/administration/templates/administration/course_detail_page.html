@@ -90,6 +90,9 @@
                             <button class="btn btn-sm btn-info manage-questions-btn" data-id="{{ activite.id }}">Gérer les questions</button>
                         {% elif activite.activity_type == 'DEVOIR' %}
                             <button class="btn btn-sm btn-warning grade-assignment-btn" data-id="{{ activite.id }}">Noter les devoirs</button>
+                        {% elif activite.activity_type == 'SONDAGE' %}
+                            <button class="btn btn-sm btn-info manage-sondage-questions-btn" data-id="{{ activite.id }}">Gérer les questions</button>
+                            <a href="{% url 'evaluations:sondage_results' activite.id %}" class="btn btn-sm btn-success">Voir les résultats</a>
                         {% endif %}
                         <button class="btn btn-sm btn-secondary edit-evaluation-btn" data-id="{{ activite.id }}">Modifier</button>
                         <button class="btn btn-sm btn-danger delete-evaluation-btn" data-id="{{ activite.id }}">Supprimer</button>
@@ -425,6 +428,43 @@
         </div>
     </div>
 
+    <!-- Modal pour Gérer les Questions d'un Sondage -->
+    <div class="modal fade" id="sondageQuestionsModal" tabindex="-1" aria-labelledby="sondageQuestionsModalLabel" aria-hidden="true">
+        <div class="modal-dialog modal-lg">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="sondageQuestionsModalLabel">Gérer les Questions du Sondage</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body">
+                    <div class="row">
+                        <div class="col-md-6">
+                            <h5>Ajouter une Question de Sondage</h5>
+                            <form id="sondageQuestionForm">
+                                <input type="hidden" id="sondageActivityId" name="sondageActivityId">
+                                <div id="sondage-question-form-errors" class="alert alert-danger d-none"></div>
+                                <div class="mb-3">
+                                    <label for="sondageQuestionIntitule" class="form-label">Intitulé de la question</label>
+                                    <textarea class="form-control" id="sondageQuestionIntitule" name="intitule" rows="3" required></textarea>
+                                </div>
+                                <button type="submit" id="saveSondageQuestionBtn" class="btn btn-primary">
+                                    <span class="spinner-border spinner-border-sm d-none" role="status" aria-hidden="true"></span>
+                                    Ajouter la question
+                                </button>
+                            </form>
+                        </div>
+                        <div class="col-md-6">
+                            <h5>Questions du Sondage</h5>
+                            <ul class="list-group" id="sondage-question-list-in-modal">
+                                <!-- La liste des questions sera chargée ici -->
+                            </ul>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
     <!-- Modal pour Noter les Devoirs -->
     <div class="modal fade" id="gradeAssignmentModal" tabindex="-1" aria-labelledby="gradeAssignmentModalLabel" aria-hidden="true">
         <div class="modal-dialog modal-lg">
@@ -461,6 +501,7 @@ document.addEventListener('DOMContentLoaded', function () {
     const gradeAssignmentModal = document.getElementById('gradeAssignmentModal') ? new bootstrap.Modal(document.getElementById('gradeAssignmentModal')) : null;
     const annonceModal = document.getElementById('annonceModal') ? new bootstrap.Modal(document.getElementById('annonceModal')) : null;
     const enrollStudentModal = document.getElementById('enrollStudentModal') ? new bootstrap.Modal(document.getElementById('enrollStudentModal')) : null;
+    const sondageQuestionsModal = document.getElementById('sondageQuestionsModal') ? new bootstrap.Modal(document.getElementById('sondageQuestionsModal')) : null;
 
     const moduleForm = document.getElementById('moduleForm');
     const ressourceForm = document.getElementById('ressourceForm');
@@ -633,6 +674,12 @@ document.addEventListener('DOMContentLoaded', function () {
             document.getElementById('assignmentTitleForGrading').textContent = e.target.closest('li').querySelector('h5').textContent;
             loadSubmissionsForGrading(assignmentId);
             gradeAssignmentModal.show();
+        }
+        if (e.target.classList.contains('manage-sondage-questions-btn')) {
+            const sondageId = e.target.dataset.id;
+            document.getElementById('sondageActivityId').value = sondageId;
+            loadSondageQuestions(sondageId);
+            sondageQuestionsModal.show();
         }
     });
 
@@ -1148,6 +1195,85 @@ document.addEventListener('DOMContentLoaded', function () {
                 spinner.classList.add('d-none');
                 clickedButton.disabled = false;
             });
+        }
+    });
+
+    // --- Gestion des Sondages ---
+    const sondageQuestionForm = document.getElementById('sondageQuestionForm');
+    const sondageQuestionListInModal = document.getElementById('sondage-question-list-in-modal');
+
+    function loadSondageQuestions(activityId) {
+        sondageQuestionListInModal.innerHTML = '<li>Chargement...</li>';
+        fetch(`/evaluations/api/sondages/${activityId}/questions/`)
+            .then(response => response.json())
+            .then(data => {
+                sondageQuestionListInModal.innerHTML = '';
+                if (data.questions && data.questions.length > 0) {
+                    data.questions.forEach(question => {
+                        const questionItem = document.createElement('li');
+                        questionItem.className = 'list-group-item d-flex justify-content-between align-items-center';
+                        questionItem.innerHTML = `
+                            <span>${question.intitule}</span>
+                            <div>
+                                <button class="btn btn-sm btn-danger delete-sondage-question-btn" data-id="${question.id}">Supprimer</button>
+                            </div>
+                        `;
+                        sondageQuestionListInModal.appendChild(questionItem);
+                    });
+                } else {
+                    sondageQuestionListInModal.innerHTML = '<li>Aucune question pour ce sondage.</li>';
+                }
+            });
+    }
+
+    sondageQuestionForm.addEventListener('submit', function(e) {
+        e.preventDefault();
+        const formData = new FormData(sondageQuestionForm);
+        const activityId = formData.get('sondageActivityId');
+        const url = `/evaluations/api/sondages/${activityId}/questions/create/`;
+
+        const data = {
+            intitule: formData.get('intitule'),
+        };
+
+        fetch(url, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'X-CSRFToken': csrftoken
+            },
+            body: JSON.stringify(data)
+        })
+        .then(response => response.json())
+        .then(result => {
+            if (response.ok) {
+                sondageQuestionForm.reset();
+                loadSondageQuestions(activityId);
+            } else {
+                const errorDiv = document.getElementById('sondage-question-form-errors');
+                errorDiv.innerHTML = Object.values(result.errors).map(e => `<p>${e}</p>`).join('');
+                errorDiv.classList.remove('d-none');
+            }
+        });
+    });
+
+    sondageQuestionListInModal.addEventListener('click', function(e) {
+        if (e.target.classList.contains('delete-sondage-question-btn')) {
+            const questionId = e.target.dataset.id;
+            if (confirm('Supprimer cette question de sondage ?')) {
+                fetch(`/evaluations/api/sondages/questions/${questionId}/delete/`, {
+                    method: 'POST',
+                    headers: { 'X-CSRFToken': csrftoken }
+                })
+                .then(response => response.json())
+                .then(result => {
+                    if (response.ok) {
+                        loadSondageQuestions(document.getElementById('sondageActivityId').value);
+                    } else {
+                        // Handle error
+                    }
+                });
+            }
         }
     });
 

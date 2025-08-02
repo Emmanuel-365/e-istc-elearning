@@ -1,10 +1,11 @@
+from django.shortcuts import render, get_object_or_404
 from django.http import JsonResponse
 from django.views.decorators.http import require_POST
 from courses.models import Course
-from .models import Activite, Question, Choix, Soumission
-from .forms import ActiviteForm, QuestionForm, ChoixForm
+from .models import Activite, Question, Choix, Soumission, QuestionSondage, ReponseSondage
+from .forms import ActiviteForm, QuestionForm, ChoixForm, QuestionSondageForm, ReponseSondageForm
 from administration.decorators import course_owner_or_admin_required
-from .decorators import activity_owner_or_admin_required, question_owner_or_admin_required, submission_owner_or_admin_required
+from .decorators import activity_owner_or_admin_required, question_owner_or_admin_required, submission_owner_or_admin_required, sondage_participant_required
 import json
 from django.contrib import messages
 
@@ -214,3 +215,74 @@ def grade_submission(request, submission_id):
     except Soumission.DoesNotExist:
         messages.error(request, 'Soumission non trouvée.')
         return JsonResponse({'message': 'Soumission non trouvée'}, status=404)
+
+@activity_owner_or_admin_required
+def sondage_results(request, activity_id):
+    activite = get_object_or_404(Activite, pk=activity_id, activity_type='SONDAGE')
+    questions = activite.questions_sondage.all()
+    
+    results = []
+    for question in questions:
+        total_responses = ReponseSondage.objects.filter(question=question).count()
+        results.append({
+            'question': question.intitule,
+            'total_responses': total_responses,
+        })
+
+    return render(request, 'evaluations/sondage_results.html', {'activite': activite, 'results': results})
+
+# API pour les sondages
+
+@activity_owner_or_admin_required
+@require_POST
+def create_sondage_question(request, activity_id):
+    activite = get_object_or_404(Activite, pk=activity_id, activity_type='SONDAGE')
+    data = json.loads(request.body)
+    form = QuestionSondageForm(data)
+    if form.is_valid():
+        question = form.save(commit=False)
+        question.activite = activite
+        question.save()
+        messages.success(request, 'Question de sondage créée avec succès !')
+        return JsonResponse({'question': {'id': question.id, 'intitule': question.intitule}})
+    else:
+        messages.error(request, 'Erreur lors de la création de la question de sondage.')
+        return JsonResponse({'errors': form.errors}, status=400)
+
+@sondage_participant_required
+@require_POST
+def submit_sondage_response(request, question_id):
+    question = get_object_or_404(QuestionSondage, pk=question_id)
+    data = json.loads(request.body)
+    
+    # Check if student already responded to this question
+    if ReponseSondage.objects.filter(question=question, etudiant=request.user).exists():
+        messages.error(request, 'Vous avez déjà répondu à cette question de sondage.')
+        return JsonResponse({'message': 'Already responded'}, status=400)
+
+    form = ReponseSondageForm(data)
+    if form.is_valid():
+        response = form.save(commit=False)
+        response.question = question
+        response.etudiant = request.user
+        response.save()
+        messages.success(request, 'Réponse de sondage enregistrée avec succès !')
+        return JsonResponse({'status': 'success'})
+    else:
+        messages.error(request, 'Erreur lors de l\'enregistrement de la réponse de sondage.')
+        return JsonResponse({'errors': form.errors}, status=400)
+
+@activity_owner_or_admin_required
+def list_sondage_questions(request, activity_id):
+    activite = get_object_or_404(Activite, pk=activity_id, activity_type='SONDAGE')
+    questions = activite.questions_sondage.all()
+    questions_data = [{'id': q.id, 'intitule': q.intitule} for q in questions]
+    return JsonResponse({'questions': questions_data})
+
+@question_owner_or_admin_required
+@require_POST
+def delete_sondage_question(request, question_id):
+    question = get_object_or_404(QuestionSondage, pk=question_id)
+    question.delete()
+    messages.success(request, 'Question de sondage supprimée avec succès !')
+    return JsonResponse({'status': 'success'})

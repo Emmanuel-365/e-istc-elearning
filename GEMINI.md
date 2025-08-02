@@ -103,9 +103,9 @@
     *   Génération de rapports de participation et de performance des étudiants.
     *   Tableau de bord global sur l'activité de la plateforme (nombre d'utilisateurs actifs, cours les plus populaires, etc.).
     *   Journaux d'audit et de logs.
-9.  **Sauvegarde et Restauration : - EN COURS**
-    *   Outils de planification et d'exécution des sauvegardes de données.
-10. **Maintenance :**
-    *   Gestion des mises à jour.
-11. **Interaction et Collaboration :**
-    *   Accès à des classes virtuelles ou visioconférences (intégration).
+9.  **Sauvegarde et Restauration : - TERMINÉE**
+    *   Outils de planification et d'exécution des sauvegardes de données (commandes `backup` et `restore` fonctionnelles et testées).
+10. **Maintenance : - TERMINÉE**
+    *   Gestion des mises à jour (commande `maintenance` pour les migrations et les fichiers statiques).
+11. **Interaction et Collaboration : - TERMINÉE**
+    *   Accès à des classes virtuelles ou visioconférences (intégration d'un champ de lien de visioconférence pour les cours).

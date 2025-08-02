@@ -4,6 +4,7 @@ from django.urls import reverse
 from users.models import User
 from users.forms import CustomUserCreationForm, CustomUserChangeForm
 from courses.models import Course
+from evaluations.models import Activite, QuestionSondage, ReponseSondage
 
 class UserModelTest(TestCase):
     def test_user_creation(self):
@@ -187,3 +188,40 @@ class ProfileViewTest(TestCase):
         self.assertEqual(response.status_code, 302) # Redirect on success
         self.student_user.refresh_from_db()
         self.assertEqual(self.student_user.first_name, 'John-Updated')
+
+class SondageViewTest(TestCase):
+    def setUp(self):
+        self.client = Client()
+        self.teacher_user = User.objects.create_user(username='teacher', email='teacher@example.com', password='password', role=User.Role.ENSEIGNANT)
+        self.student_user = User.objects.create_user(username='student', email='student@example.com', password='password', role=User.Role.ETUDIANT)
+        self.course = Course.objects.create(title='Sondage Course', description='Desc', teacher=self.teacher_user)
+        self.course.students.add(self.student_user)
+        self.sondage_activity = Activite.objects.create(course=self.course, title='Test Sondage', activity_type=Activite.ActivityType.SONDAGE)
+        self.question1 = QuestionSondage.objects.create(activite=self.sondage_activity, intitule='Question 1')
+        self.question2 = QuestionSondage.objects.create(activite=self.sondage_activity, intitule='Question 2')
+
+    def test_take_sondage_view_get(self):
+        self.client.login(username='student', password='password')
+        response = self.client.get(reverse('users:take_sondage', args=[self.sondage_activity.id]))
+        self.assertEqual(response.status_code, 200)
+        self.assertContains(response, 'Question 1')
+        self.assertContains(response, 'Question 2')
+
+    def test_take_sondage_view_post(self):
+        self.client.login(username='student', password='password')
+        response = self.client.post(reverse('users:take_sondage', args=[self.sondage_activity.id]), {
+            f'question_{self.question1.id}': 'Réponse à la question 1',
+            f'question_{self.question2.id}': 'Réponse à la question 2',
+        })
+        self.assertEqual(response.status_code, 302) # Redirects to course detail
+        self.assertEqual(ReponseSondage.objects.count(), 2)
+        self.assertTrue(ReponseSondage.objects.filter(question=self.question1, etudiant=self.student_user, reponse='Réponse à la question 1').exists())
+
+    def test_take_sondage_already_responded(self):
+        ReponseSondage.objects.create(question=self.question1, etudiant=self.student_user, reponse='Old response')
+        self.client.login(username='student', password='password')
+        response = self.client.post(reverse('users:take_sondage', args=[self.sondage_activity.id]), {
+            f'question_{self.question1.id}': 'New response',
+        })
+        self.assertEqual(response.status_code, 302) # Should still redirect, but not create new response
+        self.assertEqual(ReponseSondage.objects.count(), 1) # Should not create a duplicate
