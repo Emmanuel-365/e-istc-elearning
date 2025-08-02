@@ -5,7 +5,7 @@ from users.models import User
 from users.forms import CustomUserCreationForm, CustomUserChangeForm
 from courses.models import Course, Module, Ressource, Category, CourseProgress
 from courses.forms import CourseForm, ModuleForm, RessourceForm, CategoryForm
-from django.db.models import Avg
+from django.db.models import Avg, Count
 from evaluations.models import Activite, Soumission, Tentative
 from .decorators import admin_required, course_owner_or_admin_required
 import json
@@ -317,7 +317,23 @@ def reports_page(request):
             'avg_assignment_grade': avg_assignment_grade,
             'avg_quiz_score': avg_quiz_score
         })
-    return render(request, 'administration/reports.html', {'reports': reports})
+
+    # Global statistics
+    total_users = User.objects.count()
+    total_students = User.objects.filter(role=User.Role.ETUDIANT).count()
+    total_teachers = User.objects.filter(role=User.Role.ENSEIGNANT).count()
+    total_courses = Course.objects.count()
+    total_enrollments = User.objects.filter(role=User.Role.ETUDIANT).aggregate(Count('courses'))['courses__count']
+    
+    context = {
+        'reports': reports,
+        'total_users': total_users,
+        'total_students': total_students,
+        'total_teachers': total_teachers,
+        'total_courses': total_courses,
+        'total_enrollments': total_enrollments,
+    }
+    return render(request, 'administration/reports.html', context)
 
 @admin_required
 def audit_logs_page(request):

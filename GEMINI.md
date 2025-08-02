@@ -103,7 +103,7 @@
     *   Gestion des plugins/extensions.
 8.  **Rapports et Statistiques (Admin/Enseignant) :- TERMINÉE**
     *   Génération de rapports de participation et de performance des étudiants.
-    *   Tableau de bord global sur l'activité de la plateforme (nombre d'utilisateurs actifs, cours les plus populaires, etc.).
+    *   Tableau de bord global sur l'activité de la plateforme (nombre d'utilisateurs actifs, cours les plus populaires, etc., affichés sur la page de rapports).
     *   Journaux d'audit et de logs (interface dédiée pour consulter les logs d'administration).
 9.  **Sauvegarde et Restauration : - TERMINÉE**
     *   Outils de planification et d'exécution des sauvegardes de données (commandes `backup` et `restore` fonctionnelles et testées).

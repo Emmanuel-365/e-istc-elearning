@@ -6,6 +6,59 @@
 <div class="container-fluid">
     <h2 class="mb-4">Rapports de Participation et de Performance</h2>
 
+    <div class="card mb-4">
+        <div class="card-header">
+            Statistiques Globales de la Plateforme
+        </div>
+        <div class="card-body">
+            <div class="row">
+                <div class="col-md-3">
+                    <div class="card text-white bg-primary mb-3">
+                        <div class="card-body">
+                            <h5 class="card-title">Utilisateurs Totaux</h5>
+                            <p class="card-text fs-2">{{ total_users }}</p>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-md-3">
+                    <div class="card text-white bg-success mb-3">
+                        <div class="card-body">
+                            <h5 class="card-title">Étudiants</h5>
+                            <p class="card-text fs-2">{{ total_students }}</p>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-md-3">
+                    <div class="card text-white bg-warning mb-3">
+                        <div class="card-body">
+                            <h5 class="card-title">Enseignants</h5>
+                            <p class="card-text fs-2">{{ total_teachers }}</p>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-md-3">
+                    <div class="card text-white bg-info mb-3">
+                        <div class="card-body">
+                            <h5 class="card-title">Cours Totaux</h5>
+                            <p class="card-text fs-2">{{ total_courses }}</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="row">
+                <div class="col-md-3">
+                    <div class="card text-white bg-secondary mb-3">
+                        <div class="card-body">
+                            <h5 class="card-title">Inscriptions Totales</h5>
+                            <p class="card-text fs-2">{{ total_enrollments }}</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <h3 class="mb-4">Rapports par Cours</h3>
     <div class="card">
         <div class="card-body">
             <table class="table table-striped">
