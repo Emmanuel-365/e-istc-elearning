@@ -112,16 +112,20 @@ document.addEventListener('DOMContentLoaded', function() {
     const spinner = submitButton.querySelector('.spinner-border');
 
     loginForm.addEventListener('submit', function(e) {
-        // Validation simple
-        const username = document.getElementById('id_username').value.trim();
-        const password = document.getElementById('id_password').value.trim();
+        e.preventDefault(); // Prevent default form submission
 
-        // Client-side validation removed, relying on Django's form validation and messages framework.
-        // If fields are empty, Django will add errors to the form, which will be displayed by base.html's message handling.
+        // Client-side validation
+        if (!loginForm.checkValidity()) {
+            loginForm.reportValidity();
+            return;
+        }
 
         // Afficher le spinner
         spinner.classList.remove('d-none');
         submitButton.disabled = true;
+
+        // Submit the form programmatically after validation
+        loginForm.submit();
     });
 });
 </script>

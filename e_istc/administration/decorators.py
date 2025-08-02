@@ -6,9 +6,18 @@ from courses.models import Course, Module, Ressource, Annonce
 def admin_required(function=None, login_url='users:login'):
     """
     Decorator for views that checks that the user is logged in and is an admin.
+    If user is authenticated but not admin, raises PermissionDenied (403).
+    If user is not authenticated, redirects to login_url.
     """
+    def check_func(user):
+        if not user.is_authenticated:
+            return False # Will redirect to login_url
+        if user.role == User.Role.ADMIN:
+            return True
+        raise PermissionDenied # Authenticated but not admin, raise 403
+
     actual_decorator = user_passes_test(
-        lambda u: u.is_authenticated and u.role == User.Role.ADMIN,
+        check_func,
         login_url=login_url
     )
     if function:

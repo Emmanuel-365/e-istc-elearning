@@ -83,6 +83,3 @@
     - **Validation Côté Client :** Implémentation d'une validation JavaScript plus robuste pour les formulaires des modales afin de fournir un feedback instantané avant l'envoi au serveur.
 
 ## Prochaines Étapes
-1.  **Tests et Préparation au Déploiement :**
-    *   **Tests Automatisés :** Écrire des tests unitaires et d'intégration pour les fonctionnalités critiques (modèles, formulaires, vues, API).
-    *   **Configuration de Déploiement :** Préparer le projet pour un environnement de production (gestion des fichiers statiques et médias, configuration de la base de données, sécurité).

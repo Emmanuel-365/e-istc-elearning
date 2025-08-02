@@ -30,6 +30,18 @@ class User(AbstractUser):
             self.specialite = None
         super().save(*args, **kwargs)
 
+    @property
+    def is_etudiant(self):
+        return self.role == self.Role.ETUDIANT
+
+    @property
+    def is_enseignant(self):
+        return self.role == self.Role.ENSEIGNANT
+
+    @property
+    def is_admin(self):
+        return self.role == self.Role.ADMIN
+
 @receiver(post_save, sender=User)
 def send_welcome_email(sender, instance, created, **kwargs):
     if created and instance.email:

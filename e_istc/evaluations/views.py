@@ -124,7 +124,7 @@ def question_detail(request, question_id):
         messages.error(request, 'Question non trouvée.')
         return JsonResponse({'error': 'Question non trouvée'}, status=404)
 
-@question_owner_or_admin_required
+@activity_owner_or_admin_required
 @require_POST
 def create_question(request, quiz_id):
     activite = Activite.objects.get(pk=quiz_id)
