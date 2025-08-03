@@ -1,5 +1,7 @@
 from django.urls import path
 from django.contrib.auth import views as auth_views
+
+from users import forms
 from . import views
 
 app_name = 'users'
@@ -13,9 +15,9 @@ urlpatterns = [
     path('activity/<int:activity_id>/submit/', views.submit_assignment, name='submit_assignment'),
     path('activity/<int:activity_id>/take_quiz/', views.take_quiz, name='take_quiz'),
     path('activity/<int:activity_id>/take_sondage/', views.take_sondage, name='take_sondage'),
-    path('password_reset/', views.CustomPasswordResetView.as_view(template_name='users/registration/password_reset_form.html'), name='password_reset'),
+    path('password_reset/', views.CustomPasswordResetView.as_view(template_name='users/registration/password_reset_form.html', form_class=forms.CustomPasswordResetForm), name='password_reset'),
     path('password_reset/done/', auth_views.PasswordResetDoneView.as_view(template_name='users/registration/password_reset_done.html'), name='password_reset_done'),
-    path('reset/<uidb64>/<token>/', views.CustomPasswordResetConfirmView.as_view(template_name='users/registration/password_reset_confirm.html'), name='password_reset_confirm'),
+    path('reset/<uidb64>/<token>/', views.CustomPasswordResetConfirmView.as_view(template_name='users/registration/password_reset_confirm.html', form_class=forms.CustomSetPasswordForm), name='password_reset_confirm'),
     path('reset/done/', auth_views.PasswordResetCompleteView.as_view(template_name='users/registration/password_reset_complete.html'), name='password_reset_complete'),
     path('api/courses/<int:course_id>/enroll/', views.enroll_course, name='api_enroll_course'),
     path('api/courses/<int:course_id>/unenroll/', views.unenroll_course, name='api_unenroll_course'),
