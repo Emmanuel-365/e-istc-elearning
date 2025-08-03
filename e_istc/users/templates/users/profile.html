@@ -1,6 +1,56 @@
 {% extends "base.html" %}
+{% load static %}
 
 {% block title %}Mon Profil{% endblock %}
+
+{% block extra_css %}
+<style>
+    .profile-photo-container {
+        position: relative;
+        width: 180px;
+        height: 180px;
+        border-radius: 50%;
+        overflow: hidden;
+        margin: 0 auto 20px auto;
+        border: 4px solid var(--bs-primary);
+        box-shadow: 0 0 15px rgba(0, 0, 0, 0.1);
+        cursor: pointer;
+        transition: all 0.3s ease;
+    }
+    .profile-photo-container:hover {
+        transform: scale(1.05);
+        box-shadow: 0 0 20px rgba(0, 0, 0, 0.2);
+    }
+    .profile-photo {
+        width: 100%;
+        height: 100%;
+        object-fit: cover;
+    }
+    .photo-overlay {
+        position: absolute;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        background: rgba(0, 0, 0, 0.5);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        opacity: 0;
+        transition: opacity 0.3s ease;
+    }
+    .profile-photo-container:hover .photo-overlay {
+        opacity: 1;
+    }
+    .photo-overlay i {
+        color: white;
+        font-size: 2.5rem;
+    }
+    .profile-photo-input {
+        display: none; /* Hide the actual file input */
+    }
+</style>
+{% endblock %}
 
 {% block content %}
 <div class="container-fluid">
@@ -8,27 +58,79 @@
 
     <div class="card border-0 shadow-sm">
         <div class="card-body">
-            <div class="row">
-                <div class="col-md-4 text-center">
-                    {% if user.photo %}
-                        <img src="{{ user.photo.url }}" alt="Photo de profil" class="img-fluid rounded-circle mb-3" style="width: 150px; height: 150px; object-fit: cover;">
-                    {% else %}
-                        <div class="bg-light rounded-circle d-flex align-items-center justify-content-center mb-3" style="width: 150px; height: 150px;">
-                            <i class="bi bi-person-fill text-secondary" style="font-size: 5rem;"></i>
+            <form method="post" enctype="multipart/form-data" id="profileForm">
+                {% csrf_token %}
+                <div class="row">
+                    <div class="col-md-4 text-center">
+                        <div class="profile-photo-container" id="profilePhotoContainer">
+                            <img src="{% if user.photo %}{{ user.photo.url }}{% else %}{% static 'img/default_profile.png' %}{% endif %}" alt="Photo de profil" class="profile-photo" id="profilePhotoPreview">
+                            <div class="photo-overlay">
+                                <i class="bi bi-camera-fill"></i>
+                            </div>
                         </div>
-                    {% endif %}
-                    <h4 class="mb-0">{{ user.first_name }} {{ user.last_name }}</h4>
-                    <p class="text-muted">{{ user.get_role_display }}</p>
+                        <input type="file" name="photo" id="id_photo" class="profile-photo-input" accept="image/*">
+                        <h4 class="mb-0">{{ user.first_name }} {{ user.last_name }}</h4>
+                        <p class="text-muted">{{ user.get_role_display }}</p>
+                    </div>
+                    <div class="col-md-8">
+                        <div class="row">
+                            <div class="col-md-6 mb-3">
+                                <label for="id_first_name" class="form-label">Prénom</label>
+                                {{ form.first_name }}
+                            </div>
+                            <div class="col-md-6 mb-3">
+                                <label for="id_last_name" class="form-label">Nom</label>
+                                {{ form.last_name }}
+                            </div>
+                        </div>
+                        <div class="mb-3">
+                            <label for="id_email" class="form-label">Email</label>
+                            {{ form.email }}
+                        </div>
+                        {% if user.is_etudiant %}
+                        <div class="mb-3">
+                            <label for="id_matricule" class="form-label">Matricule</label>
+                            {{ form.matricule }}
+                        </div>
+                        {% endif %}
+                        {% if user.is_enseignant %}
+                        <div class="mb-3">
+                            <label for="id_specialite" class="form-label">Spécialité</label>
+                            {{ form.specialite }}
+                        </div>
+                        {% endif %}
+                        <button type="submit" class="btn btn-primary mt-3">Enregistrer les modifications</button>
+                    </div>
                 </div>
-                <div class="col-md-8">
-                    <form method="post" enctype="multipart/form-data">
-                        {% csrf_token %}
-                        {{ form.as_p }}
-                        <button type="submit" class="btn btn-primary">Enregistrer les modifications</button>
-                    </form>
-                </div>
-            </div>
+            </form>
         </div>
     </div>
 </div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    const profilePhotoContainer = document.getElementById('profilePhotoContainer');
+    const profilePhotoInput = document.getElementById('id_photo');
+    const profilePhotoPreview = document.getElementById('profilePhotoPreview');
+
+    if (profilePhotoContainer && profilePhotoInput && profilePhotoPreview) {
+        profilePhotoContainer.addEventListener('click', function() {
+            profilePhotoInput.click();
+        });
+
+        profilePhotoInput.addEventListener('change', function(event) {
+            const file = event.target.files[0];
+            if (file) {
+                const reader = new FileReader();
+                reader.onload = function(e) {
+                    profilePhotoPreview.src = e.target.result;
+                };
+                reader.readAsDataURL(file);
+            }
+        });
+    }
+});
+</script>
 {% endblock %}

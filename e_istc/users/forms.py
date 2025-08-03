@@ -33,6 +33,7 @@ class UserProfileForm(forms.ModelForm):
             'email': forms.EmailInput(attrs={'class': 'form-control'}),
             'matricule': forms.TextInput(attrs={'class': 'form-control'}),
             'specialite': forms.TextInput(attrs={'class': 'form-control'}),
+            'photo': forms.FileInput(attrs={'class': 'profile-photo-input'}),
         }
 
     def __init__(self, *args, **kwargs):
