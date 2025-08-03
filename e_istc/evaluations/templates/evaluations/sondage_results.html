@@ -22,7 +22,20 @@
             </div>
             <div class="card-body">
                 <p>Nombre total de réponses : <strong>{{ result.total_responses }}</strong></p>
-                <!-- Ici, on pourrait ajouter des graphiques ou des détails sur les réponses si le sondage avait des options prédéfinies -->
+                {% if result.individual_responses %}
+                <div class="mt-3">
+                    <h6>Réponses détaillées :</h6>
+                    <ul class="list-group list-group-flush">
+                        {% for response in result.individual_responses %}
+                        <li class="list-group-item">
+                            <strong>{{ response.etudiant_name }} :</strong> {{ response.reponse }}
+                        </li>
+                        {% endfor %}
+                    </ul>
+                </div>
+                {% else %}
+                <p class="text-muted">Aucune réponse détaillée pour cette question.</p>
+                {% endif %}
             </div>
         </div>
         {% endfor %}

@@ -225,10 +225,14 @@ def sondage_results(request, activity_id):
     
     results = []
     for question in questions:
-        total_responses = ReponseSondage.objects.filter(question=question).count()
+        responses = ReponseSondage.objects.filter(question=question).order_by('etudiant__last_name', 'etudiant__first_name')
         results.append({
             'question': question.intitule,
-            'total_responses': total_responses,
+            'total_responses': responses.count(),
+            'individual_responses': [{
+                'etudiant_name': f'{r.etudiant.first_name} {r.etudiant.last_name}',
+                'reponse': r.reponse
+            } for r in responses]
         })
 
     return render(request, 'evaluations/sondage_results.html', {'activite': activite, 'results': results})

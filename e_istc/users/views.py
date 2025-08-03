@@ -138,13 +138,10 @@ def update_course_teacher(request, course_id):
                 'description': course.description,
                 'created_at': course.created_at.strftime('%d/%m/%Y')
             }
-            messages.success(request, 'Cours mis à jour avec succès !')
-            return JsonResponse({'course': course_data})
+            return JsonResponse({'status': 'success', 'course': course_data, 'message': 'Cours mis à jour avec succès !'})
         else:
-            messages.error(request, 'Erreur lors de la mise à jour du cours.')
-            return JsonResponse({'status': 'error', 'errors': form.errors}, status=400)
+            return JsonResponse({'status': 'error', 'errors': form.errors, 'message': 'Erreur lors de la mise à jour du cours.'}, status=400)
     except Course.DoesNotExist:
-        messages.error(request, 'Cours non trouvé ou vous n\'êtes pas l\'enseignant de ce cours.')
         return JsonResponse({'status': 'error', 'message': 'Cours non trouvé ou vous n\'êtes pas l\'enseignant de ce cours.'}, status=404)
 
 
