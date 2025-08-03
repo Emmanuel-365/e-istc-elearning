@@ -4,6 +4,13 @@
 {% block title %}Accueil - E-ISTC{% endblock %}
 
 {% block content %}
+  <header class="py-5" style="background-image: url('{% static 'img/Institut Supérieur ISARE1.jpg' %}'); background-size: cover; background-position: center; background-repeat: no-repeat; color: #fff;">
+    <div class="container text-center text-white" style="background-color: rgba(0, 0, 0, 0.5); padding: 2rem; border-radius: 10px;">
+      <h1 class="display-5 fw-bold">Bienvenue sur la plateforme E-ISTC</h1>
+      <p class="lead">Apprenez à votre rythme avec les meilleurs enseignants de l'ISTC.</p>
+      <a href="{% url 'users:login' %}" class="btn btn-primary btn-lg">Commencer maintenant</a>
+    </div>
+  </header>
   <!-- SECTION PARTENAIRE ISARE -->
   <section class="py-5" style="background: url('{% static 'img/isare.png' %}') center center / cover no-repeat; position: relative;">
     <!-- Overlay semi-transparent blanc pour la lisibilité -->
