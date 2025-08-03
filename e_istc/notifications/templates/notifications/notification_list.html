@@ -15,12 +15,17 @@
 
     <div class="list-group">
         {% for notification in notifications %}
+        <div class="card mb-3 shadow-sm {% if not notification.is_read %}border-primary{% else %}border-light{% endif %}">
             <a href="{{ notification.link }}" class="list-group-item list-group-item-action {% if not notification.is_read %}list-group-item-info{% endif %}" data-notification-id="{{ notification.id }}">
-                <div class="d-flex w-100 justify-content-between">
-                    <p class="mb-1">{{ notification.message }}</p>
-                    <small>{{ notification.created_at|timesince }} ago</small>
+                <div class="d-flex align-items-center">
+                    <i class="notification-icon bi me-3 fs-4"></i>
+                    <div class="flex-grow-1">
+                        <p class="mb-1">{{ notification.message }}</p>
+                        <small class="text-muted">{{ notification.created_at|timesince }} ago</small>
+                    </div>
                 </div>
             </a>
+        </div>
         {% empty %}
             <p class="text-center text-muted py-4">Aucune notification.</p>
         {% endfor %}
@@ -46,6 +51,20 @@ document.addEventListener('DOMContentLoaded', function () {
                 }
             });
         });
+
+        // Assign icons based on message content
+        const message = link.querySelector('p').textContent.toLowerCase();
+        const iconElement = link.querySelector('.notification-icon');
+
+        if (message.includes('annonce')) {
+            iconElement.classList.add('bi-megaphone');
+        } else if (message.includes('évaluation') || message.includes('devoir') || message.includes('quiz') || message.includes('sondage')) {
+            iconElement.classList.add('bi-journal-check');
+        } else if (message.includes('message')) {
+            iconElement.classList.add('bi-chat-dots');
+        } else {
+            iconElement.classList.add('bi-info-circle'); // Default icon
+        }
     });
 
     function getCookie(name) {
