@@ -162,8 +162,9 @@ document.addEventListener('DOMContentLoaded', function () {
     });
 
     categoryTableBody.addEventListener('click', function (e) {
-        if (e.target.classList.contains('edit-btn')) {
-            currentCategoryId = e.target.dataset.id;
+        const target = e.target.closest('button');
+        if (target && target.classList.contains('edit-btn')) {
+            currentCategoryId = target.dataset.id;
             fetch(`/administration/api/categories/${currentCategoryId}/`)
                 .then(response => response.json())
                 .then(data => {
@@ -182,8 +183,8 @@ document.addEventListener('DOMContentLoaded', function () {
                     categoryModal.show();
                 });
         }
-        if (e.target.classList.contains('delete-btn')) {
-            currentCategoryId = e.target.dataset.id;
+        if (target && target.classList.contains('delete-btn')) {
+            currentCategoryId = target.dataset.id;
             deleteModal.show();
         }
     });

@@ -217,8 +217,9 @@ document.addEventListener('DOMContentLoaded', function () {
     });
 
     userTableBody.addEventListener('click', function (e) {
-        if (e.target.classList.contains('edit-btn')) {
-            currentUserId = e.target.dataset.id;
+        const target = e.target.closest('button');
+        if (target && target.classList.contains('edit-btn')) {
+            currentUserId = target.dataset.id;
             fetch(`/administration/api/users/${currentUserId}/`)
                 .then(response => response.json())
                 .then(data => {
@@ -242,8 +243,8 @@ document.addEventListener('DOMContentLoaded', function () {
                     userModal.show();
                 });
         }
-        if (e.target.classList.contains('delete-btn')) {
-            currentUserId = e.target.dataset.id;
+        if (target && target.classList.contains('delete-btn')) {
+            currentUserId = target.dataset.id;
             deleteModal.show();
         }
     });
@@ -306,9 +307,10 @@ document.addEventListener('DOMContentLoaded', function () {
     });
 
     userTableBody.addEventListener('click', function (e) {
-        if (e.target.classList.contains('lock-btn')) {
-            const userId = e.target.dataset.id;
-            const action = e.target.dataset.action;
+        const target = e.target.closest('button');
+        if (target && target.classList.contains('lock-btn')) {
+            const userId = target.dataset.id;
+            const action = target.dataset.action;
             fetch(`/administration/api/users/${userId}/${action}/`, {
                 method: 'POST',
                 headers: { 'X-CSRFToken': csrftoken }

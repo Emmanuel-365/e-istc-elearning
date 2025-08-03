@@ -139,8 +139,10 @@ document.addEventListener('DOMContentLoaded', function () {
     const csrftoken = getCookie('csrftoken');
 
     checkboxes.forEach(checkbox => {
-        checkbox.addEventListener('change', function () {
-            const ressourceId = this.dataset.ressourceId;
+        checkbox.addEventListener('change', function (e) {
+            const target = e.target.closest('input[type="checkbox"]');
+            if (!target) return;
+            const ressourceId = target.dataset.ressourceId;
             const url = `/courses/api/ressources/${ressourceId}/complete/`;
 
             fetch(url, {

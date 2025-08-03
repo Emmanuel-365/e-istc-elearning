@@ -399,13 +399,14 @@ document.addEventListener('DOMContentLoaded', function () {
     }
 
     evaluationList.addEventListener('click', function (e) {
-        if (e.target.classList.contains('edit-evaluation-btn')) {
-            const clickedButton = e.target;
+        const target = e.target.closest('button');
+        if (target && target.classList.contains('edit-evaluation-btn')) {
+            const clickedButton = target;
             const originalButtonText = clickedButton.innerHTML;
             clickedButton.innerHTML = '<span class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span>';
             clickedButton.disabled = true;
 
-            currentEvaluationId = e.target.dataset.id;
+            currentEvaluationId = target.dataset.id;
             fetch(`/evaluations/api/activities/${currentEvaluationId}/`)
                 .then(response => response.json())
                 .then(data => {
@@ -430,28 +431,29 @@ document.addEventListener('DOMContentLoaded', function () {
                     clickedButton.disabled = false;
                 });
         }
-        if (e.target.classList.contains('delete-evaluation-btn')) {
-            currentEvaluationId = e.target.dataset.id;
+        if (target && target.classList.contains('delete-evaluation-btn')) {
+            currentEvaluationId = target.dataset.id;
             deleteElementType = 'evaluation';
             deleteConfirmModal.show();
         }
     });
 
     evaluationList.addEventListener('click', function(e) {
-        if (e.target.classList.contains('manage-questions-btn')) {
-            const quizId = e.target.dataset.id;
+        const target = e.target.closest('button');
+        if (target && target.classList.contains('manage-questions-btn')) {
+            const quizId = target.dataset.id;
             document.getElementById('quizId').value = quizId;
             loadQuestionsForQuiz(quizId);
             questionsModal.show();
         }
-        if (e.target.classList.contains('grade-assignment-btn')) {
-            const assignmentId = e.target.dataset.id;
-            document.getElementById('assignmentTitleForGrading').textContent = e.target.closest('li').querySelector('h5').textContent;
+        if (target && target.classList.contains('grade-assignment-btn')) {
+            const assignmentId = target.dataset.id;
+            document.getElementById('assignmentTitleForGrading').textContent = target.closest('li').querySelector('h5').textContent;
             loadSubmissionsForGrading(assignmentId);
             gradeAssignmentModal.show();
         }
-        if (e.target.classList.contains('manage-sondage-questions-btn')) {
-            const sondageId = e.target.dataset.id;
+        if (target && target.classList.contains('manage-sondage-questions-btn')) {
+            const sondageId = target.dataset.id;
             document.getElementById('sondageActivityId').value = sondageId;
             loadSondageQuestions(sondageId);
             sondageQuestionsModal.show();
@@ -564,13 +566,14 @@ document.addEventListener('DOMContentLoaded', function () {
     });
 
     moduleList.addEventListener('click', function (e) {
-        if (e.target.classList.contains('edit-module-btn')) {
-            const clickedButton = e.target;
+        const target = e.target.closest('button');
+        if (target && target.classList.contains('edit-module-btn')) {
+            const clickedButton = target;
             const originalButtonText = clickedButton.innerHTML;
             clickedButton.innerHTML = '<span class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span>';
             clickedButton.disabled = true;
 
-            currentModuleId = e.target.dataset.id;
+            currentModuleId = target.dataset.id;
             fetch(`/courses/api/modules/${currentModuleId}/`)
                 .then(response => response.json())
                 .then(data => {
@@ -594,8 +597,8 @@ document.addEventListener('DOMContentLoaded', function () {
                     clickedButton.disabled = false;
                 });
         }
-        if (e.target.classList.contains('delete-module-btn')) {
-            currentModuleId = e.target.dataset.id;
+        if (target && target.classList.contains('delete-module-btn')) {
+            currentModuleId = target.dataset.id;
             deleteElementType = 'module';
             deleteConfirmModal.show();
         }
@@ -603,8 +606,9 @@ document.addEventListener('DOMContentLoaded', function () {
 
     // --- Gestion des Ressources ---
     moduleList.addEventListener('click', function (e) {
-        if (e.target.classList.contains('add-ressource-btn')) {
-            currentModuleId = e.target.dataset.moduleId;
+        const target = e.target.closest('button');
+        if (target && target.classList.contains('add-ressource-btn')) {
+            currentModuleId = target.dataset.moduleId;
             currentRessourceId = null;
             ressourceForm.reset();
             document.getElementById('ressourceModalLabel').textContent = 'Ajouter une ressource';
@@ -612,14 +616,14 @@ document.addEventListener('DOMContentLoaded', function () {
             document.getElementById('ressourceModuleId').value = currentModuleId;
             ressourceModal.show();
         }
-        if (e.target.classList.contains('edit-ressource-btn')) {
-            const clickedButton = e.target;
+        if (target && target.classList.contains('edit-ressource-btn')) {
+            const clickedButton = target;
             const originalButtonText = clickedButton.innerHTML;
             clickedButton.innerHTML = '<span class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span>';
             clickedButton.disabled = true;
 
-            currentRessourceId = e.target.dataset.id;
-            currentModuleId = e.target.dataset.moduleId; // Nécessaire pour upsert
+            currentRessourceId = target.dataset.id;
+            currentModuleId = target.dataset.moduleId; // Nécessaire pour upsert
             fetch(`/courses/api/ressources/${currentRessourceId}/`)
                 .then(response => response.json())
                 .then(data => {
@@ -644,8 +648,8 @@ document.addEventListener('DOMContentLoaded', function () {
                     clickedButton.disabled = false;
                 });
         }
-        if (e.target.classList.contains('delete-ressource-btn')) {
-            currentRessourceId = e.target.dataset.id;
+        if (target && target.classList.contains('delete-ressource-btn')) {
+            currentRessourceId = target.dataset.id;
             deleteElementType = 'ressource';
             deleteConfirmModal.show();
         }
@@ -736,8 +740,9 @@ document.addEventListener('DOMContentLoaded', function () {
     });
 
     studentTableBody.addEventListener('click', function (e) {
-        if (e.target.classList.contains('remove-student-btn')) {
-            const studentId = e.target.dataset.id;
+        const target = e.target.closest('button');
+        if (target && target.classList.contains('remove-student-btn')) {
+            const studentId = target.dataset.id;
             // Using native confirm for now, will be replaced by a custom modal later if needed
             if (confirm('Retirer cet étudiant du cours ?')) {
                 fetch(`/courses/api/courses/{{ course.id }}/students/${studentId}/remove/`, {
@@ -862,8 +867,9 @@ document.addEventListener('DOMContentLoaded', function () {
     });
 
     questionListInModal.addEventListener('click', function(e) {
-        const questionId = e.target.dataset.id;
-        if (e.target.classList.contains('edit-question-btn')) {
+        const target = e.target.closest('button');
+        if (target && target.classList.contains('edit-question-btn')) {
+            const questionId = target.dataset.id;
             fetch(`/evaluations/api/questions/${questionId}/`)
                 .then(response => response.json())
                 .then(data => {
@@ -890,7 +896,8 @@ document.addEventListener('DOMContentLoaded', function () {
                     });
                 });
         }
-        if (e.target.classList.contains('delete-question-btn')) {
+        if (target && target.classList.contains('delete-question-btn')) {
+            const questionId = target.dataset.id;
             if (confirm('Supprimer cette question ?')) {
                 fetch(`/evaluations/api/questions/${questionId}/delete/`, {
                     method: 'POST',
@@ -947,10 +954,11 @@ document.addEventListener('DOMContentLoaded', function () {
     }
 
     submissionsList.addEventListener('click', function(e) {
-        if (e.target.classList.contains('save-grade-btn')) {
-            const submissionId = e.target.dataset.submissionId;
-            const grade = e.target.previousElementSibling.value;
-            const comment = e.target.previousElementSibling.previousElementSibling.value;
+        const target = e.target.closest('button');
+        if (target && target.classList.contains('save-grade-btn')) {
+            const submissionId = target.dataset.submissionId;
+            const grade = target.previousElementSibling.value;
+            const comment = target.previousElementSibling.previousElementSibling.value;
 
             fetch(`/evaluations/api/submissions/${submissionId}/grade/`, {
                 method: 'POST',
@@ -1035,8 +1043,9 @@ document.addEventListener('DOMContentLoaded', function () {
     });
 
     sondageQuestionListInModal.addEventListener('click', function(e) {
-        if (e.target.classList.contains('delete-sondage-question-btn')) {
-            const questionId = e.target.dataset.id;
+        const target = e.target.closest('button');
+        if (target && target.classList.contains('delete-sondage-question-btn')) {
+            const questionId = target.dataset.id;
             if (confirm('Supprimer cette question de sondage ?')) {
                 fetch(`/evaluations/api/sondages/questions/${questionId}/delete/`, {
                     method: 'POST',
@@ -1131,13 +1140,14 @@ document.addEventListener('DOMContentLoaded', function () {
     }
 
     annonceList.addEventListener('click', function (e) {
-        if (e.target.classList.contains('edit-annonce-btn')) {
-            const clickedButton = e.target;
+        const target = e.target.closest('button');
+        if (target && target.classList.contains('edit-annonce-btn')) {
+            const clickedButton = target;
             const originalButtonText = clickedButton.innerHTML;
             clickedButton.innerHTML = '<span class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span>';
             clickedButton.disabled = true;
 
-            currentAnnonceId = e.target.dataset.id;
+            currentAnnonceId = target.dataset.id;
             fetch(`/courses/api/annonces/${currentAnnonceId}/`)
                 .then(response => response.json())
                 .then(data => {
@@ -1160,8 +1170,8 @@ document.addEventListener('DOMContentLoaded', function () {
                     clickedButton.disabled = false;
                 });
         }
-        if (e.target.classList.contains('delete-annonce-btn')) {
-            currentAnnonceId = e.target.dataset.id;
+        if (target && target.classList.contains('delete-annonce-btn')) {
+            currentAnnonceId = target.dataset.id;
             deleteElementType = 'annonce';
             deleteConfirmModal.show();
         }
@@ -1193,13 +1203,14 @@ document.addEventListener('DOMContentLoaded', function () {
     });
 
     document.getElementById('enrollable-student-list').addEventListener('click', function(e) {
-        if (e.target.classList.contains('enroll-now-btn')) {
-            const clickedButton = e.target;
+        const target = e.target.closest('button');
+        if (target && target.classList.contains('enroll-now-btn')) {
+            const clickedButton = target;
             const originalButtonText = clickedButton.innerHTML;
             clickedButton.innerHTML = '<span class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span>';
             clickedButton.disabled = true;
 
-            const studentId = e.target.dataset.id;
+            const studentId = target.dataset.id;
             fetch(`/courses/api/courses/${courseId}/students/${studentId}/enroll/`, {
                 method: 'POST',
                 headers: { 'X-CSRFToken': csrftoken }
