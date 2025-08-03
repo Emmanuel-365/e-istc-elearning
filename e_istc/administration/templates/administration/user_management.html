@@ -13,7 +13,7 @@
 
     <div class="d-flex justify-content-between align-items-center mb-4">
         <h2 class="mb-0">Gestion des Utilisateurs</h2>
-        <button id="addUserBtn" class="btn btn-primary">Ajouter un utilisateur</button>
+        <button id="addUserBtn" class="btn btn-primary" aria-label="Ajouter un utilisateur"><i class="bi bi-person-plus"></i></button>
     </div>
 
     <div class="card border-0 shadow-sm">
@@ -35,12 +35,12 @@
                             <td>{{ user.email }}</td>
                             <td><span class="badge bg-info">{{ user.get_role_display }}</span></td>
                             <td class="text-center">
-                                <button class="btn btn-sm btn-outline-secondary edit-btn" data-id="{{ user.id }}">Modifier</button>
-                                <button class="btn btn-sm btn-outline-danger delete-btn" data-id="{{ user.id }}">Supprimer</button>
+                                <button class="btn btn-sm btn-outline-secondary edit-btn" data-id="{{ user.id }}" aria-label="Modifier l'utilisateur"><i class="bi bi-pencil"></i></button>
+                                <button class="btn btn-sm btn-outline-danger delete-btn" data-id="{{ user.id }}" aria-label="Supprimer l'utilisateur"><i class="bi bi-trash"></i></button>
                                 {% if user.is_locked %}
-                                    <button class="btn btn-sm btn-outline-success lock-btn" data-id="{{ user.id }}" data-action="unlock">Déverrouiller</button>
+                                    <button class="btn btn-sm btn-outline-success lock-btn" data-id="{{ user.id }}" data-action="unlock" aria-label="Déverrouiller l'utilisateur"><i class="bi bi-unlock"></i></button>
                                 {% else %}
-                                    <button class="btn btn-sm btn-outline-warning lock-btn" data-id="{{ user.id }}" data-action="lock">Verrouiller</button>
+                                    <button class="btn btn-sm btn-outline-warning lock-btn" data-id="{{ user.id }}" data-action="lock" aria-label="Verrouiller l'utilisateur"><i class="bi bi-lock"></i></button>
                                 {% endif %}
                             </td>
                         </tr>

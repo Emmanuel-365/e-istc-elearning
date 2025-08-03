@@ -13,7 +13,7 @@
 
     <div class="d-flex justify-content-between align-items-center mb-4">
         <h2 class="mb-0">Gestion des Catégories</h2>
-        <button id="addCategoryBtn" class="btn btn-primary">Ajouter une catégorie</button>
+        <button id="addCategoryBtn" class="btn btn-primary" aria-label="Ajouter une catégorie"><i class="bi bi-plus-circle"></i></button>
     </div>
 
     <div class="card border-0 shadow-sm">
@@ -33,8 +33,8 @@
                             <td>{{ category.name }}</td>
                             <td>{{ category.slug }}</td>
                             <td class="text-center">
-                                <button class="btn btn-sm btn-outline-secondary edit-btn" data-id="{{ category.id }}">Modifier</button>
-                                <button class="btn btn-sm btn-outline-danger delete-btn" data-id="{{ category.id }}">Supprimer</button>
+                                <button class="btn btn-sm btn-outline-secondary edit-btn" data-id="{{ category.id }}" aria-label="Modifier la catégorie"><i class="bi bi-pencil"></i></button>
+                                <button class="btn btn-sm btn-outline-danger delete-btn" data-id="{{ category.id }}" aria-label="Supprimer la catégorie"><i class="bi bi-trash"></i></button>
                             </td>
                         </tr>
                         {% endfor %}

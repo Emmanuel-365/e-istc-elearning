@@ -28,10 +28,10 @@
                     <h5 class="card-title">{{ course.title }}</h5>
                     <p class="card-text text-muted">{{ course.description|truncatechars:100 }}</p>
                     <div class="mt-auto d-flex justify-content-between">
-                        <a href="{% url 'administration:course_detail_page' course.id %}" class="btn btn-sm btn-outline-info">Gérer</a>
+                        <a href="{% url 'administration:course_detail_page' course.id %}" class="btn btn-sm btn-outline-info" aria-label="Gérer le cours"><i class="bi bi-gear"></i></a>
                         <div>
-                            <button class="btn btn-sm btn-outline-secondary edit-btn" data-id="{{ course.id }}">Modifier</button>
-                            <button class="btn btn-sm btn-outline-danger delete-btn" data-id="{{ course.id }}">Supprimer</button>
+                            <button class="btn btn-sm btn-outline-secondary edit-btn" data-id="{{ course.id }}" aria-label="Modifier le cours"><i class="bi bi-pencil"></i></button>
+                            <button class="btn btn-sm btn-outline-danger delete-btn" data-id="{{ course.id }}" aria-label="Supprimer le cours"><i class="bi bi-trash"></i></button>
                         </div>
                     </div>
                 </div>

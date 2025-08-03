@@ -32,7 +32,7 @@
         <div class="card-footer text-end">
             <form action="{% url 'forums:supprimer_message' message.id %}" method="post" onsubmit="return confirm('Êtes-vous sûr de vouloir supprimer ce message ?');">
                 {% csrf_token %}
-                <button type="submit" class="btn btn-sm btn-outline-danger">Supprimer</button>
+                <button type="submit" class="btn btn-sm btn-outline-danger" aria-label="Supprimer le message"><i class="bi bi-trash"></i></button>
             </form>
         </div>
         {% endif %}
@@ -49,7 +49,7 @@
             <form action="{% url 'forums:ajouter_message' sujet.id %}" method="post">
                 {% csrf_token %}
                 {{ message_form.as_p }}
-                <button type="submit" class="btn btn-primary">Envoyer la réponse</button>
+                <button type="submit" class="btn btn-primary" aria-label="Envoyer la réponse"><i class="bi bi-send"></i> Envoyer la réponse</button>
             </form>
         </div>
     </div>
@@ -58,7 +58,7 @@
     <div class="mt-4 text-end">
          <form action="{% url 'forums:supprimer_sujet' sujet.id %}" method="post" onsubmit="return confirm('Êtes-vous sûr de vouloir supprimer ce sujet et tous ses messages ?');">
             {% csrf_token %}
-            <button type="submit" class="btn btn-danger">Supprimer le Sujet Entier</button>
+            <button type="submit" class="btn btn-danger" aria-label="Supprimer le sujet entier"><i class="bi bi-trash"></i> Supprimer le Sujet Entier</button>
         </form>
     </div>
     {% endif %}

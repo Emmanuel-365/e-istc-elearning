@@ -44,10 +44,10 @@
                                     </div>
                                     <div>
                                         {% if ressource.file %}
-                                            <a href="{{ ressource.file.url }}" target="_blank" class="btn btn-sm btn-info">Voir Fichier</a>
+                                            <a href="{{ ressource.file.url }}" target="_blank" class="btn btn-sm btn-info" aria-label="Voir Fichier"><i class="bi bi-file-earmark"></i></a>
                                         {% endif %}
                                         {% if ressource.url %}
-                                            <a href="{{ ressource.url }}" target="_blank" class="btn btn-sm btn-info">Voir URL</a>
+                                            <a href="{{ ressource.url }}" target="_blank" class="btn btn-sm btn-info" aria-label="Voir URL"><i class="bi bi-link-45deg"></i></a>
                                         {% endif %}
                                     </div>
                                 </li>
@@ -69,7 +69,7 @@
                 <div class="card-header">Informations</div>
                 <div class="card-body">
                     <p><strong>Enseignant :</strong> {{ course.teacher.first_name }} {{ course.teacher.last_name }}</p>
-                    <a href="{% url 'messaging:new_conversation' course.teacher.id %}" class="btn btn-sm btn-outline-primary mb-3">Contacter l'enseignant</a>
+                    <a href="{% url 'messaging:new_conversation' course.teacher.id %}" class="btn btn-sm btn-outline-primary mb-3" aria-label="Contacter l'enseignant"><i class="bi bi-chat-dots"></i> Contacter l'enseignant</a>
                     {% if course.visio_link %}
                         <p><strong>Visioconférence :</strong> <a href="{{ course.visio_link }}" target="_blank">Rejoindre la session</a></p>
                     {% endif %}
@@ -102,15 +102,15 @@
                                 {% if activite.id in submitted_activities_ids %}
                                     <button class="btn btn-secondary btn-sm" disabled>Déjà soumis</button>
                                 {% else %}
-                                    <a href="{% url 'users:submit_assignment' activite.id %}" class="btn btn-primary btn-sm">Soumettre</a>
+                                    <a href="{% url 'users:submit_assignment' activite.id %}" class="btn btn-primary btn-sm" aria-label="Soumettre le devoir"><i class="bi bi-upload"></i> Soumettre</a>
                                 {% endif %}
                             {% elif activite.activity_type == 'QUIZ' %}
-                                <a href="{% url 'users:take_quiz' activite.id %}" class="btn btn-success btn-sm">Commencer</a>
+                                <a href="{% url 'users:take_quiz' activite.id %}" class="btn btn-success btn-sm" aria-label="Commencer le quiz"><i class="bi bi-play-circle"></i> Commencer</a>
                             {% elif activite.activity_type == 'SONDAGE' %}
                                 {% if activite.id in submitted_sondages_ids %}
                                     <button class="btn btn-secondary btn-sm" disabled>Déjà répondu</button>
                                 {% else %}
-                                    <a href="{% url 'users:take_sondage' activite.id %}" class="btn btn-primary btn-sm">Participer</a>
+                                    <a href="{% url 'users:take_sondage' activite.id %}" class="btn btn-primary btn-sm" aria-label="Participer au sondage"><i class="bi bi-check-circle"></i> Participer</a>
                                 {% endif %}
                             {% endif %}
                         </div>
@@ -124,7 +124,7 @@
                 <div class="card-header">Forum</div>
                 <div class="card-body">
                     <p>Discutez avec vos camarades et l'enseignant.</p>
-                    <a href="{% url 'forums:forum_cours' course.id %}" class="btn btn-primary">Accéder au Forum</a>
+                    <a href="{% url 'forums:forum_cours' course.id %}" class="btn btn-primary" aria-label="Accéder au forum"><i class="bi bi-chat-left-text"></i> Accéder au Forum</a>
                 </div>
             </div>
         </div>
