@@ -4,6 +4,14 @@
 
 {% block content %}
 <div class="container mt-5">
+    <nav aria-label="breadcrumb">
+        <ol class="breadcrumb">
+            <li class="breadcrumb-item"><a href="{% url 'home' %}">Accueil</a></li>
+            <li class="breadcrumb-item"><a href="{% url 'administration:course_detail_page' activite.course.id %}">Détails du Cours</a></li>
+            <li class="breadcrumb-item active" aria-current="page">Résultats du Sondage</li>
+        </ol>
+    </nav>
+
     <h2 class="mb-4">Résultats du Sondage : {{ activite.title }}</h2>
 
     {% if results %}

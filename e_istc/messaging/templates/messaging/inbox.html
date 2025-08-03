@@ -4,6 +4,13 @@
 
 {% block content %}
 <div class="container">
+    <nav aria-label="breadcrumb">
+        <ol class="breadcrumb">
+            <li class="breadcrumb-item"><a href="{% url 'home' %}">Accueil</a></li>
+            <li class="breadcrumb-item active" aria-current="page">Boîte de réception</li>
+        </ol>
+    </nav>
+
     <h2 class="mb-4">Boîte de réception</h2>
 
     <div class="card border-0 shadow-sm mb-4">

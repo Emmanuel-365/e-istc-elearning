@@ -46,6 +46,13 @@
 
 {% block content %}
 <div class="container">
+    <nav aria-label="breadcrumb">
+        <ol class="breadcrumb">
+            <li class="breadcrumb-item"><a href="{% url 'messaging:inbox' %}">Boîte de réception</a></li>
+            <li class="breadcrumb-item active" aria-current="page">Conversation</li>
+        </ol>
+    </nav>
+
     <h2 class="mb-3">Conversation avec 
         {% for participant in conversation.participants.all %}
             {% if participant != request.user %}

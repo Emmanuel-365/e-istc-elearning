@@ -3,184 +3,264 @@
 {% block title %}Détails du Cours - {{ course.title }}{% endblock %}
 
 {% block content %}
-<div class="container-fluid">
-    <nav aria-label="breadcrumb">
-        <ol class="breadcrumb">
+<div class="container-fluid py-4">
+    <!-- Breadcrumb -->
+    <nav aria-label="breadcrumb" class="mb-4">
+        <ol class="breadcrumb bg-light p-3 rounded">
             <li class="breadcrumb-item"><a href="{% url 'administration:course_management' %}">Gestion des Cours</a></li>
             <li class="breadcrumb-item active" aria-current="page">{{ course.title }}</li>
         </ol>
     </nav>
 
-    <div class="row">
-        <div class="col-lg-8">
-            <div class="card mb-4">
-                <div class="card-body">
-                    <h2 class="card-title">{{ course.title }}</h2>
-                    <p class="card-text">{{ course.description }}</p>
-                </div>
-            </div>
+    <!-- Course Header -->
+    <div class="card shadow-sm mb-4 border-0">
+        <div class="card-body">
+            <h2 class="card-title mb-3">{{ course.title }}</h2>
+            <p class="text-muted">{{ course.description }}</p>
+        </div>
+    </div>
 
-            <div class="card mb-4">
-                <div class="card-header d-flex justify-content-between align-items-center">
-                    <h5 class="mb-0">Modules du Cours</h5>
-                    <button id="addModuleBtn" class="btn btn-primary">Ajouter un module</button>
-                </div>
-                <div class="card-body">
-                    <ul class="list-group" id="module-list">
-                        {% for module in course.modules.all %}
-                        <li class="list-group-item" id="module-item-{{ module.id }}">
-                            <h5>{{ module.title }} (Ordre: {{ module.order }})</h5>
-                            <p>{{ module.description }}</p>
-                            <h6>Ressources:</h6>
-                            <ul class="list-group list-group-flush" id="ressource-list-{{ module.id }}">
-                                {% for ressource in module.ressources.all %}
-                                <li class="list-group-item d-flex justify-content-between align-items-center" id="ressource-item-{{ ressource.id }}">
-                                    {{ ressource.title }}
-                                    <div>
-                                        {% if ressource.file %}
-                                            <a href="{{ ressource.file.url }}" target="_blank" class="btn btn-sm btn-outline-info">Voir Fichier</a>
-                                        {% endif %}
-                                        {% if ressource.url %}
-                                            <a href="{{ ressource.url }}" target="_blank" class="btn btn-sm btn-outline-info">Voir URL</a>
-                                        {% endif %}
-                                        <button class="btn btn-sm btn-outline-secondary edit-ressource-btn" data-id="{{ ressource.id }}" data-module-id="{{ module.id }}">Modifier</button>
-                                        <button class="btn btn-sm btn-outline-danger delete-ressource-btn" data-id="{{ ressource.id }}">Supprimer</button>
+    <!-- Tabs Navigation -->
+    <ul class="nav nav-tabs mb-4" id="courseTabs" role="tablist">
+        <li class="nav-item" role="presentation">
+            <button class="nav-link active" id="modules-tab" data-bs-toggle="tab" data-bs-target="#modules" type="button" role="tab" aria-controls="modules" aria-selected="true">Modules</button>
+        </li>
+        <li class="nav-item" role="presentation">
+            <button class="nav-link" id="annonces-tab" data-bs-toggle="tab" data-bs-target="#annonces" type="button" role="tab" aria-controls="annonces" aria-selected="false">Annonces</button>
+        </li>
+        <li class="nav-item" role="presentation">
+            <button class="nav-link" id="evaluations-tab" data-bs-toggle="tab" data-bs-target="#evaluations" type="button" role="tab" aria-controls="evaluations" aria-selected="false">Évaluations</button>
+        </li>
+        <li class="nav-item" role="presentation">
+            <button class="nav-link" id="students-tab" data-bs-toggle="tab" data-bs-target="#students" type="button" role="tab" aria-controls="students" aria-selected="false">Étudiants</button>
+        </li>
+        <li class="nav-item" role="presentation">
+            <button class="nav-link" id="forum-tab" data-bs-toggle="tab" data-bs-target="#forum" type="button" role="tab" aria-controls="forum" aria-selected="false">Forum</button>
+        </li>
+    </ul>
+
+    <div class="row g-4">
+        <!-- Main Content -->
+        <div class="col-lg-8">
+            <div class="tab-content" id="courseTabsContent">
+                <!-- Modules Tab -->
+                <div class="tab-pane fade show active" id="modules" role="tabpanel" aria-labelledby="modules-tab">
+                    <div class="card shadow-sm border-0">
+                        <div class="card-header bg-white border-bottom py-3 d-flex justify-content-between align-items-center">
+                            <h5 class="mb-0">Modules</h5>
+                            <button id="addModuleBtn" class="btn btn-primary btn-sm" aria-label="Ajouter un module"><i class="bi bi-plus-circle"></i></button>
+                        </div>
+                        <div class="card-body">
+                            <ul class="list-group list-group-flush" id="module-list">
+                                {% for module in course.modules.all %}
+                                <li class="list-group-item border-0 py-3" id="module-item-{{ module.id }}">
+                                    <div class="d-flex justify-content-between align-items-center">
+                                        <div>
+                                            <h6 class="mb-1">{{ module.title }} <span class="text-muted">(Ordre: {{ module.order }})</span></h6>
+                                            <p class="text-muted mb-2">{{ module.description }}</p>
+                                        </div>
+                                        <div>
+                                            <button class="btn btn-outline-secondary btn-sm edit-module-btn me-1" data-id="{{ module.id }}" aria-label="Modifier le module"><i class="bi bi-pencil"></i></button>
+                                            <button class="btn btn-outline-danger btn-sm delete-module-btn" data-id="{{ module.id }}" aria-label="Supprimer le module"><i class="bi bi-trash"></i></button>
+                                        </div>
                                     </div>
+                                    <h6 class="mt-3 mb-2">Ressources</h6>
+                                    <ul class="list-group list-group-flush ms-3" id="ressource-list-{{ module.id }}">
+                                        {% for ressource in module.ressources.all %}
+                                        <li class="list-group-item border-0 py-2 d-flex justify-content-between align-items-center" id="ressource-item-{{ ressource.id }}">
+                                            <span>{{ ressource.title }}</span>
+                                            <div>
+                                                {% if ressource.file %}
+                                                    <a href="{{ ressource.file.url }}" target="_blank" class="btn btn-outline-info btn-sm me-1" aria-label="Voir le fichier"><i class="bi bi-file-earmark"></i></a>
+                                                {% endif %}
+                                                {% if ressource.url %}
+                                                    <a href="{{ ressource.url }}" target="_blank" class="btn btn-outline-info btn-sm me-1">URL</a>
+                                                {% endif %}
+                                                <button class="btn btn-outline-secondary btn-sm edit-ressource-btn me-1" data-id="{{ ressource.id }}" data-module-id="{{ module.id }}">Modifier</button>
+                                                <button class="btn btn-outline-danger btn-sm delete-ressource-btn" data-id="{{ ressource.id }}">Supprimer</button>
+                                            </div>
+                                        </li>
+                                        {% empty %}
+                                        <li class="list-group-item text-muted">Aucune ressource disponible.</li>
+                                        {% endfor %}
+                                    </ul>
+                                    <button class="btn btn-outline-success btn-sm mt-3 add-ressource-btn" data-module-id="{{ module.id }}">Ajouter une ressource</button>
                                 </li>
+                                {% empty %}
+                                <li class="list-group-item text-muted">Aucun module pour ce cours.</li>
                                 {% endfor %}
                             </ul>
-                            <button class="btn btn-sm btn-outline-success mt-2 add-ressource-btn" data-module-id="{{ module.id }}">Ajouter Ressource</button>
-                            <div class="mt-2">
-                                <button class="btn btn-sm btn-outline-secondary edit-module-btn" data-id="{{ module.id }}">Modifier Module</button>
-                                <button class="btn btn-sm btn-outline-danger delete-module-btn" data-id="{{ module.id }}">Supprimer Module</button>
-                            </div>
-                        </li>
-                        {% empty %}
-                        <li class="list-group-item">Aucun module pour ce cours pour le moment.</li>
-                        {% endfor %}
-                    </ul>
+                        </div>
+                    </div>
                 </div>
-            </div>
 
-            <div class="card mb-4">
-                <div class="card-header d-flex justify-content-between align-items-center">
-                    <h5 class="mb-0">Annonces</h5>
-                    <button id="addAnnonceBtn" class="btn btn-primary">Ajouter une annonce</button>
+                <!-- Announcements Tab -->
+                <div class="tab-pane fade" id="annonces" role="tabpanel" aria-labelledby="annonces-tab">
+                    <div class="card shadow-sm border-0">
+                        <div class="card-header bg-white border-bottom py-3 d-flex justify-content-between align-items-center">
+                            <h5 class="mb-0">Annonces</h5>
+                            <button id="addAnnonceBtn" class="btn btn-primary btn-sm">Ajouter une annonce</button>
+                        </div>
+                        <div class="card-body">
+                            <ul class="list-group list-group-flush" id="annonce-list">
+                                {% for annonce in annonces %}
+                                <li class="list-group-item border-0 py-3" id="annonce-item-{{ annonce.id }}">
+                                    <div class="d-flex justify-content-between align-items-start">
+                                        <div>
+                                            <h6 class="mb-1">{{ annonce.titre }}</h6>
+                                            <p class="text-muted mb-1">{{ annonce.contenu|linebreaksbr }}</p>
+                                            <small class="text-muted">Publié le: {{ annonce.cree_le|date:"d/m/Y H:i" }}</small>
+                                        </div>
+                                        <div>
+                                            <button class="btn btn-outline-secondary btn-sm edit-annonce-btn me-1" data-id="{{ annonce.id }}">Modifier</button>
+                                            <button class="btn btn-outline-danger btn-sm delete-annonce-btn" data-id="{{ annonce.id }}">Supprimer</button>
+                                        </div>
+                                    </div>
+                                </li>
+                                {% empty %}
+                                <li class="list-group-item text-muted">Aucune annonce pour ce cours.</li>
+                                {% endfor %}
+                            </ul>
+                        </div>
+                    </div>
                 </div>
-                <div class="card-body">
-                    <ul class="list-group" id="annonce-list">
-                        {% for annonce in annonces %}
-                        <li class="list-group-item d-flex justify-content-between align-items-center" id="annonce-item-{{ annonce.id }}">
-                            <div>
-                                <h5>{{ annonce.titre }}</h5>
-                                <p>{{ annonce.contenu|linebreaksbr }}</p>
-                                <small>Publié le: {{ annonce.cree_le|date:"d/m/Y H:i" }}</small>
+
+                <!-- Evaluations Tab -->
+                <div class="tab-pane fade" id="evaluations" role="tabpanel" aria-labelledby="evaluations-tab">
+                    <div class="card shadow-sm border-0">
+                        <div class="card-header bg-white border-bottom py-3 d-flex justify-content-between align-items-center">
+                            <h5 class="mb-0">Évaluations</h5>
+                            <button id="addEvaluationBtn" class="btn btn-primary btn-sm">Ajouter</button>
+                        </div>
+                        <div class="card-body">
+                            <ul class="list-group list-group-flush" id="evaluation-list">
+                                {% for activite in activites %}
+                                <li class="list-group-item border-0 py-3" id="evaluation-item-{{ activite.id }}">
+                                    <h6 class="mb-1">{{ activite.title }} <span class="badge bg-info">{{ activite.get_activity_type_display }}</span></h6>
+                                    <p class="text-muted mb-1">{{ activite.description }}</p>
+                                    <small class="text-muted">Date limite: {{ activite.due_date|date:"d/m/Y H:i" }}</small>
+                                    <div class="mt-2 d-flex gap-2">
+                                        {% if activite.activity_type == 'QUIZ' %}
+                                            <button class="btn btn-outline-info btn-sm manage-questions-btn" data-id="{{ activite.id }}">Gérer les questions</button>
+                                        {% elif activite.activity_type == 'DEVOIR' %}
+                                            <button class="btn btn-outline-warning btn-sm grade-assignment-btn" data-id="{{ activite.id }}">Noter les devoirs</button>
+                                        {% elif activite.activity_type == 'SONDAGE' %}
+                                            <button class="btn btn-outline-info btn-sm manage-sondage-questions-btn" data-id="{{ activite.id }}">Gérer les questions</button>
+                                            <a href="{% url 'evaluations:sondage_results' activite.id %}" class="btn btn-outline-success btn-sm">Voir les résultats</a>
+                                        {% endif %}
+                                        <button class="btn btn-outline-secondary btn-sm edit-evaluation-btn" data-id="{{ activite.id }}">Modifier</button>
+                                        <button class="btn btn-outline-danger btn-sm delete-evaluation-btn" data-id="{{ activite.id }}">Supprimer</button>
+                                    </div>
+                                </li>
+                                {% empty %}
+                                <li class="list-group-item text-muted">Aucune évaluation pour ce cours.</li>
+                                {% endfor %}
+                            </ul>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Students Tab -->
+                <div class="tab-pane fade" id="students" role="tabpanel" aria-labelledby="students-tab">
+                    <div class="card shadow-sm border-0">
+                        <div class="card-header bg-white border-bottom py-3 d-flex justify-content-between align-items-center">
+                            <h5 class="mb-0">Étudiants inscrits</h5>
+                            <div class="d-flex gap-2">
+                                <button id="enrollStudentBtn" class="btn btn-primary btn-sm">Inscrire</button>
+                                <a href="{% url 'administration:course_progress' course.id %}" class="btn btn-info btn-sm">Progression</a>
                             </div>
-                            <div>
-                                <button class="btn btn-sm btn-outline-secondary edit-annonce-btn" data-id="{{ annonce.id }}">Modifier</button>
-                                <button class="btn btn-sm btn-outline-danger delete-annonce-btn" data-id="{{ annonce.id }}">Supprimer</button>
-                            </div>
-                        </li>
-                        {% empty %}
-                        <li class="list-group-item">Aucune annonce pour ce cours pour le moment.</li>
-                        {% endfor %}
-                    </ul>
+                        </div>
+                        <div class="card-body">
+                            <table class="table table-hover">
+                                <thead>
+                                    <tr>
+                                        <th>Nom</th>
+                                        <th>Actions</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="student-table-body">
+                                    {% for student in enrolled_students %}
+                                    <tr id="student-row-{{ student.id }}">
+                                        <td>{{ student.last_name }} {{ student.first_name }}</td>
+                                        <td>
+                                            <a href="{% url 'messaging:new_conversation' student.id %}" class="btn btn-outline-primary btn-sm me-1">Contacter</a>
+                                            <button class="btn btn-outline-danger btn-sm remove-student-btn" data-id="{{ student.id }}">Retirer</button>
+                                        </td>
+                                    </tr>
+                                    {% empty %}
+                                    <tr id="no-student-row">
+                                        <td colspan="2" class="text-muted">Aucun étudiant inscrit.</td>
+                                    </tr>
+                                    {% endfor %}
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Forum Tab -->
+                <div class="tab-pane fade" id="forum" role="tabpanel" aria-labelledby="forum-tab">
+                    <div class="card shadow-sm border-0">
+                        <div class="card-header bg-white border-bottom py-3">
+                            <h5 class="mb-0">Forum</h5>
+                        </div>
+                        <div class="card-body">
+                            <p class="text-muted mb-3">Accéder à l'espace de discussion du cours.</p>
+                            <a href="{% url 'forums:forum_cours' course.id %}" class="btn btn-primary btn-sm">Accéder au Forum</a>
+                        </div>
+                    </div>
                 </div>
             </div>
         </div>
 
+        <!-- Sidebar -->
         <div class="col-lg-4">
-            <div class="card mb-4">
-                <div class="card-header">Informations</div>
-                <div class="card-body">
-                    <p><strong>Enseignant :</strong> {{ course.teacher.first_name }} {{ course.teacher.last_name }}</p>
-                    <p><strong>Date de Création :</strong> {{ course.created_at|date:"d/m/Y H:i" }}</p>
-                    <p><strong>Dernière mise à jour :</strong> {{ course.updated_at|date:"d/m/Y H:i" }}</p>
-                    <p><strong>Lien de la visioconférence :</strong> {{ course.visio_link|default:"Non défini" }}</p>
-                    <p><strong>Date et heure de la visioconférence :</strong> {{ course.visio_date|date:"d/m/Y H:i"|default:"Non défini" }}</p>
-                </div>
-            </div>
-
-            <div class="card mb-4">
-                <div class="card-header d-flex justify-content-between align-items-center">
-                    <h5 class="mb-0">Évaluations</h5>
-                    <button id="addEvaluationBtn" class="btn btn-primary">Ajouter</button>
+            <div class="card shadow-sm border-0">
+                <div class="card-header bg-white border-bottom py-3">
+                    <h5 class="mb-0">Informations</h5>
                 </div>
                 <div class="card-body">
-                    <ul class="list-group" id="evaluation-list">
-                        {% for activite in activites %}
-                        <li class="list-group-item" id="evaluation-item-{{ activite.id }}">
-                            <h5>{{ activite.title }} <span class="badge bg-info">{{ activite.get_activity_type_display }}</span></h5>
-                            <p>{{ activite.description }}</p>
-                            <small>Date limite: {{ activite.due_date|date:"d/m/Y H:i" }}</small>
-                            <div class="mt-2">
-                                {% if activite.activity_type == 'QUIZ' %}
-                                    <button class="btn btn-sm btn-outline-info manage-questions-btn" data-id="{{ activite.id }}">Gérer les questions</button>
-                                {% elif activite.activity_type == 'DEVOIR' %}
-                                    <button class="btn btn-sm btn-outline-warning grade-assignment-btn" data-id="{{ activite.id }}">Noter les devoirs</button>
-                                {% elif activite.activity_type == 'SONDAGE' %}
-                                    <button class="btn btn-sm btn-outline-info manage-sondage-questions-btn" data-id="{{ activite.id }}">Gérer les questions</button>
-                                    <a href="{% url 'evaluations:sondage_results' activite.id %}" class="btn btn-sm btn-outline-success">Voir les résultats</a>
-                                {% endif %}
-                                <button class="btn btn-sm btn-outline-secondary edit-evaluation-btn" data-id="{{ activite.id }}">Modifier</button>
-                                <button class="btn btn-sm btn-outline-danger delete-evaluation-btn" data-id="{{ activite.id }}">Supprimer</button>
-                            </div>
-                        </li>
-                        {% empty %}
-                        <li class="list-group-item">Aucune évaluation pour ce cours.</li>
-                        {% endfor %}
-                    </ul>
-                </div>
-            </div>
-
-            <div class="card mb-4">
-                <div class="card-header d-flex justify-content-between align-items-center">
-                    <h5 class="mb-0">Étudiants inscrits</h5>
-                    <div>
-                        <button id="enrollStudentBtn" class="btn btn-primary">Inscrire</button>
-                        <a href="{% url 'administration:course_progress' course.id %}" class="btn btn-info">Progression</a>
-                    </div>
-                </div>
-                <div class="card-body">
-                    <table class="table table-striped">
-                        <thead>
-                            <tr>
-                                <th>Nom</th>
-                                <th>Actions</th>
-                            </tr>
-                        </thead>
-                        <tbody id="student-table-body">
-                            {% for student in enrolled_students %}
-                            <tr id="student-row-{{ student.id }}">
-                                <td>{{ student.last_name }} {{ student.first_name }}</td>
-                                <td>
-                                    <a href="{% url 'messaging:new_conversation' student.id %}" class="btn btn-sm btn-outline-primary">Contacter</a>
-                                    <button class="btn btn-sm btn-outline-danger remove-student-btn" data-id="{{ student.id }}">Retirer</button>
-                                </td>
-                            </tr>
-                            {% empty %}
-                            <tr id="no-student-row">
-                                <td colspan="2">Aucun étudiant inscrit.</td>
-                            </tr>
-                            {% endfor %}
-                        </tbody>
-                    </table>
-                </div>
-            </div>
-
-            <div class="card">
-                <div class="card-header">Forum</div>
-                <div class="card-body">
-                    <p>Accéder à l'espace de discussion.</p>
-                    <a href="{% url 'forums:forum_cours' course.id %}" class="btn btn-primary">Accéder au Forum</a>
+                    <p class="mb-2"><strong>Enseignant:</strong> {{ course.teacher.first_name }} {{ course.teacher.last_name }}</p>
+                    <p class="mb-2"><strong>Création:</strong> {{ course.created_at|date:"d/m/Y H:i" }}</p>
+                    <p class="mb-2"><strong>Mise à jour:</strong> {{ course.updated_at|date:"d/m/Y H:i" }}</p>
+                    <p class="mb-2"><strong>Visioconférence:</strong> {{ course.visio_link|default:"Non défini" }}</p>
+                    <p class="mb-0"><strong>Date visio:</strong> {{ course.visio_date|date:"d/m/Y H:i"|default:"Non défini" }}</p>
                 </div>
             </div>
         </div>
     </div>
 
-    <!-- All Modals from the original file should be here -->
+    <!-- Modals -->
     {% include "administration/course_detail_modals.html" %}
 </div>
+
+<style>
+    .card {
+        border-radius: 0.5rem;
+    }
+    .nav-tabs .nav-link {
+        border-radius: 0.5rem 0.5rem 0 0;
+    }
+    .nav-tabs .nav-link.active {
+        background-color: #007bff;
+        color: white;
+    }
+    .list-group-item {
+        transition: background-color 0.2s;
+    }
+    .list-group-item:hover {
+        background-color: #f8f9fa;
+    }
+    .btn-sm {
+        padding: 0.25rem 0.5rem;
+    }
+    .table-hover tbody tr:hover {
+        background-color: #f1f3f5;
+    }
+</style>
+
+<!-- Bootstrap JS for tabs functionality -->
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
 {% endblock %}
 
 {% block extra_js %}
