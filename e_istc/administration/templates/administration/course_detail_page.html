@@ -133,29 +133,69 @@
                             <button id="addEvaluationBtn" class="btn btn-primary btn-sm" aria-label="Ajouter une évaluation"><i class="bi bi-plus-circle"></i></button>
                         </div>
                         <div class="card-body">
-                            <ul class="list-group list-group-flush" id="evaluation-list">
+                            <!-- Devoirs Section -->
+                            <h6 class="mb-3 text-primary"><i class="bi bi-file-earmark-text me-2"></i>Devoirs</h6>
+                            <div class="list-group mb-4">
                                 {% for activite in activites %}
-                                <li class="list-group-item border-0 py-3" id="evaluation-item-{{ activite.id }}">
-                                    <h6 class="mb-1">{{ activite.title }} <span class="badge bg-info">{{ activite.get_activity_type_display }}</span></h6>
-                                    <p class="text-muted mb-1">{{ activite.description }}</p>
-                                    <small class="text-muted">Date limite: {{ activite.due_date|date:"d/m/Y H:i" }}</small>
-                                    <div class="mt-2 d-flex gap-2">
-                                        {% if activite.activity_type == 'QUIZ' %}
-                                            <button class="btn btn-outline-info btn-sm manage-questions-btn" data-id="{{ activite.id }}" aria-label="Gérer les questions"><i class="bi bi-question-circle"></i></button>
-                                        {% elif activite.activity_type == 'DEVOIR' %}
-                                            <button class="btn btn-outline-warning btn-sm grade-assignment-btn" data-id="{{ activite.id }}" aria-label="Noter les devoirs"><i class="bi bi-pencil-square"></i></button>
-                                        {% elif activite.activity_type == 'SONDAGE' %}
-                                            <button class="btn btn-outline-info btn-sm manage-sondage-questions-btn" data-id="{{ activite.id }}" aria-label="Gérer les questions du sondage"><i class="bi bi-question-circle"></i></button>
-                                            <a href="{% url 'evaluations:sondage_results' activite.id %}" class="btn btn-outline-success btn-sm" aria-label="Voir les résultats"><i class="bi bi-bar-chart"></i></a>
-                                        {% endif %}
-                                        <button class="btn btn-outline-secondary btn-sm edit-evaluation-btn" data-id="{{ activite.id }}" aria-label="Modifier l'évaluation"><i class="bi bi-pencil"></i></button>
-                                        <button class="btn btn-outline-danger btn-sm delete-evaluation-btn" data-id="{{ activite.id }}" aria-label="Supprimer l'évaluation"><i class="bi bi-trash"></i></button>
-                                    </div>
-                                </li>
+                                    {% if activite.activity_type == 'DEVOIR' %}
+                                        <li class="list-group-item border-0 py-3" id="evaluation-item-{{ activite.id }}">
+                                            <h6 class="mb-1">{{ activite.title }}</h6>
+                                            <p class="text-muted mb-1">{{ activite.description }}</p>
+                                            <small class="text-muted">Date limite: {{ activite.due_date|date:"d/m/Y H:i" }}</small>
+                                            <div class="mt-2 d-flex gap-2">
+                                                <button class="btn btn-outline-warning btn-sm grade-assignment-btn" data-id="{{ activite.id }}" aria-label="Noter les devoirs"><i class="bi bi-pencil-square"></i></button>
+                                                <button class="btn btn-outline-secondary btn-sm edit-evaluation-btn" data-id="{{ activite.id }}" aria-label="Modifier l'évaluation"><i class="bi bi-pencil"></i></button>
+                                                <button class="btn btn-outline-danger btn-sm delete-evaluation-btn" data-id="{{ activite.id }}" aria-label="Supprimer l'évaluation"><i class="bi bi-trash"></i></button>
+                                            </div>
+                                        </li>
+                                    {% endif %}
                                 {% empty %}
-                                <li class="list-group-item text-muted">Aucune évaluation pour ce cours.</li>
+                                    <p class="list-group-item text-muted">Aucun devoir pour ce cours.</p>
                                 {% endfor %}
-                            </ul>
+                            </div>
+
+                            <!-- Quiz Section -->
+                            <h6 class="mb-3 text-primary"><i class="bi bi-patch-question me-2"></i>Quiz</h6>
+                            <div class="list-group mb-4">
+                                {% for activite in activites %}
+                                    {% if activite.activity_type == 'QUIZ' %}
+                                        <li class="list-group-item border-0 py-3" id="evaluation-item-{{ activite.id }}">
+                                            <h6 class="mb-1">{{ activite.title }}</h6>
+                                            <p class="text-muted mb-1">{{ activite.description }}</p>
+                                            <small class="text-muted">Date limite: {{ activite.due_date|date:"d/m/Y H:i" }}</small>
+                                            <div class="mt-2 d-flex gap-2">
+                                                <button class="btn btn-outline-info btn-sm manage-questions-btn" data-id="{{ activite.id }}" aria-label="Gérer les questions"><i class="bi bi-question-circle"></i></button>
+                                                <button class="btn btn-outline-secondary btn-sm edit-evaluation-btn" data-id="{{ activite.id }}" aria-label="Modifier l'évaluation"><i class="bi bi-pencil"></i></button>
+                                                <button class="btn btn-outline-danger btn-sm delete-evaluation-btn" data-id="{{ activite.id }}" aria-label="Supprimer l'évaluation"><i class="bi bi-trash"></i></button>
+                                            </div>
+                                        </li>
+                                    {% endif %}
+                                {% empty %}
+                                    <p class="list-group-item text-muted">Aucun quiz pour ce cours.</p>
+                                {% endfor %}
+                            </div>
+
+                            <!-- Sondages Section -->
+                            <h6 class="mb-3 text-primary"><i class="bi bi-bar-chart-steps me-2"></i>Sondages</h6>
+                            <div class="list-group">
+                                {% for activite in activites %}
+                                    {% if activite.activity_type == 'SONDAGE' %}
+                                        <li class="list-group-item border-0 py-3" id="evaluation-item-{{ activite.id }}">
+                                            <h6 class="mb-1">{{ activite.title }}</h6>
+                                            <p class="text-muted mb-1">{{ activite.description }}</p>
+                                            <small class="text-muted">Date limite: {{ activite.due_date|date:"d/m/Y H:i" }}</small>
+                                            <div class="mt-2 d-flex gap-2">
+                                                <button class="btn btn-outline-info btn-sm manage-sondage-questions-btn" data-id="{{ activite.id }}" aria-label="Gérer les questions du sondage"><i class="bi bi-question-circle"></i></button>
+                                                <a href="{% url 'evaluations:sondage_results' activite.id %}" class="btn btn-outline-success btn-sm" aria-label="Voir les résultats"><i class="bi bi-bar-chart"></i></a>
+                                                <button class="btn btn-outline-secondary btn-sm edit-evaluation-btn" data-id="{{ activite.id }}" aria-label="Modifier l'évaluation"><i class="bi bi-pencil"></i></button>
+                                                <button class="btn btn-outline-danger btn-sm delete-evaluation-btn" data-id="{{ activite.id }}" aria-label="Supprimer l'évaluation"><i class="bi bi-trash"></i></button>
+                                            </div>
+                                        </li>
+                                    {% endif %}
+                                {% empty %}
+                                    <p class="list-group-item text-muted">Aucun sondage pour ce cours.</p>
+                                {% endfor %}
+                            </div>
                         </div>
                     </div>
                 </div>

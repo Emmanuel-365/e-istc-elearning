@@ -3,39 +3,48 @@
 {% block title %}Cours: {{ course.title }}{% endblock %}
 
 {% block content %}
-<div class="container-fluid">
-    <nav aria-label="breadcrumb">
-        <ol class="breadcrumb">
+<div class="container-fluid py-4">
+    <!-- Breadcrumb -->
+    <nav aria-label="breadcrumb" class="mb-4">
+        <ol class="breadcrumb bg-light p-3 rounded">
             <li class="breadcrumb-item"><a href="{% url 'users:etudiant_dashboard' %}">Mon Tableau de Bord</a></li>
             <li class="breadcrumb-item active" aria-current="page">{{ course.title }}</li>
         </ol>
     </nav>
 
-    <div class="row">
-        <div class="col-lg-8">
-            <div class="card mb-4">
-                {% if course.image %}
-                    <img src="{{ course.image.url }}" alt="Image du cours" class="card-img-top">
-                {% endif %}
-                <div class="card-body">
-                    <h2 class="card-title">{{ course.title }}</h2>
-                    <p class="card-text">{{ course.description }}</p>
+    <!-- Course Header -->
+    <div class="card shadow-sm mb-4 border-0">
+        <div class="card-body">
+            <div class="row align-items-center">
+                <div class="col-md-auto">
+                    {% if course.image %}
+                        <img src="{{ course.image.url }}" alt="Image du cours" class="rounded-circle me-3" style="width: 100px; height: 100px; object-fit: cover;">
+                    {% endif %}
+                </div>
+                <div class="col">
+                    <h2 class="card-title mb-1">{{ course.title }}</h2>
+                    <p class="card-text text-muted">{{ course.description }}</p>
                 </div>
             </div>
+        </div>
+    </div>
 
+    <div class="row">
+        <!-- Main Content Area -->
+        <div class="col-lg-8">
             <!-- Tabs Navigation -->
-            <ul class="nav nav-tabs mb-4" id="courseTabs" role="tablist">
+            <ul class="nav nav-pills nav-fill mb-4" id="courseTabs" role="tablist">
                 <li class="nav-item" role="presentation">
-                    <button class="nav-link active" id="modules-tab" data-bs-toggle="tab" data-bs-target="#modules" type="button" role="tab" aria-controls="modules" aria-selected="true">Modules</button>
+                    <button class="nav-link active" id="modules-tab" data-bs-toggle="tab" data-bs-target="#modules" type="button" role="tab" aria-controls="modules" aria-selected="true"><i class="bi bi-book me-2"></i>Modules</button>
                 </li>
                 <li class="nav-item" role="presentation">
-                    <button class="nav-link" id="annonces-tab" data-bs-toggle="tab" data-bs-target="#annonces" type="button" role="tab" aria-controls="annonces" aria-selected="false">Annonces</button>
+                    <button class="nav-link" id="annonces-tab" data-bs-toggle="tab" data-bs-target="#annonces" type="button" role="tab" aria-controls="annonces" aria-selected="false"><i class="bi bi-megaphone me-2"></i>Annonces</button>
                 </li>
                 <li class="nav-item" role="presentation">
-                    <button class="nav-link" id="evaluations-tab" data-bs-toggle="tab" data-bs-target="#evaluations" type="button" role="tab" aria-controls="evaluations" aria-selected="false">Évaluations</button>
+                    <button class="nav-link" id="evaluations-tab" data-bs-toggle="tab" data-bs-target="#evaluations" type="button" role="tab" aria-controls="evaluations" aria-selected="false"><i class="bi bi-journal-check me-2"></i>Évaluations</button>
                 </li>
                 <li class="nav-item" role="presentation">
-                    <button class="nav-link" id="forum-tab" data-bs-toggle="tab" data-bs-target="#forum" type="button" role="tab" aria-controls="forum" aria-selected="false">Forum</button>
+                    <button class="nav-link" id="forum-tab" data-bs-toggle="tab" data-bs-target="#forum" type="button" role="tab" aria-controls="forum" aria-selected="false"><i class="bi bi-chat-left-text me-2"></i>Forum</button>
                 </li>
             </ul>
 
@@ -48,15 +57,15 @@
                             <h5 class="mb-0">Contenu du Cours</h5>
                         </div>
                         <div class="card-body">
-                            <div class="accordion" id="modulesAccordion">
+                            <div class="accordion accordion-flush" id="modulesAccordion">
                                 {% for module in course.modules.all %}
                                 <div class="accordion-item">
                                     <h2 class="accordion-header" id="module-heading-{{ module.id }}">
-                                        <button class="accordion-button" type="button" data-bs-toggle="collapse" data-bs-target="#module-collapse-{{ module.id }}" aria-expanded="true" aria-controls="module-collapse-{{ module.id }}">
+                                        <button class="accordion-button {% if forloop.first %} {% else %}collapsed{% endif %}" type="button" data-bs-toggle="collapse" data-bs-target="#module-collapse-{{ module.id }}" aria-expanded="{% if forloop.first %}true{% else %}false{% endif %}" aria-controls="module-collapse-{{ module.id }}">
                                             {{ module.title }}
                                         </button>
                                     </h2>
-                                    <div id="module-collapse-{{ module.id }}" class="accordion-collapse collapse show" aria-labelledby="module-heading-{{ module.id }}">
+                                    <div id="module-collapse-{{ module.id }}" class="accordion-collapse collapse {% if forloop.first %}show{% endif %}" aria-labelledby="module-heading-{{ module.id }}" data-bs-parent="#modulesAccordion">
                                         <div class="accordion-body">
                                             <p>{{ module.description }}</p>
                                             <ul class="list-group list-group-flush">
@@ -68,22 +77,22 @@
                                                     </div>
                                                     <div>
                                                         {% if ressource.file %}
-                                                            <a href="{{ ressource.file.url }}" target="_blank" class="btn btn-sm btn-info" aria-label="Voir Fichier"><i class="bi bi-file-earmark"></i></a>
+                                                            <a href="{{ ressource.file.url }}" target="_blank" class="btn btn-sm btn-outline-info" aria-label="Voir Fichier"><i class="bi bi-file-earmark"></i></a>
                                                         {% endif %}
                                                         {% if ressource.url %}
-                                                            <a href="{{ ressource.url }}" target="_blank" class="btn btn-sm btn-info" aria-label="Voir URL"><i class="bi bi-link-45deg"></i></a>
+                                                            <a href="{{ ressource.url }}" target="_blank" class="btn btn-sm btn-outline-info" aria-label="Voir URL"><i class="bi bi-link-45deg"></i></a>
                                                         {% endif %}
                                                     </div>
                                                 </li>
                                                 {% empty %}
-                                                <li class="list-group-item">Aucune ressource pour ce module.</li>
+                                                <li class="list-group-item text-muted">Aucune ressource pour ce module.</li>
                                                 {% endfor %}
                                             </ul>
                                         </div>
                                     </div>
                                 </div>
                                 {% empty %}
-                                <p>Aucun module pour ce cours pour le moment.</p>
+                                <p class="text-muted">Aucun module pour ce cours pour le moment.</p>
                                 {% endfor %}
                             </div>
                         </div>
@@ -98,9 +107,15 @@
                         </div>
                         <div class="card-body">
                             {% for annonce in annonces %}
-                                <div class="alert alert-info">{{ annonce.contenu|linebreaksbr }}</div>
+                                <div class="alert alert-info alert-dismissible fade show" role="alert">
+                                    <h6 class="alert-heading">{{ annonce.titre }}</h6>
+                                    <p class="mb-0">{{ annonce.contenu|linebreaksbr }}</p>
+                                    <hr>
+                                    <small class="text-muted">Publié le: {{ annonce.cree_le|date:"d/m/Y H:i" }}</small>
+                                    <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+                                </div>
                             {% empty %}
-                                <p>Aucune annonce.</p>
+                                <p class="text-muted">Aucune annonce.</p>
                             {% endfor %}
                         </div>
                     </div>
@@ -113,30 +128,74 @@
                             <h5 class="mb-0">Évaluations</h5>
                         </div>
                         <div class="card-body">
-                            <div class="list-group list-group-flush">
+                            <!-- Devoirs Section -->
+                            <h6 class="mb-3 text-primary"><i class="bi bi-file-earmark-text me-2"></i>Devoirs</h6>
+                            <div class="list-group mb-4">
                                 {% for activite in activites %}
-                                    <div class="list-group-item">
-                                        <h5 class="mb-1">{{ activite.title }}</h5>
-                                        <small>Date limite : {{ activite.due_date|date:"d/m/Y H:i" }}</small>
-                                        <p class="mb-1">{{ activite.description }}</p>
-                                        {% if activite.activity_type == 'DEVOIR' %}
-                                            {% if activite.id in submitted_activities_ids %}
-                                                <button class="btn btn-secondary btn-sm" disabled>Déjà soumis</button>
-                                            {% else %}
-                                                <a href="{% url 'users:submit_assignment' activite.id %}" class="btn btn-primary btn-sm" aria-label="Soumettre le devoir"><i class="bi bi-upload"></i> Soumettre</a>
-                                            {% endif %}
-                                        {% elif activite.activity_type == 'QUIZ' %}
-                                            <a href="{% url 'users:take_quiz' activite.id %}" class="btn btn-success btn-sm" aria-label="Commencer le quiz"><i class="bi bi-play-circle"></i> Commencer</a>
-                                        {% elif activite.activity_type == 'SONDAGE' %}
-                                            {% if activite.id in submitted_sondages_ids %}
-                                                <button class="btn btn-secondary btn-sm" disabled>Déjà répondu</button>
-                                            {% else %}
-                                                <a href="{% url 'users:take_sondage' activite.id %}" class="btn btn-primary btn-sm" aria-label="Participer au sondage"><i class="bi bi-check-circle"></i> Participer</a>
-                                            {% endif %}
-                                        {% endif %}
-                                    </div>
+                                    {% if activite.activity_type == 'DEVOIR' %}
+                                        <div class="list-group-item d-flex justify-content-between align-items-center">
+                                            <div>
+                                                <h5 class="mb-1">{{ activite.title }}</h5>
+                                                <small class="text-muted">Date limite : {{ activite.due_date|date:"d/m/Y H:i" }}</small>
+                                                <p class="mb-1">{{ activite.description }}</p>
+                                            </div>
+                                            <div class="text-end">
+                                                {% if activite.id in submitted_activities_ids %}
+                                                    <button class="btn btn-secondary btn-sm" disabled><i class="bi bi-check-circle me-1"></i>Déjà soumis</button>
+                                                {% else %}
+                                                    <a href="{% url 'users:submit_assignment' activite.id %}" class="btn btn-primary btn-sm" aria-label="Soumettre le devoir"><i class="bi bi-upload me-1"></i> Soumettre</a>
+                                                {% endif %}
+                                            </div>
+                                        </div>
+                                    {% endif %}
                                 {% empty %}
-                                    <p class="p-3">Aucune évaluation.</p>
+                                    <p class="p-3 text-muted">Aucun devoir disponible.</p>
+                                {% endfor %}
+                            </div>
+
+                            <!-- Quiz Section -->
+                            <h6 class="mb-3 text-primary"><i class="bi bi-patch-question me-2"></i>Quiz</h6>
+                            <div class="list-group mb-4">
+                                {% for activite in activites %}
+                                    {% if activite.activity_type == 'QUIZ' %}
+                                        <div class="list-group-item d-flex justify-content-between align-items-center">
+                                            <div>
+                                                <h5 class="mb-1">{{ activite.title }}</h5>
+                                                <small class="text-muted">Date limite : {{ activite.due_date|date:"d/m/Y H:i" }}</small>
+                                                <p class="mb-1">{{ activite.description }}</p>
+                                            </div>
+                                            <div class="text-end">
+                                                <a href="{% url 'users:take_quiz' activite.id %}" class="btn btn-success btn-sm" aria-label="Commencer le quiz"><i class="bi bi-play-circle me-1"></i> Commencer</a>
+                                            </div>
+                                        </div>
+                                    {% endif %}
+                                {% empty %}
+                                    <p class="p-3 text-muted">Aucun quiz disponible.</p>
+                                {% endfor %}
+                            </div>
+
+                            <!-- Sondages Section -->
+                            <h6 class="mb-3 text-primary"><i class="bi bi-bar-chart-steps me-2"></i>Sondages</h6>
+                            <div class="list-group">
+                                {% for activite in activites %}
+                                    {% if activite.activity_type == 'SONDAGE' %}
+                                        <div class="list-group-item d-flex justify-content-between align-items-center">
+                                            <div>
+                                                <h5 class="mb-1">{{ activite.title }}</h5>
+                                                <small class="text-muted">Date limite : {{ activite.due_date|date:"d/m/Y H:i" }}</small>
+                                                <p class="mb-1">{{ activite.description }}</p>
+                                            </div>
+                                            <div class="text-end">
+                                                {% if activite.id in submitted_sondages_ids %}
+                                                    <button class="btn btn-secondary btn-sm" disabled><i class="bi bi-check-circle me-1"></i>Déjà répondu</button>
+                                                {% else %}
+                                                    <a href="{% url 'users:take_sondage' activite.id %}" class="btn btn-primary btn-sm" aria-label="Participer au sondage"><i class="bi bi-check-circle me-1"></i> Participer</a>
+                                                {% endif %}
+                                            </div>
+                                        </div>
+                                    {% endif %}
+                                {% empty %}
+                                    <p class="p-3 text-muted">Aucun sondage disponible.</p>
                                 {% endfor %}
                             </div>
                         </div>
@@ -150,29 +209,34 @@
                             <h5 class="mb-0">Forum</h5>
                         </div>
                         <div class="card-body">
-                            <p>Discutez avec vos camarades et l'enseignant.</p>
-                            <a href="{% url 'forums:forum_cours' course.id %}" class="btn btn-primary" aria-label="Accéder au forum"><i class="bi bi-chat-left-text"></i> Accéder au Forum</a>
+                            <p class="text-muted">Discutez avec vos camarades et l'enseignant.</p>
+                            <a href="{% url 'forums:forum_cours' course.id %}" class="btn btn-primary" aria-label="Accéder au forum"><i class="bi bi-chat-left-text me-2"></i> Accéder au Forum</a>
                         </div>
                     </div>
                 </div>
             </div>
         </div>
 
+        <!-- Sidebar -->
         <div class="col-lg-4">
-            <div class="card mb-4">
-                <div class="card-header">Informations</div>
+            <div class="card mb-4 shadow-sm border-0">
+                <div class="card-header bg-white border-bottom py-3">
+                    <h5 class="mb-0">Informations du Cours</h5>
+                </div>
                 <div class="card-body">
-                    <p><strong>Enseignant :</strong> {{ course.teacher.first_name }} {{ course.teacher.last_name }}</p>
-                    <a href="{% url 'messaging:new_conversation' course.teacher.id %}" class="btn btn-sm btn-outline-primary mb-3" aria-label="Contacter l'enseignant"><i class="bi bi-chat-dots"></i> Contacter l'enseignant</a>
+                    <p class="mb-2"><strong>Enseignant :</strong> {{ course.teacher.first_name }} {{ course.teacher.last_name }}</p>
+                    <a href="{% url 'messaging:new_conversation' course.teacher.id %}" class="btn btn-sm btn-outline-primary mb-3" aria-label="Contacter l'enseignant"><i class="bi bi-chat-dots me-1"></i> Contacter l'enseignant</a>
                     {% if course.visio_link %}
-                        <p><strong>Visioconférence :</strong> <a href="{{ course.visio_link }}" target="_blank">Rejoindre la session</a></p>
+                        <p class="mb-2"><strong>Visioconférence :</strong> <a href="{{ course.visio_link }}" target="_blank" class="text-decoration-none">Rejoindre la session <i class="bi bi-box-arrow-up-right"></i></a></p>
                     {% endif %}
                     {% if course.visio_date %}
-                        <p><strong>Date :</strong> {{ course.visio_date|date:"d/m/Y H:i" }}</p>
+                        <p class="mb-0"><strong>Date de la Visio :</strong> {{ course.visio_date|date:"d/m/Y H:i" }}</p>
                     {% endif %}
                 </div>
             </div>
         </div>
+    </div>
+</div>
 {% endblock %}
 
 {% block extra_js %}
