@@ -1,7 +1,7 @@
 from django.db.models.signals import post_save
 from django.dispatch import receiver
 from django.urls import reverse
-from courses.models import Annonce
+from courses.models import Annonce, Course
 from evaluations.models import Activite
 from messaging.models import Message
 from .models import Notification
@@ -35,4 +35,27 @@ def create_message_notification(sender, instance, created, **kwargs):
                     user=participant,
                     message=f"Nouveau message de {instance.sender.first_name} {instance.sender.last_name}",
                     link=reverse('messaging:conversation_detail', args=[instance.conversation.id])
+                )
+
+@receiver(post_save, sender=Course)
+def create_visio_notification(sender, instance, created, **kwargs):
+    if not created and (instance.visio_link or instance.visio_date):
+        # Check if visio_link or visio_date actually changed
+        try:
+            old_instance = sender.objects.get(pk=instance.pk)
+        except sender.DoesNotExist:
+            return # Object didn't exist before, so it's a new creation, not an update of visio info
+
+        if old_instance.visio_link != instance.visio_link or old_instance.visio_date != instance.visio_date:
+            message_text = f"Une visioconférence a été planifiée/mise à jour pour le cours {instance.title}."
+            if instance.visio_date:
+                message_text += f" Date: {instance.visio_date.strftime('%d/%m/%Y %H:%M')}."
+            if instance.visio_link:
+                message_text += f" Lien: {instance.visio_link}"
+
+            for student in instance.students.all():
+                Notification.objects.create(
+                    user=student,
+                    message=message_text,
+                    link=reverse('users:student_course_detail', args=[instance.id])
                 )
