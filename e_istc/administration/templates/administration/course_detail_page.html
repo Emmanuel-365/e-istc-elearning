@@ -7,7 +7,13 @@
     <!-- Breadcrumb -->
     <nav aria-label="breadcrumb" class="mb-4">
         <ol class="breadcrumb bg-light p-3 rounded">
-            <li class="breadcrumb-item"><a href="{% url 'administration:course_management' %}">Gestion des Cours</a></li>
+            <li class="breadcrumb-item">
+                {% if request.user.is_enseignant %}
+                    <a href="{% url 'users:enseignant_dashboard' %}">Mon Tableau de Bord</a>
+                {% else %}
+                    <a href="{% url 'administration:course_management' %}">Gestion des Cours</a>
+                {% endif %}
+            </li>
             <li class="breadcrumb-item active" aria-current="page">{{ course.title }}</li>
         </ol>
     </nav>
