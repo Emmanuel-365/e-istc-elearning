@@ -1016,10 +1016,10 @@ document.addEventListener('DOMContentLoaded', function () {
             })
             .then(response => response.json())
             .then(result => {
-                if (response.ok) {
-                    // Django messages will handle the success display
+                if (result.status === 'success') {
+                    showToast(result.message, 'success');
                 } else {
-                    // Django messages will handle the error display
+                    showToast(result.message, 'error');
                 }
             })
             .finally(() => {
@@ -1099,10 +1099,11 @@ document.addEventListener('DOMContentLoaded', function () {
                 })
                 .then(response => response.json())
                 .then(result => {
-                    if (response.ok) {
+                    if (result.status === 'success') {
                         loadSondageQuestions(document.getElementById('sondageActivityId').value);
+                        showToast(result.message, 'success');
                     } else {
-                        // Handle error
+                        showToast(result.message, 'error');
                     }
                 });
             }
@@ -1266,8 +1267,9 @@ document.addEventListener('DOMContentLoaded', function () {
             if (response.ok) {
                 enrollStudentModal.hide();
                 addStudentToTable(result.student);
+                showToast(result.message, 'success');
             } else {
-                // Django messages will handle the error display
+                showToast(result.message, 'error');
             }
         })
         .finally(() => {

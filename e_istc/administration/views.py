@@ -53,12 +53,11 @@ def create_user(request):
             'get_role_display': user.get_role_display(),
             'matricule': user.matricule,
             'specialite': user.specialite,
+            'is_locked': user.is_locked,
         }
-        messages.success(request, 'Utilisateur créé avec succès !')
-        return JsonResponse({'status': 'success', 'user': user_data})
+        return JsonResponse({'status': 'success', 'user': user_data, 'message': 'Utilisateur créé avec succès !'})
     else:
-        messages.error(request, 'Erreur lors de la création de l\'utilisateur.')
-        return JsonResponse({'status': 'error', 'errors': form.errors}, status=400)
+        return JsonResponse({'status': 'error', 'errors': form.errors, 'message': "Erreur lors de la création de l'utilisateur."}, status=400)
 
 @admin_required
 def user_detail(request, user_id):
@@ -97,14 +96,12 @@ def update_user(request, user_id):
                 'get_role_display': user.get_role_display(),
                 'matricule': user.matricule,
                 'specialite': user.specialite,
+                'is_locked': user.is_locked,
             }
-            messages.success(request, 'Utilisateur mis à jour avec succès !')
-            return JsonResponse({'status': 'success', 'user': user_data})
+            return JsonResponse({'status': 'success', 'user': user_data, 'message': 'Utilisateur mis à jour avec succès !'})
         else:
-            messages.error(request, 'Erreur lors de la mise à jour de l\'utilisateur.')
-            return JsonResponse({'status': 'error', 'errors': form.errors}, status=400)
+            return JsonResponse({'status': 'error', 'errors': form.errors, 'message': "Erreur lors de la mise à jour de l'utilisateur."}, status=400)
     except User.DoesNotExist:
-        messages.error(request, 'Utilisateur non trouvé.')
         return JsonResponse({'status': 'error', 'message': 'Utilisateur non trouvé'}, status=404)
 
 
@@ -114,10 +111,8 @@ def delete_user(request, user_id):
     try:
         user = User.objects.get(pk=user_id)
         user.delete()
-        messages.success(request, 'Utilisateur supprimé avec succès !')
-        return JsonResponse({'status': 'success'})
+        return JsonResponse({'status': 'success', 'message': 'Utilisateur supprimé avec succès !'})
     except User.DoesNotExist:
-        messages.error(request, 'Utilisateur non trouvé.')
         return JsonResponse({'status': 'error', 'message': 'Utilisateur non trouvé'}, status=404)
 
 # API pour les cours
@@ -202,8 +197,7 @@ def lock_user(request, user_id):
     user = get_object_or_404(User, pk=user_id)
     user.is_locked = True
     user.save()
-    messages.success(request, "L'utilisateur a été verrouillé.")
-    return JsonResponse({'status': 'success'})
+    return JsonResponse({'status': 'success', 'message': "L'utilisateur a été verrouillé."})
 
 @admin_required
 @require_POST
@@ -211,8 +205,7 @@ def unlock_user(request, user_id):
     user = get_object_or_404(User, pk=user_id)
     user.is_locked = False
     user.save()
-    messages.success(request, "L'utilisateur a été déverrouillé.")
-    return JsonResponse({'status': 'success'})
+    return JsonResponse({'status': 'success', 'message': "L'utilisateur a été déverrouillé."})
 
 @admin_required
 def course_progress_view(request, course_id):
@@ -338,8 +331,6 @@ def delete_category(request, category_id):
     try:
         category = Category.objects.get(pk=category_id)
         category.delete()
-        messages.success(request, 'Catégorie supprimée avec succès !')
-        return JsonResponse({'status': 'success'})
+        return JsonResponse({'status': 'success', 'message': 'Catégorie supprimée avec succès !'})
     except Category.DoesNotExist:
-        messages.error(request, 'Catégorie non trouvée.')
-        return JsonResponse({'status': 'error', 'message': 'Catégorie non trouvée'}, status=404)
+        return JsonResponse({'status': 'error', 'message': 'Catégorie non trouvée.'}, status=404)

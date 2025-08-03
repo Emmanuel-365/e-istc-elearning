@@ -263,17 +263,15 @@ def enroll_student(request, course_id, student_id):
         course = Course.objects.get(pk=course_id)
         student = User.objects.get(pk=student_id, role=User.Role.ETUDIANT)
         course.students.add(student)
-        messages.success(request, 'Étudiant inscrit avec succès !')
-        return JsonResponse({'student': {
+        return JsonResponse({'status': 'success', 'student': {
             'id': student.id,
             'first_name': student.first_name,
             'last_name': student.last_name,
             'email': student.email,
             'matricule': student.matricule
-        }})
+        }, 'message': 'Étudiant inscrit avec succès !'})
     except (Course.DoesNotExist, User.DoesNotExist):
-        messages.error(request, 'Cours ou étudiant non trouvé.')
-        return JsonResponse({'message': 'Cours ou étudiant non trouvé.'}, status=404)
+        return JsonResponse({'status': 'error', 'message': 'Cours ou étudiant non trouvé.'}, status=404)
 
 @require_POST
 @login_required

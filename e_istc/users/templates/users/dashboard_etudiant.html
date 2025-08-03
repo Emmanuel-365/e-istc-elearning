@@ -134,8 +134,10 @@ document.addEventListener('DOMContentLoaded', function () {
                     </button>
                 `;
             }
+            showToast(result.message, 'success');
         })
         .catch(error => {
+            showToast(error.message || 'Une erreur est survenue.', 'error');
             console.error('Error:', error);
         })
         .finally(() => {

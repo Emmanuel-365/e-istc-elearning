@@ -255,7 +255,9 @@ document.addEventListener('DOMContentLoaded', function () {
             if (result.status === 'success') {
                 document.getElementById(`course-card-${currentCourseId}`).remove();
                 deleteModal.hide();
+                showToast(result.message, 'success');
             } else {
+                showToast(result.message, 'error');
             }
         })
         .finally(() => {

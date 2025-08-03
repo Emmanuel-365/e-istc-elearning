@@ -22,7 +22,7 @@ urlpatterns = [
     path('api/courses/create/', views.create_course, name='api_create_course'),
     path('api/courses/<int:course_id>/', views.course_detail, name='api_course_detail'),
     path('api/courses/<int:course_id>/update/', views.update_course, name='api_update_course'),
-    path('cours/<int:course_id>/delete/', views.delete_course, name='api_delete_course'),
+    path('api/courses/<int:course_id>/delete/', views.delete_course, name='api_delete_course'),
     path('cours/<int:course_id>/progress/', views.course_progress_view, name='course_progress'),
 
     # API pour les catégories

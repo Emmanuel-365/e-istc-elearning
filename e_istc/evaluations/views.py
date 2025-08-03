@@ -259,8 +259,7 @@ def submit_sondage_response(request, question_id):
     
     # Check if student already responded to this question
     if ReponseSondage.objects.filter(question=question, etudiant=request.user).exists():
-        messages.error(request, 'Vous avez déjà répondu à cette question de sondage.')
-        return JsonResponse({'message': 'Already responded'}, status=400)
+        return JsonResponse({'status': 'error', 'message': 'Vous avez déjà répondu à cette question de sondage.'}, status=400)
 
     form = ReponseSondageForm(data)
     if form.is_valid():
@@ -268,11 +267,9 @@ def submit_sondage_response(request, question_id):
         response.question = question
         response.etudiant = request.user
         response.save()
-        messages.success(request, 'Réponse de sondage enregistrée avec succès !')
-        return JsonResponse({'status': 'success'})
+        return JsonResponse({'status': 'success', 'message': 'Réponse de sondage enregistrée avec succès !'})
     else:
-        messages.error(request, 'Erreur lors de l\'enregistrement de la réponse de sondage.')
-        return JsonResponse({'errors': form.errors}, status=400)
+        return JsonResponse({'status': 'error', 'errors': form.errors, 'message': "Erreur lors de l'enregistrement de la réponse de sondage."}, status=400)
 
 @activity_owner_or_admin_required
 def list_sondage_questions(request, activity_id):
@@ -286,5 +283,4 @@ def list_sondage_questions(request, activity_id):
 def delete_sondage_question(request, question_id):
     question = get_object_or_404(QuestionSondage, pk=question_id)
     question.delete()
-    messages.success(request, 'Question de sondage supprimée avec succès !')
-    return JsonResponse({'status': 'success'})
+    return JsonResponse({'status': 'success', 'message': 'Question de sondage supprimée avec succès !'})

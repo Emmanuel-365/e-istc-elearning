@@ -244,11 +244,15 @@ document.addEventListener('DOMContentLoaded', function () {
             }
             return response.json();
         })
-        .then(() => {
+        .then((result) => {
             document.getElementById(`course-card-${currentCourseId}`).remove();
             deleteModal.hide();
+            showToast(result.message, 'success');
         })
-        .catch(error => console.error('Error:', error))
+        .catch(error => {
+            showToast(error.message || 'Une erreur est survenue.', 'error');
+            console.error('Error:', error);
+        })
         .finally(() => {
             spinner.classList.add('d-none');
             this.disabled = false;

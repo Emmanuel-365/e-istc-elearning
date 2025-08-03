@@ -237,7 +237,9 @@ document.addEventListener('DOMContentLoaded', function () {
             if (result.status === 'success') {
                 document.getElementById(`category-row-${currentCategoryId}`).remove();
                 deleteModal.hide();
+                showToast(result.message, 'success');
             } else {
+                showToast(result.message, 'error');
             }
         })
         .finally(() => {

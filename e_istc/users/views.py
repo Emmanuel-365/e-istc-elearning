@@ -155,11 +155,9 @@ def delete_course_teacher(request, course_id):
     try:
         course = Course.objects.get(pk=course_id, teacher=request.user)
         course.delete()
-        messages.success(request, 'Cours supprimé avec succès !')
-        return JsonResponse({})
+        return JsonResponse({'status': 'success', 'message': 'Cours supprimé avec succès !'})
     except Course.DoesNotExist:
-        messages.error(request, 'Cours non trouvé ou vous n\'êtes pas l\'enseignant de ce cours.')
-        return JsonResponse({'message': 'Cours non trouvé ou vous n\'êtes pas l\'enseignant de ce cours.'}, status=404)
+        return JsonResponse({'status': 'error', 'message': 'Cours non trouvé ou vous n\'êtes pas l\'enseignant de ce cours.'}, status=404)
 
 
 @login_required
