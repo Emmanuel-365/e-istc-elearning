@@ -75,6 +75,15 @@
                         </select>
                     </div>
                     <div class="mb-3">
+                        <label for="category" class="form-label">Catégorie</label>
+                        <select class="form-select" id="category" name="category">
+                            <option value="">---------</option>
+                            {% for category in categories %}
+                                <option value="{{ category.id }}">{{ category.name }}</option>
+                            {% endfor %}
+                        </select>
+                    </div>
+                    <div class="mb-3">
                         <label for="image" class="form-label">Image d'illustration</label>
                         <input type="file" class="form-control" id="image" name="image">
                     </div>
@@ -197,6 +206,7 @@ document.addEventListener('DOMContentLoaded', function () {
                     document.getElementById('title').value = data.title;
                     document.getElementById('description').value = data.description;
                     document.getElementById('teacher').value = data.teacher_id;
+                    document.getElementById('category').value = data.category_id || '';
                     
                     courseModal.show();
                 });

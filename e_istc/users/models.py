@@ -22,6 +22,9 @@ class User(AbstractUser):
     photo = models.ImageField(upload_to='users/photos/', null=True, blank=True, verbose_name="Photo de profil")
     matricule = models.CharField(max_length=254, unique=True, null=True, blank=True)
     specialite = models.CharField(max_length=254, null=True, blank=True)
+    niveau_etude = models.CharField(max_length=100, null=True, blank=True, verbose_name="Niveau d'étude")
+    filiere = models.CharField(max_length=100, null=True, blank=True, verbose_name="Filière")
+    statut_enseignant = models.CharField(max_length=100, null=True, blank=True, verbose_name="Statut Enseignant")
     courses = models.ManyToManyField('courses.Course', related_name='students', blank=True)
     is_locked = models.BooleanField(default=False)
 

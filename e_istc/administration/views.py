@@ -10,7 +10,8 @@ from evaluations.models import Activite, Soumission, Tentative
 from .decorators import admin_required, course_owner_or_admin_required
 import json
 from django.contrib import messages
-from django.contrib.admin.models import LogEntry
+from django.contrib.admin.models import LogEntry, ADDITION, CHANGE, DELETION
+from django.contrib.contenttypes.models import ContentType
 
 @admin_required
 def user_management_page(request):
@@ -21,7 +22,8 @@ def user_management_page(request):
 def course_management_page(request):
     courses = Course.objects.all().order_by('-created_at')
     teachers = User.objects.filter(role=User.Role.ENSEIGNANT)
-    return render(request, 'administration/course_management.html', {'courses': courses, 'teachers': teachers})
+    categories = Category.objects.all().order_by('name')
+    return render(request, 'administration/course_management.html', {'courses': courses, 'teachers': teachers, 'categories': categories})
 
 @course_owner_or_admin_required
 def course_detail_page(request, course_id):
@@ -43,6 +45,15 @@ def create_user(request):
     form = CustomUserCreationForm(request.POST, request.FILES)
     if form.is_valid():
         user = form.save()
+        # Log the action
+        LogEntry.objects.log_action(
+            user_id=request.user.id,
+            content_type_id=ContentType.objects.get_for_model(user).pk,
+            object_id=user.pk,
+            object_repr=str(user),
+            action_flag=ADDITION,
+            change_message=f'Utilisateur {user.username} créé.'
+        )
         user_data = {
             'id': user.id,
             'username': user.username,
@@ -86,6 +97,15 @@ def update_user(request, user_id):
         form = CustomUserChangeForm(request.POST, request.FILES, instance=user)
         if form.is_valid():
             user = form.save()
+            # Log the action
+            LogEntry.objects.log_action(
+                user_id=request.user.id,
+                content_type_id=ContentType.objects.get_for_model(user).pk,
+                object_id=user.pk,
+                object_repr=str(user),
+                action_flag=CHANGE,
+                change_message=f'Utilisateur {user.username} mis à jour.'
+            )
             user_data = {
                 'id': user.id,
                 'username': user.username,
@@ -110,6 +130,15 @@ def update_user(request, user_id):
 def delete_user(request, user_id):
     try:
         user = User.objects.get(pk=user_id)
+        # Log the action before deletion
+        LogEntry.objects.log_action(
+            user_id=request.user.id,
+            content_type_id=ContentType.objects.get_for_model(user).pk,
+            object_id=user.pk,
+            object_repr=str(user),
+            action_flag=DELETION,
+            change_message=f'Utilisateur {user.username} supprimé.'
+        )
         user.delete()
         return JsonResponse({'status': 'success', 'message': 'Utilisateur supprimé avec succès !'})
     except User.DoesNotExist:
@@ -123,6 +152,15 @@ def create_course(request):
     form = CourseForm(request.POST, request.FILES)
     if form.is_valid():
         course = form.save()
+        # Log the action
+        LogEntry.objects.log_action(
+            user_id=request.user.id,
+            content_type_id=ContentType.objects.get_for_model(course).pk,
+            object_id=course.pk,
+            object_repr=str(course),
+            action_flag=ADDITION,
+            change_message=f'Cours {course.title} créé.'
+        )
         course_data = {
             'id': course.id,
             'title': course.title,
@@ -161,6 +199,15 @@ def update_course(request, course_id):
         form = CourseForm(request.POST, request.FILES, instance=course)
         if form.is_valid():
             course = form.save()
+            # Log the action
+            LogEntry.objects.log_action(
+                user_id=request.user.id,
+                content_type_id=ContentType.objects.get_for_model(course).pk,
+                object_id=course.pk,
+                object_repr=str(course),
+                action_flag=CHANGE,
+                change_message=f'Cours {course.title} mis à jour.'
+            )
             course_data = {
                 'id': course.id,
                 'title': course.title,
@@ -184,6 +231,15 @@ def update_course(request, course_id):
 def delete_course(request, course_id):
     try:
         course = Course.objects.get(pk=course_id)
+        # Log the action before deletion
+        LogEntry.objects.log_action(
+            user_id=request.user.id,
+            content_type_id=ContentType.objects.get_for_model(course).pk,
+            object_id=course.pk,
+            object_repr=str(course),
+            action_flag=DELETION,
+            change_message=f'Cours {course.title} supprimé.'
+        )
         course.delete()
         messages.success(request, 'Cours supprimé avec succès !')
         return JsonResponse({'status': 'success'})
@@ -197,6 +253,15 @@ def lock_user(request, user_id):
     user = get_object_or_404(User, pk=user_id)
     user.is_locked = True
     user.save()
+    # Log the action
+    LogEntry.objects.log_action(
+        user_id=request.user.id,
+        content_type_id=ContentType.objects.get_for_model(user).pk,
+        object_id=user.pk,
+        object_repr=str(user),
+        action_flag=CHANGE,
+        change_message=f'Utilisateur {user.username} verrouillé.'
+    )
     return JsonResponse({'status': 'success', 'message': "L'utilisateur a été verrouillé."})
 
 @admin_required
@@ -205,6 +270,15 @@ def unlock_user(request, user_id):
     user = get_object_or_404(User, pk=user_id)
     user.is_locked = False
     user.save()
+    # Log the action
+    LogEntry.objects.log_action(
+        user_id=request.user.id,
+        content_type_id=ContentType.objects.get_for_model(user).pk,
+        object_id=user.pk,
+        object_repr=str(user),
+        action_flag=CHANGE,
+        change_message=f'Utilisateur {user.username} déverrouillé.'
+    )
     return JsonResponse({'status': 'success', 'message': "L'utilisateur a été déverrouillé."})
 
 @admin_required
@@ -236,6 +310,15 @@ def create_category(request):
     form = CategoryForm(request.POST, request.FILES)
     if form.is_valid():
         category = form.save()
+        # Log the action
+        LogEntry.objects.log_action(
+            user_id=request.user.id,
+            content_type_id=ContentType.objects.get_for_model(category).pk,
+            object_id=category.pk,
+            object_repr=str(category),
+            action_flag=ADDITION,
+            change_message=f'Catégorie {category.name} créée.'
+        )
         category_data = {
             'id': category.id,
             'name': category.name,
@@ -269,6 +352,15 @@ def update_category(request, category_id):
         form = CategoryForm(request.POST, request.FILES, instance=category)
         if form.is_valid():
             category = form.save()
+            # Log the action
+            LogEntry.objects.log_action(
+                user_id=request.user.id,
+                content_type_id=ContentType.objects.get_for_model(category).pk,
+                object_id=category.pk,
+                object_repr=str(category),
+                action_flag=CHANGE,
+                change_message=f'Catégorie {category.name} mise à jour.'
+            )
             category_data = {
                 'id': category.id,
                 'name': category.name,
@@ -330,6 +422,15 @@ def audit_logs_page(request):
 def delete_category(request, category_id):
     try:
         category = Category.objects.get(pk=category_id)
+        # Log the action before deletion
+        LogEntry.objects.log_action(
+            user_id=request.user.id,
+            content_type_id=ContentType.objects.get_for_model(category).pk,
+            object_id=category.pk,
+            object_repr=str(category),
+            action_flag=DELETION,
+            change_message=f'Catégorie {category.name} supprimée.'
+        )
         category.delete()
         return JsonResponse({'status': 'success', 'message': 'Catégorie supprimée avec succès !'})
     except Category.DoesNotExist:

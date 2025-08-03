@@ -26,27 +26,42 @@ class CustomUserChangeForm(forms.ModelForm):
 class UserProfileForm(forms.ModelForm):
     class Meta:
         model = User
-        fields = ('first_name', 'last_name', 'email', 'matricule', 'specialite', 'photo')
+        fields = ('first_name', 'last_name', 'email', 'matricule', 'specialite', 'photo', 'niveau_etude', 'filiere', 'statut_enseignant')
         widgets = {
             'first_name': forms.TextInput(attrs={'class': 'form-control'}),
             'last_name': forms.TextInput(attrs={'class': 'form-control'}),
             'email': forms.EmailInput(attrs={'class': 'form-control'}),
             'matricule': forms.TextInput(attrs={'class': 'form-control'}),
             'specialite': forms.TextInput(attrs={'class': 'form-control'}),
+            'niveau_etude': forms.TextInput(attrs={'class': 'form-control'}),
+            'filiere': forms.TextInput(attrs={'class': 'form-control'}),
+            'statut_enseignant': forms.TextInput(attrs={'class': 'form-control'}),
             'photo': forms.FileInput(attrs={'class': 'profile-photo-input'}),
         }
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
-        # Disable matricule and specialite fields based on user role
+        # Disable/hide fields based on user role
         if self.instance.role == User.Role.ETUDIANT:
             self.fields['specialite'].required = False
             self.fields['specialite'].widget = forms.HiddenInput()
+            self.fields['statut_enseignant'].required = False
+            self.fields['statut_enseignant'].widget = forms.HiddenInput()
         elif self.instance.role == User.Role.ENSEIGNANT:
             self.fields['matricule'].required = False
             self.fields['matricule'].widget = forms.HiddenInput()
-        else: # Admin or other roles, hide both
+            self.fields['niveau_etude'].required = False
+            self.fields['niveau_etude'].widget = forms.HiddenInput()
+            self.fields['filiere'].required = False
+            self.fields['filiere'].widget = forms.HiddenInput()
+        else: # Admin or other roles, hide all specific fields
             self.fields['matricule'].required = False
             self.fields['matricule'].widget = forms.HiddenInput()
             self.fields['specialite'].required = False
             self.fields['specialite'].widget = forms.HiddenInput()
+            self.fields['niveau_etude'].required = False
+            self.fields['niveau_etude'].widget = forms.HiddenInput()
+            self.fields['filiere'].required = False
+            self.fields['filiere'].widget = forms.HiddenInput()
+            self.fields['statut_enseignant'].required = False
+            self.fields['statut_enseignant'].widget = forms.HiddenInput()

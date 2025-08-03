@@ -92,11 +92,23 @@
                             <label for="id_matricule" class="form-label">Matricule</label>
                             {{ form.matricule }}
                         </div>
+                        <div class="mb-3">
+                            <label for="id_niveau_etude" class="form-label">Niveau d'étude</label>
+                            {{ form.niveau_etude }}
+                        </div>
+                        <div class="mb-3">
+                            <label for="id_filiere" class="form-label">Filière</label>
+                            {{ form.filiere }}
+                        </div>
                         {% endif %}
                         {% if user.is_enseignant %}
                         <div class="mb-3">
                             <label for="id_specialite" class="form-label">Spécialité</label>
                             {{ form.specialite }}
+                        </div>
+                        <div class="mb-3">
+                            <label for="id_statut_enseignant" class="form-label">Statut Enseignant</label>
+                            {{ form.statut_enseignant }}
                         </div>
                         {% endif %}
                         <button type="submit" class="btn btn-primary mt-3">Enregistrer les modifications</button>
